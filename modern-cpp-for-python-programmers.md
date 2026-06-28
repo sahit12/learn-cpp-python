@@ -6291,3 +6291,1651 @@ public:
 *Part III is complete. You now understand the ownership model that makes C++ both safe and fast: RAII ties resource lifetime to object lifetime, smart pointers automate ownership, move semantics avoid unnecessary copies, and the Rule of Zero/Five ensures correct copy and move behavior for your own types.*
 
 *Part IV covers object-oriented programming -- classes, constructors, inheritance, virtual functions, and polymorphism. Ask to continue.*
+
+---
+
+# Part IV -- Object-Oriented Programming
+
+C++ OOP looks similar to Python OOP on the surface -- both have classes, inheritance, and virtual dispatch. The differences are in where they live (stack vs heap), how they are initialized (constructor member initializer lists), what you must declare explicitly (virtual, override, abstract), and the performance implications of each choice.
+
+---
+
+<a name="ch17"></a>
+# Chapter 17: Classes, Objects, and Encapsulation
+
+## Python Classes vs C++ Classes
+
+```python
+# Python class
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width        # no access control -- everything is public
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+r = Rectangle(3, 4)
+r.width = -5       # Python cannot stop this
+print(r.area())    # -20 -- corrupt state
+```
+
+```cpp
+// C++ class
+class Rectangle {
+public:                             // public interface
+    Rectangle(double w, double h);  // constructor declaration
+    double area() const;            // method declaration
+
+private:                            // hidden implementation
+    double width;                   // cannot be accessed from outside
+    double height;
+};
+```
+
+The key difference: **access specifiers**. C++ divides class members into:
+
+- `public`: accessible by anyone
+- `private`: accessible only by the class's own member functions
+- `protected`: accessible by the class and its derived classes (Chapter 19)
+
+In Python everything is public by convention (with `_` as a hint). In C++, `private` is enforced by the compiler.
+
+---
+
+## Defining a Class: Full Example
+
+```cpp
+// Rectangle.h
+#pragma once
+#include <string>
+
+class Rectangle {
+public:
+    // Constructor
+    Rectangle(double width, double height);
+
+    // Const methods (do not modify the object)
+    double area()      const;
+    double perimeter() const;
+    std::string describe() const;
+
+    // Getters and setters with validation
+    double get_width()  const;
+    double get_height() const;
+    void   set_width(double w);
+    void   set_height(double h);
+
+private:
+    double width;
+    double height;
+};
+```
+
+```cpp
+// Rectangle.cpp
+#include "Rectangle.h"
+#include <stdexcept>
+#include <string>
+
+// Constructor: ClassName::method_name(params) { body }
+Rectangle::Rectangle(double w, double h) {
+    if (w <= 0 || h <= 0)
+        throw std::invalid_argument("Dimensions must be positive");
+    width  = w;
+    height = h;
+}
+
+double Rectangle::area()      const { return width * height; }
+double Rectangle::perimeter() const { return 2.0 * (width + height); }
+
+std::string Rectangle::describe() const {
+    return "Rectangle(" + std::to_string(width) + " x "
+                        + std::to_string(height) + ")";
+}
+
+double Rectangle::get_width()  const { return width; }
+double Rectangle::get_height() const { return height; }
+
+void Rectangle::set_width(double w) {
+    if (w <= 0) throw std::invalid_argument("Width must be positive");
+    width = w;
+}
+void Rectangle::set_height(double h) {
+    if (h <= 0) throw std::invalid_argument("Height must be positive");
+    height = h;
+}
+```
+
+```cpp
+// main.cpp
+#include <iostream>
+#include "Rectangle.h"
+
+int main() {
+    Rectangle r{3.0, 4.0};           // calls constructor
+    std::cout << r.area()       << "\n";  // 12
+    std::cout << r.perimeter()  << "\n";  // 14
+    std::cout << r.describe()   << "\n";  // Rectangle(3.000000 x 4.000000)
+
+    r.set_width(5.0);
+    std::cout << r.area() << "\n";   // 20
+
+    // r.width = -1;   // COMPILE ERROR: 'width' is private
+    // r.set_width(-1); // throws std::invalid_argument at runtime
+}
+```
+
+---
+
+## `struct` vs `class`
+
+In C++, `struct` and `class` are almost identical. The only difference: `struct` members are `public` by default; `class` members are `private` by default.
+
+```cpp
+struct Point {       // members are public by default
+    double x, y;
+};
+
+class Point2 {       // members are private by default
+    double x, y;     // these are private
+};
+
+Point  p{1.0, 2.0};   // p.x accessible
+Point2 q{1.0, 2.0};   // q.x NOT accessible (private)
+```
+
+Convention:
+- Use `struct` for simple data aggregates with no invariants to protect (Point, Color, Size)
+- Use `class` when you need access control and invariants (Rectangle must have positive dimensions)
+
+---
+
+## Memory Layout of a Class
+
+```cpp
+class Vec2 {
+    float x;   // 4 bytes
+    float y;   // 4 bytes
+};
+
+Vec2 v{1.0f, 2.0f};
+```
+
+```
+Stack (or wherever v lives):
+
+Address    Member    Bytes
+0x1000     x (float) [00][00][80][3F]   <- 1.0f in IEEE 754
+0x1004     y (float) [00][00][00][40]   <- 2.0f in IEEE 754
+
+sizeof(Vec2) == 8  (same as two separate floats)
+```
+
+There is no hidden per-object overhead from member functions. Functions exist once in the `.text` section of the executable. The object just holds data.
+
+```
+Code (compiled once, shared by all Vec2 instances):
+.text:
+  Vec2::area():
+    mov eax, [this+0]   <- reads this->x
+    ...
+```
+
+The `this` pointer (implicit first parameter of every member function) tells the function which object to operate on.
+
+---
+
+## `this` Pointer
+
+Inside any non-static member function, `this` is a pointer to the current object:
+
+```cpp
+class Counter {
+    int count{0};
+public:
+    Counter& increment() {
+        ++count;      // same as: ++(this->count)
+        return *this; // return reference to self (enables chaining)
+    }
+    int get() const { return count; }
+};
+
+Counter c;
+c.increment().increment().increment();   // method chaining
+std::cout << c.get();   // 3
+```
+
+`return *this` returns a reference to the object itself, allowing `.method()` to be called immediately on the result. This pattern (fluent interface / method chaining) is common in builder classes.
+
+---
+
+## Static Members
+
+`static` data members and methods belong to the **class**, not to any individual object:
+
+```cpp
+class Player {
+    std::string name;
+    static int  player_count;    // shared across ALL Player objects
+
+public:
+    Player(std::string n) : name{n} { ++player_count; }
+    ~Player()                       { --player_count; }
+
+    static int get_count() { return player_count; }
+    // static methods have no 'this' -- cannot access non-static members
+};
+
+int Player::player_count = 0;   // definition outside the class (required)
+
+Player p1{"Alice"};
+Player p2{"Bob"};
+std::cout << Player::get_count() << "\n";  // 2  (call via class name)
+{
+    Player p3{"Carol"};
+    std::cout << Player::get_count() << "\n";  // 3
+}   // p3 destroyed
+std::cout << Player::get_count() << "\n";  // 2
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting the `::` Scope Resolution in the `.cpp` File
+
+**The bug:**
+```cpp
+// Rectangle.cpp
+double area() const {   // ERROR: this defines a FREE function named area,
+    return width * height;  // not Rectangle::area. 'width' is not in scope.
+}
+```
+**The fix:** `double Rectangle::area() const { return width * height; }`
+
+### Mistake 2: Calling a Non-const Method on a Const Object
+
+**The bug:**
+```cpp
+const Rectangle r{3.0, 4.0};
+r.set_width(5.0);   // ERROR: set_width is non-const (it modifies the object)
+```
+**Compiler message:**
+```
+error: passing 'const Rectangle' as 'this' argument discards qualifiers
+```
+**The fix:** Either remove `const` from the object, or don't call mutating methods on const objects.
+
+### Mistake 3: Forgetting to Define Static Members
+
+**The bug:**
+```cpp
+class Foo { static int count; };
+// Forgot: int Foo::count = 0;
+// Linker error: undefined reference to 'Foo::count'
+```
+**The fix:** Static data members must be defined exactly once in a `.cpp` file.
+
+---
+
+## Exercises
+
+**Exercise 17.1 -- Design a class**
+
+Design a `BankAccount` class with:
+- Private `balance` (double, starts at 0)
+- `deposit(double amount)` -- adds to balance (reject negative amounts)
+- `withdraw(double amount)` -- subtracts (reject if insufficient funds)
+- `get_balance() const` -- returns balance
+
+*Answer:*
+```cpp
+class BankAccount {
+    double balance{0.0};
+public:
+    void deposit(double amount) {
+        if (amount <= 0) throw std::invalid_argument("Amount must be positive");
+        balance += amount;
+    }
+    void withdraw(double amount) {
+        if (amount <= 0)      throw std::invalid_argument("Amount must be positive");
+        if (amount > balance) throw std::runtime_error("Insufficient funds");
+        balance -= amount;
+    }
+    double get_balance() const { return balance; }
+};
+```
+
+---
+
+**Exercise 17.2 -- Const correctness**
+
+Which of these methods should be `const`?
+
+```cpp
+class Circle {
+    double radius;
+public:
+    void    set_radius(double r) { radius = r; }
+    double  get_radius()        { return radius; }
+    double  area()              { return 3.14159 * radius * radius; }
+    bool    is_unit_circle()    { return radius == 1.0; }
+};
+```
+
+*Answer:* `get_radius()`, `area()`, and `is_unit_circle()` should all be `const` -- none of them modify `radius`. `set_radius()` cannot be `const` because it assigns to `radius`.
+
+---
+
+<a name="ch18"></a>
+# Chapter 18: Constructors, Destructors, and Initialization
+
+## The Member Initializer List
+
+C++ constructors have a special syntax for initializing members **before the constructor body runs**. This is the **member initializer list**, the `:` clause between the parameter list and `{`:
+
+```cpp
+class Particle {
+    double x, y;
+    double vx, vy;
+    std::string name;
+
+public:
+    // WITHOUT member initializer list (suboptimal):
+    Particle(double px, double py, std::string n) {
+        x    = px;   // assignment (not initialization)
+        y    = py;   // members are default-constructed first, then assigned
+        vx   = 0.0;
+        vy   = 0.0;
+        name = n;    // name is default-constructed to "" then copy-assigned
+    }
+
+    // WITH member initializer list (correct and efficient):
+    Particle(double px, double py, std::string n)
+        : x{px}, y{py}, vx{0.0}, vy{0.0}, name{std::move(n)}
+    {   // body runs after all members are initialized
+    }
+};
+```
+
+The member initializer list directly constructs each member with the given value. The assignment version first default-constructs each member, then overwrites it -- two operations instead of one.
+
+For `std::string`, `std::vector`, and any class type, always use the initializer list. For `const` members and reference members, the initializer list is not optional -- they **cannot** be assigned after construction:
+
+```cpp
+class Fixed {
+    const int id;
+    int& ref;
+public:
+    Fixed(int i, int& r) : id{i}, ref{r} {}  // MUST use initializer list
+    // id = i;  // COMPILE ERROR: cannot assign to const member
+};
+```
+
+### Initialization Order
+
+Members are initialized in the **order they are declared in the class**, not the order they appear in the initializer list:
+
+```cpp
+class Tricky {
+    int a;
+    int b;
+public:
+    Tricky(int x) : b{x}, a{b}  // WARNING: a is initialized before b!
+    {}
+    // a is initialized with b's value, but b hasn't been initialized yet
+    // 'a' gets garbage
+};
+```
+
+**Rule:** Put initializers in the same order as the declarations. Most compilers warn about order mismatches with `-Wall`.
+
+---
+
+## Delegating Constructors (C++11)
+
+One constructor can call another constructor of the same class:
+
+```cpp
+class Vec3 {
+    double x, y, z;
+public:
+    Vec3(double x, double y, double z) : x{x}, y{y}, z{z} {}
+
+    // Delegate to the main constructor:
+    Vec3()               : Vec3{0.0, 0.0, 0.0} {}   // zero vector
+    Vec3(double uniform) : Vec3{uniform, uniform, uniform} {}
+};
+
+Vec3 origin;       // (0, 0, 0)
+Vec3 ones{1.0};    // (1, 1, 1)
+Vec3 point{1.0, 2.0, 3.0};
+```
+
+---
+
+## Constructor Kinds
+
+### Default Constructor
+
+Called when no arguments are provided:
+
+```cpp
+class Foo {
+public:
+    Foo() { std::cout << "default constructed\n"; }
+};
+Foo f;              // calls Foo()
+Foo g{};            // also calls Foo()
+std::vector<Foo> v(5);  // calls Foo() five times
+```
+
+If you declare **any** constructor, the compiler no longer generates a default constructor automatically. Add `Foo() = default;` to get it back.
+
+### Explicit Constructor (Prevent Implicit Conversion)
+
+```cpp
+class Radius {
+    double value;
+public:
+    Radius(double v) : value{v} {}   // implicit: Radius r = 5.0; works
+};
+
+class SafeRadius {
+    double value;
+public:
+    explicit SafeRadius(double v) : value{v} {}  // explicit: no implicit conversion
+};
+
+Radius    r1 = 5.0;        // OK: implicit conversion double -> Radius
+SafeRadius r2 = 5.0;        // ERROR: explicit constructor cannot convert implicitly
+SafeRadius r3{5.0};         // OK: direct initialization always works
+SafeRadius r4(5.0);         // OK: direct initialization
+
+void process(Radius r) {}
+process(5.0);               // OK for Radius (implicit conversion allowed)
+process(SafeRadius{5.0});   // OK: explicit construction then pass
+```
+
+Use `explicit` for single-argument constructors to prevent surprising implicit conversions. `std::vector(int)` is `explicit` -- `std::vector<int> v = 5;` would be confusing.
+
+---
+
+## Destructor Revisited: The Full Rules
+
+```cpp
+class Resource {
+    int* data;
+public:
+    Resource()  : data{new int[100]{}} { std::cout << "acquired\n"; }
+    ~Resource()                        { delete[] data; std::cout << "released\n"; }
+};
+```
+
+Destructors are called:
+1. **When a local variable goes out of scope** (stack unwinding)
+2. **When `delete` is called** on a heap-allocated object
+3. **When a container element is removed** (`vector::pop_back`, etc.)
+4. **When a member variable's owner is destroyed** (member destructors run after the owner's destructor body)
+
+The destructor call order for members is the **reverse of construction order**.
+
+---
+
+## In-Class Member Initializers (C++11)
+
+Members can have default values directly in the class definition:
+
+```cpp
+class Config {
+    int    width{1920};       // default: 1920
+    int    height{1080};      // default: 1080
+    bool   fullscreen{false}; // default: false
+    std::string title{"My App"};
+
+public:
+    Config() = default;   // uses all defaults above
+
+    Config(int w, int h)  // overrides width and height, keeps other defaults
+        : width{w}, height{h} {}
+};
+
+Config default_cfg;       // 1920x1080, windowed, "My App"
+Config custom{800, 600};  // 800x600, windowed, "My App"
+```
+
+This is the cleanest way to set defaults. Prefer it over setting values in the constructor body.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Initializer List Order Different From Declaration Order
+
+**The bug:**
+```cpp
+class Pair {
+    int second;   // declared first
+    int first;    // declared second
+public:
+    Pair(int f, int s) : first{f}, second{s} {}
+    // first is initialized with f -- but second is initialized FIRST (declaration order)
+    // and second{s} is fine since s is not dependent on first
+    // If instead: Pair(int x) : first{x}, second{first*2}{}
+    // then second = first*2 but first hasn't been initialized yet!
+};
+```
+**The fix:** Keep initializer list order matching declaration order.
+
+### Mistake 2: Missing `explicit` on Converting Constructor
+
+**The bug:**
+```cpp
+class Seconds { double val; public: Seconds(double v):val{v}{} };
+void wait(Seconds s) { ... }
+wait(100);   // Did you mean 100 seconds? Or was 100 an int you forgot to convert?
+```
+**The fix:** `explicit Seconds(double v)` forces `wait(Seconds{100})` -- the intent is clear.
+
+---
+
+## Exercises
+
+**Exercise 18.1 -- Rewrite with initializer list**
+
+Rewrite this constructor to use a member initializer list:
+
+```cpp
+class Player {
+    std::string name;
+    int hp;
+    int max_hp;
+public:
+    Player(std::string n, int health) {
+        name   = n;
+        hp     = health;
+        max_hp = health;
+    }
+};
+```
+
+*Answer:*
+```cpp
+Player(std::string n, int health)
+    : name{std::move(n)}, hp{health}, max_hp{health} {}
+```
+`std::move(n)` avoids copying the string (since `n` is a value parameter, it's a local copy we can move from).
+
+---
+
+**Exercise 18.2 -- Delegating constructors**
+
+Write a `Color` class with `r`, `g`, `b` components (0.0-1.0 doubles). Provide:
+- A full 3-argument constructor
+- A grayscale constructor taking one value (sets r=g=b)
+- A default constructor (black: 0,0,0)
+
+Use delegating constructors.
+
+*Answer:*
+```cpp
+class Color {
+    double r, g, b;
+public:
+    Color(double r, double g, double b) : r{r}, g{g}, b{b} {}
+    Color(double gray)  : Color{gray, gray, gray} {}
+    Color()             : Color{0.0} {}
+};
+```
+
+---
+
+<a name="ch19"></a>
+# Chapter 19: Inheritance and Composition
+
+## Two Kinds of Reuse
+
+When one class needs functionality from another, you have two options:
+
+- **Inheritance ("is-a")**: `Dog` is-a `Animal`. `Dog` inherits from `Animal`.
+- **Composition ("has-a")**: `Car` has-a `Engine`. `Car` has an `Engine` as a member.
+
+Python programmers often overuse inheritance. Prefer composition in C++ (and generally): it is more flexible and avoids the tight coupling that inheritance creates.
+
+---
+
+## Inheritance Syntax
+
+```python
+# Python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    def speak(self):
+        return "Woof"
+```
+
+```cpp
+// C++
+class Animal {
+protected:             // accessible by Animal and derived classes
+    std::string name;
+public:
+    Animal(const std::string& n) : name{n} {}
+    std::string get_name() const { return name; }
+    virtual std::string speak() const { return "..."; }
+    virtual ~Animal() {}   // virtual destructor -- explained in Chapter 20
+};
+
+class Dog : public Animal {    // Dog inherits publicly from Animal
+public:
+    Dog(const std::string& n) : Animal{n} {}   // must call base constructor
+
+    std::string speak() const override { return "Woof"; }
+    //                            ^--- override keyword (C++11): verifies this
+    //                                 actually overrides a virtual base method
+};
+```
+
+### The `public` Inheritance Keyword
+
+`class Dog : public Animal` -- the `public` here controls how the base class's access specifiers are inherited:
+
+| Inheritance type | public becomes | protected becomes | private becomes |
+|------------------|---------------|-------------------|-----------------|
+| `public`         | public        | protected         | inaccessible    |
+| `protected`      | protected     | protected         | inaccessible    |
+| `private`        | private       | private           | inaccessible    |
+
+Almost always use `public` inheritance. `private` and `protected` inheritance are rare, specialized tools.
+
+---
+
+## Constructors in Derived Classes
+
+A derived class constructor **must** call the base class constructor:
+
+```cpp
+class Shape {
+    std::string color;
+public:
+    Shape(const std::string& c) : color{c} {}
+    std::string get_color() const { return color; }
+};
+
+class Circle : public Shape {
+    double radius;
+public:
+    Circle(double r, const std::string& c)
+        : Shape{c}       // must explicitly call base constructor
+        , radius{r}      // then initialize own members
+    {}
+    double area() const { return 3.14159 * radius * radius; }
+};
+```
+
+If the base class has no default constructor, the derived class **must** explicitly call a base constructor in its initializer list. The base part is always constructed first, before the derived members.
+
+---
+
+## Memory Layout With Inheritance
+
+```cpp
+class Base {
+    int x;   // 4 bytes
+    int y;   // 4 bytes
+};
+
+class Derived : public Base {
+    int z;   // 4 bytes
+};
+
+Derived d;
+```
+
+```
+Memory layout of d (Derived):
+
+Address    Member      Size
+0x1000     x (Base)    4 bytes    <- Base part comes first
+0x1004     y (Base)    4 bytes
+0x1008     z (Derived) 4 bytes    <- Derived's own members after
+
+sizeof(Derived) == 12
+```
+
+The base class subobject lives at the beginning of the derived object's memory. A pointer to `Derived` is also a valid pointer to `Base` (just points to the same address -- the Base subobject is right there).
+
+---
+
+## Slicing: The Object-Oriented Trap
+
+```cpp
+Animal a = Dog{"Rex"};   // BAD: Dog is sliced into an Animal!
+a.speak();               // calls Animal::speak, not Dog::speak -- "..."
+```
+
+When you copy a `Dog` into an `Animal` variable, only the `Animal` part is copied. The `Dog`-specific data is sliced off. The object is now truly just an `Animal`.
+
+```
+Before slice:                After slice:
++-------------------+        +-------------------+
+| Dog               |        | Animal            |
+|   name: "Rex"     | -->    |   name: "Rex"     |
+|   (Dog data)      |        | (Dog data GONE)   |
++-------------------+        +-------------------+
+```
+
+To avoid slicing, use pointers or references to the base class:
+
+```cpp
+// Correct: pointer to Animal, no slicing
+std::unique_ptr<Animal> a = std::make_unique<Dog>("Rex");
+a->speak();   // "Woof" -- polymorphic dispatch (Chapter 20)
+
+// Correct: reference to Animal, no slicing
+Dog dog{"Rex"};
+Animal& ref = dog;
+ref.speak();  // "Woof" -- polymorphic dispatch
+```
+
+---
+
+## Composition vs Inheritance
+
+Most "is-a" relationships in the real world are actually "can-do" or "has-a". Prefer composition:
+
+```cpp
+// Inheritance: Engine IS-A Vehicle? No. Engine is part of Vehicle.
+class Engine { void start(); void stop(); };
+class CarBad : public Engine {};    // wrong: Car is NOT an Engine
+
+// Composition: Car HAS-A Engine
+class CarGood {
+    Engine engine;   // Engine is a component
+public:
+    void start() { engine.start(); }
+};
+```
+
+**Prefer composition when:**
+- You need the functionality of another class but are not that class
+- You want to change the implementation later without affecting callers
+- You want to combine multiple behaviors (C++ has single inheritance)
+
+**Use inheritance when:**
+- There is a genuine "is-a" relationship
+- You need polymorphic dispatch (Chapter 20) through a common base pointer
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting to Call the Base Constructor
+
+**The bug:**
+```cpp
+class Derived : public Base {
+public:
+    Derived(int x) { ... }   // Base's constructor never called!
+    // If Base has no default constructor: compile error
+    // If Base has a default constructor: it is called, possibly not what you want
+};
+```
+**The fix:** `Derived(int x) : Base{...} { ... }`
+
+### Mistake 2: Object Slicing
+
+**The bug:**
+```cpp
+void process(Animal a) { a.speak(); }  // takes by value -- slices!
+process(Dog{"Rex"});    // Dog is sliced to Animal; speak() returns "..."
+```
+**The fix:** `void process(const Animal& a)` or `void process(Animal* a)` -- reference/pointer avoids slicing.
+
+---
+
+## Exercises
+
+**Exercise 19.1 -- Class hierarchy**
+
+Design a small hierarchy: `Shape` (base), `Rectangle` and `Circle` (derived). Each should have `area() const` and `perimeter() const`. Use composition or inheritance as appropriate.
+
+*Answer (abbreviated):*
+```cpp
+class Shape {
+public:
+    virtual double area()      const = 0;   // pure virtual (Chapter 21)
+    virtual double perimeter() const = 0;
+    virtual ~Shape() {}
+};
+
+class Rectangle : public Shape {
+    double w, h;
+public:
+    Rectangle(double w, double h) : w{w}, h{h} {}
+    double area()      const override { return w * h; }
+    double perimeter() const override { return 2*(w+h); }
+};
+
+class Circle : public Shape {
+    double r;
+public:
+    Circle(double r) : r{r} {}
+    double area()      const override { return 3.14159265 * r * r; }
+    double perimeter() const override { return 2 * 3.14159265 * r; }
+};
+```
+
+---
+
+<a name="ch20"></a>
+# Chapter 20: Virtual Functions and Polymorphism
+
+## The Problem Without Virtual
+
+```cpp
+class Animal {
+public:
+    std::string speak() const { return "..."; }   // not virtual
+};
+
+class Dog : public Animal {
+public:
+    std::string speak() const { return "Woof"; }  // hides, not overrides
+};
+
+Animal* a = new Dog{};
+std::cout << a->speak();  // "..." -- calls Animal::speak, not Dog::speak!
+```
+
+Without `virtual`, the function called is determined by the **type of the pointer** at compile time. `a` is `Animal*`, so `Animal::speak` is called. The fact that the object is actually a `Dog` is ignored.
+
+This is called **static dispatch** (compile-time resolution).
+
+---
+
+## `virtual` Enables Dynamic Dispatch
+
+Adding `virtual` tells the compiler to resolve the call at **runtime** based on the actual type of the object:
+
+```cpp
+class Animal {
+public:
+    virtual std::string speak() const { return "..."; }
+    virtual ~Animal() {}   // always virtual destructor in polymorphic base classes
+};
+
+class Dog : public Animal {
+public:
+    std::string speak() const override { return "Woof"; }
+};
+
+class Cat : public Animal {
+public:
+    std::string speak() const override { return "Meow"; }
+};
+
+Animal* a1 = new Dog{};
+Animal* a2 = new Cat{};
+std::cout << a1->speak() << "\n";  // "Woof" -- dynamic dispatch to Dog::speak
+std::cout << a2->speak() << "\n";  // "Meow" -- dynamic dispatch to Cat::speak
+delete a1;
+delete a2;
+```
+
+The same pointer type (`Animal*`), the same call (`->speak()`), different behavior based on what the pointer actually points to. This is **runtime polymorphism**.
+
+---
+
+## How Virtual Dispatch Works: The vtable
+
+For each class with virtual functions, the compiler creates a **vtable** (virtual function table): an array of function pointers, one per virtual function.
+
+Each object of a polymorphic class has a hidden **vptr** (vtable pointer) pointing to its class's vtable:
+
+```
+Memory layout of a Dog object (with virtual speak):
+
++--------------------+
+| vptr -----------> Dog's vtable:
+|                    |  [0] --> Dog::speak()
+| name (string)      |  [1] --> Dog::~Dog()
++--------------------+
+
+Memory layout of a Cat object:
+
++--------------------+
+| vptr -----------> Cat's vtable:
+|                    |  [0] --> Cat::speak()
+| name (string)      |  [1] --> Cat::~Cat()
++--------------------+
+```
+
+When you call `a->speak()`:
+1. Load `a` (the pointer)
+2. Follow `a` to the object
+3. Load `vptr` from the object (first bytes of the object)
+4. Index into the vtable: `vptr[0]`
+5. Call the function pointer found there
+
+The overhead: one pointer dereference and one indirect call. Tiny but non-zero. For hot inner loops, this matters (Chapter 38 covers alternatives).
+
+---
+
+## `override` and `final` (C++11)
+
+`override` tells the compiler to verify that this function actually overrides a virtual base function. Without it, a typo silently creates a new function instead:
+
+```cpp
+class Animal {
+    virtual std::string speak() const { return "..."; }
+};
+
+class Dog : public Animal {
+    std::string speek() const { return "Woof"; }  // typo! No error without override.
+    // Does not override speak(). Dog::speek is a new function.
+    // Animal::speak is still called for Dog objects via base pointer.
+};
+
+class DogCorrect : public Animal {
+    std::string speek() const override { return "Woof"; }
+    // ERROR: 'speek' does not override any virtual function
+    //        Compiler catches the typo.
+};
+```
+
+Always use `override`. No downside, catches bugs.
+
+`final` prevents further overriding (for a method) or prevents inheritance (for a class):
+
+```cpp
+class SafeAnimal : public Animal {
+    std::string speak() const override final { return "safe"; }
+    // no derived class can override speak() anymore
+};
+
+class Terminal final : public Animal { ... };
+// class Sub : public Terminal {};  // ERROR: Terminal is final
+```
+
+---
+
+## Virtual Destructor: Why It Is Required
+
+```cpp
+class Base {
+public:
+    ~Base() { std::cout << "Base destroyed\n"; }  // NOT virtual
+};
+
+class Derived : public Base {
+    int* data;
+public:
+    Derived() : data{new int[100]{}} {}
+    ~Derived() { delete[] data; std::cout << "Derived destroyed\n"; }
+};
+
+Base* p = new Derived{};
+delete p;   // calls Base::~Base ONLY -- Derived::~Derived never called!
+            // 'data' is leaked every time
+```
+
+When you `delete` through a base class pointer and the destructor is not virtual, only the base class destructor is called. The derived class's destructor (and its cleanup code) is bypassed.
+
+```cpp
+class Base {
+public:
+    virtual ~Base() { std::cout << "Base destroyed\n"; }  // virtual
+};
+// Now: delete p; calls Derived::~Derived first (via vtable), then Base::~Base
+```
+
+**Rule: If a class has any virtual functions, make its destructor virtual.** The overhead is one vtable slot -- negligible.
+
+---
+
+## Polymorphism With `unique_ptr`
+
+Modern C++ polymorphism uses smart pointers, not raw pointers:
+
+```cpp
+#include <memory>
+#include <vector>
+
+std::vector<std::unique_ptr<Animal>> animals;
+animals.push_back(std::make_unique<Dog>("Rex"));
+animals.push_back(std::make_unique<Cat>("Whiskers"));
+animals.push_back(std::make_unique<Dog>("Buddy"));
+
+for (const auto& a : animals) {
+    std::cout << a->get_name() << " says: " << a->speak() << "\n";
+}
+// Rex says: Woof
+// Whiskers says: Meow
+// Buddy says: Woof
+// All Animals deleted automatically when vector is destroyed
+```
+
+No manual `delete`. No memory leaks. Full polymorphism.
+
+---
+
+## Python Polymorphism vs C++ Polymorphism
+
+Python uses **duck typing**: no inheritance required. Any object with a `speak()` method works.
+
+```python
+class Dog: def speak(self): return "Woof"
+class Cat: def speak(self): return "Meow"
+class Rock: pass  # no speak
+
+animals = [Dog(), Cat()]
+for a in animals:
+    print(a.speak())  # works because both have speak()
+```
+
+C++ polymorphism requires:
+1. A common base class with `virtual` functions
+2. The object accessed through a base pointer or reference
+3. `override` in derived classes
+
+C++ offers **static polymorphism** via templates (Chapter 23/25) for zero-overhead duck typing.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Non-Virtual Base Destructor
+
+Already covered above. Always make the destructor `virtual` in a polymorphic base class.
+
+### Mistake 2: Forgetting `override`
+
+**The bug:**
+```cpp
+class Derived : public Base {
+    void render() { ... }   // Base has: virtual void Render() { ... }
+    // typo: render vs Render -- silent new function, not an override
+};
+```
+**The fix:** Always write `override`. The compiler will tell you if the name doesn't match.
+
+### Mistake 3: Calling Virtual Functions in Constructors/Destructors
+
+**The bug:**
+```cpp
+class Base {
+public:
+    Base() { initialize(); }          // calls virtual -- WRONG
+    virtual void initialize() { std::cout << "Base\n"; }
+};
+class Derived : public Base {
+public:
+    void initialize() override { std::cout << "Derived\n"; }
+};
+Derived d;  // prints "Base", not "Derived" -- vtable not fully set up yet
+```
+**Why:** During the base constructor, the object is still a `Base`. The vtable points to `Base`'s functions. Dynamic dispatch is suspended during construction and destruction.
+**The fix:** Never call virtual functions in constructors or destructors. Use a factory function or a two-phase initialization if needed.
+
+---
+
+## Exercises
+
+**Exercise 20.1 -- Virtual dispatch trace**
+
+```cpp
+struct A {
+    virtual void f() { std::cout << "A\n"; }
+    void g()         { std::cout << "A::g\n"; }
+};
+struct B : A {
+    void f() override { std::cout << "B\n"; }
+    void g()          { std::cout << "B::g\n"; }
+};
+A* p = new B{};
+p->f();    // (a)
+p->g();    // (b)
+B* q = static_cast<B*>(p);
+q->f();    // (c)
+q->g();    // (d)
+delete p;
+```
+
+*Answer:*
+- (a): `B` -- `f()` is virtual, dynamic dispatch to `B::f`
+- (b): `A::g` -- `g()` is not virtual, compile-time resolution via `A*`
+- (c): `B` -- `f()` is virtual, `q` is `B*`, dispatch to `B::f`
+- (d): `B::g` -- `g()` is not virtual, compile-time resolution via `B*`
+
+---
+
+**Exercise 20.2 -- Polymorphic zoo**
+
+Create a vector of `unique_ptr<Animal>`, add at least 3 different animal types, and print each one's `speak()` result using a range-based loop.
+
+*Answer:*
+```cpp
+#include <memory>
+#include <vector>
+#include <iostream>
+
+// Using the Animal/Dog/Cat hierarchy from this chapter:
+std::vector<std::unique_ptr<Animal>> zoo;
+zoo.push_back(std::make_unique<Dog>("Rex"));
+zoo.push_back(std::make_unique<Cat>("Whiskers"));
+zoo.push_back(std::make_unique<Dog>("Buddy"));
+
+for (const auto& animal : zoo) {
+    std::cout << animal->get_name() << ": " << animal->speak() << "\n";
+}
+```
+
+---
+
+<a name="ch21"></a>
+# Chapter 21: Abstract Classes and Interfaces
+
+## Pure Virtual Functions
+
+A **pure virtual function** is a virtual function declared with `= 0`. It has no implementation in the base class. Any class with at least one pure virtual function is an **abstract class** -- it cannot be instantiated.
+
+```cpp
+class Shape {
+public:
+    virtual double area()      const = 0;  // pure virtual
+    virtual double perimeter() const = 0;  // pure virtual
+    virtual void   draw()      const = 0;  // pure virtual
+    virtual ~Shape() {}
+};
+
+Shape s;   // COMPILE ERROR: cannot instantiate abstract class 'Shape'
+```
+
+A class is abstract to express: "I define the interface; subclasses provide the implementation."
+
+---
+
+## Concrete Derived Classes
+
+A derived class that provides implementations for all pure virtual functions is **concrete** (can be instantiated):
+
+```cpp
+class Circle : public Shape {
+    double radius;
+public:
+    Circle(double r) : radius{r} {}
+
+    double area()      const override { return 3.14159265 * radius * radius; }
+    double perimeter() const override { return 2 * 3.14159265 * radius; }
+    void   draw()      const override { std::cout << "O\n"; }
+};
+
+class Square : public Shape {
+    double side;
+public:
+    Square(double s) : side{s} {}
+
+    double area()      const override { return side * side; }
+    double perimeter() const override { return 4 * side; }
+    void   draw()      const override { std::cout << "[]\n"; }
+};
+
+// Now concrete:
+Circle c{5.0};
+Square s{3.0};
+std::cout << c.area() << "\n";  // 78.5...
+std::cout << s.area() << "\n";  // 9
+```
+
+If a derived class leaves any pure virtual functions unimplemented, it is also abstract:
+
+```cpp
+class PartialShape : public Shape {
+    double area() const override { return 0; }
+    // perimeter() and draw() not implemented -- PartialShape is still abstract
+};
+PartialShape p;   // COMPILE ERROR: still abstract
+```
+
+---
+
+## Interfaces in C++
+
+C++ does not have a built-in `interface` keyword (unlike Java or C#). An **interface** is a convention: an abstract class with only pure virtual functions and a virtual destructor -- no data members, no implementation.
+
+```python
+# Python "interface" via ABC
+from abc import ABC, abstractmethod
+
+class Drawable(ABC):
+    @abstractmethod
+    def draw(self) -> None: ...
+
+    @abstractmethod
+    def bounding_box(self) -> tuple: ...
+```
+
+```cpp
+// C++ interface convention
+class IDrawable {
+public:
+    virtual void  draw()         const = 0;
+    virtual std::pair<double,double> bounding_box() const = 0;
+    virtual ~IDrawable() {}
+};
+
+class ISerializable {
+public:
+    virtual std::string serialize()   const = 0;
+    virtual void        deserialize(const std::string&) = 0;
+    virtual ~ISerializable() {}
+};
+
+// A class can implement multiple interfaces:
+class Sprite : public IDrawable, public ISerializable {
+    // must implement all pure virtuals from both interfaces
+    void   draw()         const override { ... }
+    std::pair<double,double> bounding_box() const override { ... }
+    std::string serialize()   const override { ... }
+    void        deserialize(const std::string&) override { ... }
+};
+```
+
+Multiple inheritance from multiple **pure-interface** base classes is safe and common. Multiple inheritance from classes with data members is tricky (diamond problem) and usually avoided.
+
+---
+
+## Partial Implementations (Partially Abstract)
+
+A class can implement some pure virtuals and leave others:
+
+```cpp
+class AbstractRenderer : public IDrawable {
+public:
+    // Provides a default implementation for draw:
+    void draw() const override {
+        set_up_context();
+        do_draw();         // calls another pure virtual -- template method pattern
+        tear_down_context();
+    }
+    // Subclasses must provide do_draw():
+    virtual void do_draw() const = 0;
+protected:
+    void set_up_context() const { ... }
+    void tear_down_context() const { ... }
+};
+
+class OpenGLRenderer : public AbstractRenderer {
+    void do_draw() const override { ... }  // only override what is necessary
+};
+```
+
+This is the **Template Method** pattern: the base class defines the algorithm skeleton, derived classes fill in the specific steps.
+
+---
+
+## Checking the Type at Runtime: `dynamic_cast`
+
+When you have a base class pointer and need to find out the real type:
+
+```cpp
+void process(Shape* s) {
+    if (Circle* c = dynamic_cast<Circle*>(s)) {
+        // s points to a Circle (or derived from Circle)
+        std::cout << "radius: " << c->radius << "\n";
+    } else if (Square* sq = dynamic_cast<Square*>(s)) {
+        std::cout << "side: " << sq->side << "\n";
+    }
+}
+```
+
+`dynamic_cast<Circle*>(s)` returns a `Circle*` if `s` actually points to a `Circle`, or `nullptr` otherwise. It works via the vtable (requires at least one virtual function).
+
+**Caveat:** Frequent `dynamic_cast` is usually a design smell. It means the code is asking "what type is this?" at runtime instead of using virtual dispatch. Prefer redesigning with virtual functions. `dynamic_cast` is legitimate for occasional introspection or when interacting with external code.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Instantiating an Abstract Class
+
+**The bug:**
+```cpp
+Shape s{};   // or: Shape* p = new Shape{};
+```
+**Compiler error:**
+```
+error: cannot declare variable 's' to be of abstract type 'Shape'
+note: because the following virtual functions are pure within 'Shape':
+note: virtual double Shape::area() const
+```
+**The fix:** Instantiate a concrete derived class, not the abstract base.
+
+### Mistake 2: Missing `override` in Concrete Class
+
+**The bug:**
+```cpp
+class Rect : public Shape {
+    double area() const { return w * h; }  // forgot override
+    // If Shape::area() signature changes, this silently stops overriding it
+};
+```
+**The fix:** Always write `override`. If the signature in the base changes, the compiler will tell you.
+
+---
+
+## Exercises
+
+**Exercise 21.1 -- Design an interface**
+
+Design a `ILogger` interface with methods `log_info(std::string)`, `log_warning(std::string)`, `log_error(std::string)`. Then write two implementations: `ConsoleLogger` (prints to cout) and `NullLogger` (does nothing -- useful for disabling logging in tests).
+
+*Answer:*
+```cpp
+class ILogger {
+public:
+    virtual void log_info(const std::string& msg)    = 0;
+    virtual void log_warning(const std::string& msg) = 0;
+    virtual void log_error(const std::string& msg)   = 0;
+    virtual ~ILogger() {}
+};
+
+class ConsoleLogger : public ILogger {
+public:
+    void log_info(const std::string& msg)    override {
+        std::cout << "[INFO]  " << msg << "\n"; }
+    void log_warning(const std::string& msg) override {
+        std::cout << "[WARN]  " << msg << "\n"; }
+    void log_error(const std::string& msg)   override {
+        std::cout << "[ERROR] " << msg << "\n"; }
+};
+
+class NullLogger : public ILogger {
+public:
+    void log_info(const std::string&)    override {}
+    void log_warning(const std::string&) override {}
+    void log_error(const std::string&)   override {}
+};
+
+// Usage: inject the logger as a pointer to interface
+void do_work(ILogger& log) {
+    log.log_info("Starting work");
+    // ...
+    log.log_warning("Something unusual");
+}
+
+ConsoleLogger cl;
+do_work(cl);   // prints
+
+NullLogger nl;
+do_work(nl);   // prints nothing (testing/silent mode)
+```
+
+---
+
+<a name="ch22"></a>
+# Chapter 22: Operator Overloading
+
+## What Operator Overloading Is
+
+C++ lets you define what the built-in operators (`+`, `-`, `==`, `<`, `<<`, `[]`, etc.) do for your own types. This is called **operator overloading**.
+
+Python calls these **dunder methods** (double underscore):
+
+```python
+class Vec2:
+    def __init__(self, x, y): self.x, self.y = x, y
+    def __add__(self, other):  return Vec2(self.x+other.x, self.y+other.y)
+    def __repr__(self):        return f"Vec2({self.x}, {self.y})"
+
+a = Vec2(1, 2)
+b = Vec2(3, 4)
+print(a + b)   # Vec2(4, 6)
+```
+
+```cpp
+struct Vec2 {
+    double x, y;
+
+    Vec2 operator+(const Vec2& other) const {
+        return Vec2{x + other.x, y + other.y};
+    }
+};
+
+// Non-member: output stream operator
+std::ostream& operator<<(std::ostream& os, const Vec2& v) {
+    return os << "Vec2(" << v.x << ", " << v.y << ")";
+}
+
+Vec2 a{1.0, 2.0};
+Vec2 b{3.0, 4.0};
+Vec2 c = a + b;
+std::cout << c << "\n";   // Vec2(4, 6)
+```
+
+---
+
+## Which Operators to Overload
+
+Not all operators make sense for all types. Overload only what has a clear, unsurprising meaning for your type.
+
+```cpp
+struct Vec2 {
+    double x, y;
+
+    // Arithmetic (member: left operand is *this)
+    Vec2 operator+(const Vec2& o) const { return {x+o.x, y+o.y}; }
+    Vec2 operator-(const Vec2& o) const { return {x-o.x, y-o.y}; }
+    Vec2 operator*(double s)      const { return {x*s,   y*s  }; }
+    Vec2 operator-()              const { return {-x,    -y   }; }  // unary minus
+
+    // Compound assignment
+    Vec2& operator+=(const Vec2& o) { x+=o.x; y+=o.y; return *this; }
+    Vec2& operator-=(const Vec2& o) { x-=o.x; y-=o.y; return *this; }
+    Vec2& operator*=(double s)      { x*=s;   y*=s;   return *this; }
+
+    // Comparison (C++20 spaceship operator generates all 6 at once)
+    bool operator==(const Vec2& o) const { return x==o.x && y==o.y; }
+    bool operator!=(const Vec2& o) const { return !(*this == o); }
+
+    // Array subscript
+    double& operator[](int i) {
+        if (i == 0) return x;
+        if (i == 1) return y;
+        throw std::out_of_range{"Vec2 index out of range"};
+    }
+    const double& operator[](int i) const {   // const version
+        if (i == 0) return x;
+        if (i == 1) return y;
+        throw std::out_of_range{"Vec2 index out of range"};
+    }
+};
+
+// Non-member: allows s * v as well as v * s
+Vec2 operator*(double s, const Vec2& v) { return v * s; }
+
+// Non-member: stream output (cannot be member because left operand is ostream)
+std::ostream& operator<<(std::ostream& os, const Vec2& v) {
+    return os << "(" << v.x << ", " << v.y << ")";
+}
+```
+
+Usage:
+
+```cpp
+Vec2 a{1.0, 2.0};
+Vec2 b{3.0, 4.0};
+Vec2 c = a + b;        // (4, 6)
+Vec2 d = 2.0 * a;     // (2, 4)
+Vec2 e = -a;           // (-1, -2)
+a += b;                // a = (4, 6)
+std::cout << c << "\n"; // (4, 6)
+std::cout << c[0] << "\n"; // 4
+```
+
+---
+
+## Member vs Non-Member Operators
+
+Some operators must be members (`=`, `[]`, `()`, `->`). Others should be non-members when the left operand may not be your type.
+
+**Rule of thumb:**
+- If the operator modifies the object (`+=`, `-=`, etc.): **member**
+- If the left operand might not be your type (`<<`, `*`, `+` with mixed types): **non-member**
+- Symmetric binary operators (`+`, `-`, `==`): **non-member** (for symmetry)
+
+For `operator<<` specifically: the left operand is `std::ostream`, which is not your type. You cannot add a member to `std::ostream`. Therefore `operator<<` is always a non-member.
+
+---
+
+## The Spaceship Operator (C++20)
+
+C++20 introduced `operator<=>` (the three-way comparison operator), which generates all six comparison operators at once:
+
+```cpp
+#include <compare>
+
+struct Point {
+    double x, y;
+
+    auto operator<=>(const Point& o) const = default;
+    // Generates: ==, !=, <, <=, >, >= all with memberwise comparison
+};
+
+Point a{1.0, 2.0};
+Point b{1.0, 3.0};
+bool less = (a < b);    // true: a.x == b.x, a.y < b.y
+bool eq   = (a == a);   // true
+```
+
+`= default` tells the compiler to generate memberwise comparison in declaration order. For most value types, this is exactly right.
+
+---
+
+## `operator()` -- Making Objects Callable
+
+```cpp
+struct Adder {
+    int n;
+    Adder(int n) : n{n} {}
+    int operator()(int x) const { return x + n; }
+};
+
+Adder add5{5};
+std::cout << add5(10) << "\n";   // 15
+std::cout << add5(20) << "\n";   // 25
+```
+
+An object with `operator()` is called a **functor** or **function object**. They can store state (unlike raw function pointers) and are the foundation of lambdas (Chapter 30).
+
+---
+
+## Rules and Guidelines for Operator Overloading
+
+```
+DO:
+  Overload only when the semantics are obvious and unsurprising
+  Keep operators consistent with each other (if + is defined, += should be too)
+  Make operators non-throwing when possible
+  Return *this from compound-assignment operators (enables a += b += c)
+
+DON'T:
+  Overload operators for unrelated meanings (e.g., using << for bit-shift on a list)
+  Overload &&, ||, or comma (,) -- they lose short-circuit/sequencing guarantees
+  Make operator+ modify the left operand (it should return a new value)
+  Overload more operators than your type needs
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Returning `*this` by Value Instead of Reference From `+=`
+
+**The bug:**
+```cpp
+Vec2 operator+=(const Vec2& o) {   // returns by value
+    x += o.x; y += o.y;
+    return *this;   // returns a COPY
+}
+(a += b) = c;   // modifies the temporary copy, not a -- probably wrong
+```
+**The fix:** Return `Vec2&` (reference to `*this`): `Vec2& operator+=(const Vec2& o) { ... return *this; }`
+
+### Mistake 2: Missing the Const Overload for `operator[]`
+
+**The bug:**
+```cpp
+double& operator[](int i) { ... }   // only non-const version
+const Vec2 v{1.0, 2.0};
+v[0];   // ERROR: no operator[] for const Vec2
+```
+**The fix:** Provide both `double& operator[](int i)` and `const double& operator[](int i) const`.
+
+---
+
+## Exercises
+
+**Exercise 22.1 -- Complete the vector class**
+
+Add the following to `Vec2`:
+- `length() const` returning `sqrt(x*x + y*y)`
+- `normalized() const` returning a unit vector (length 1.0)
+- `dot(Vec2) const` returning the dot product
+
+*Answer:*
+```cpp
+#include <cmath>
+
+double length() const { return std::sqrt(x*x + y*y); }
+
+Vec2 normalized() const {
+    double len = length();
+    if (len < 1e-12) throw std::runtime_error("Cannot normalize zero vector");
+    return {x/len, y/len};
+}
+
+double dot(const Vec2& o) const { return x*o.x + y*o.y; }
+```
+
+---
+
+**Exercise 22.2 -- Implement a Matrix2x2**
+
+Write a `Mat2` class (2x2 matrix of doubles) with:
+- `operator*` for matrix-matrix multiplication
+- `operator*` for matrix-vector multiplication (using `Vec2`)
+- `operator==`
+
+*Answer:*
+```cpp
+struct Mat2 {
+    double a, b, c, d;  // [a b; c d]
+
+    Mat2 operator*(const Mat2& o) const {
+        return {a*o.a + b*o.c,  a*o.b + b*o.d,
+                c*o.a + d*o.c,  c*o.b + d*o.d};
+    }
+
+    Vec2 operator*(const Vec2& v) const {
+        return {a*v.x + b*v.y, c*v.x + d*v.y};
+    }
+
+    bool operator==(const Mat2& o) const {
+        return a==o.a && b==o.b && c==o.c && d==o.d;
+    }
+};
+```
+
+---
+
+*Part IV is complete. You can now design a full object-oriented C++ system: classes with proper encapsulation, constructors with initializer lists, inheritance hierarchies with virtual dispatch, abstract interfaces, and expressive operator overloading.*
+
+*Part V covers generic programming -- templates and concepts, which let you write type-safe code that works for any type that meets your requirements, with zero runtime overhead. Ask to continue.*
