@@ -9130,3 +9130,1500 @@ std::cout << "min=" << lo << " max=" << hi << "\n";  // min=1 max=9
 *Part V is complete. You now understand C++ generic programming: function and class templates, specialization, variadic templates, concepts for type-safe constraints, and the foundations of template metaprogramming.*
 
 *Part VI covers the C++ Standard Library in depth -- containers, iterators, algorithms, lambdas, ranges, and utility types. These are the tools you will use in every real program. Ask to continue.*
+
+---
+
+# Part VI -- The Standard Library
+
+The C++ Standard Library is not a collection of helper functions bolted on after the fact. It is a carefully designed ecosystem of containers, iterators, algorithms, and utilities that work together through a common interface. Learning to use it well is the difference between writing C++ that feels like C with classes and C++ that is expressive, safe, and fast.
+
+---
+
+<a name="ch27"></a>
+# Chapter 27: Containers: `vector`, `map`, `set`, `array`, and Friends
+
+## The Container Taxonomy
+
+All standard containers fall into three categories:
+
+```
+Sequence containers (ordered by position):
+  std::array<T, N>        fixed-size array, stack-allocated
+  std::vector<T>          dynamic array, heap-allocated
+  std::deque<T>           double-ended queue
+  std::list<T>            doubly-linked list
+  std::forward_list<T>    singly-linked list
+
+Associative containers (ordered by key):
+  std::map<K, V>          sorted key-value pairs, unique keys
+  std::multimap<K, V>     sorted key-value pairs, duplicate keys allowed
+  std::set<K>             sorted unique keys
+  std::multiset<K>        sorted keys, duplicates allowed
+
+Unordered associative containers (hash-based):
+  std::unordered_map<K, V>   hash map, unique keys
+  std::unordered_set<K>      hash set, unique keys
+
+Container adapters (built on other containers):
+  std::stack<T>           LIFO adapter (uses deque by default)
+  std::queue<T>           FIFO adapter (uses deque by default)
+  std::priority_queue<T>  max-heap adapter (uses vector by default)
+```
+
+---
+
+## `std::vector<T>` -- Your Default Container
+
+Already covered in Chapter 10. Here are the parts you need for real programs:
+
+### Reservation and Capacity Management
+
+```cpp
+std::vector<int> v;
+v.reserve(1000);           // pre-allocate space for 1000 elements
+                           // avoids repeated reallocations during push_back
+
+std::cout << v.size()     << "\n";  // 0     (no elements yet)
+std::cout << v.capacity() << "\n";  // 1000  (space reserved)
+
+for (int i = 0; i < 1000; ++i)
+    v.push_back(i);         // no reallocations happen (capacity was reserved)
+
+v.shrink_to_fit();          // release excess capacity to OS
+```
+
+```
+Without reserve (1000 push_backs):
+  Realloc at 1, 2, 4, 8, 16, ... 512 = ~10 reallocations
+  Each realloc: allocate new array, copy all elements, free old array
+  Total element copies: 1+2+4+...+512 ≈ 1000 extra copies
+
+With reserve(1000):
+  Zero reallocations. Zero extra copies.
+```
+
+Reserve when you know an upper bound on the number of elements.
+
+### `emplace_back` vs `push_back`
+
+```cpp
+struct Point { double x, y; Point(double x, double y) : x{x}, y{y} {} };
+
+std::vector<Point> pts;
+
+// push_back: constructs a Point, then copies/moves it into the vector
+pts.push_back(Point{1.0, 2.0});   // construct temporary, then move-construct into vector
+
+// emplace_back: constructs the Point DIRECTLY inside the vector memory
+pts.emplace_back(1.0, 2.0);       // no temporary, arguments forwarded to constructor
+```
+
+`emplace_back` is generally preferred for class types -- it constructs in-place, avoiding the temporary. For types where the move is cheap (most standard types), the difference is minimal. For non-movable types, `emplace_back` is the only option.
+
+---
+
+## `std::deque<T>` -- Fast at Both Ends
+
+Like `vector` but also allows O(1) insertion and removal at the front:
+
+```cpp
+#include <deque>
+std::deque<int> dq = {3, 4, 5};
+dq.push_front(2);    // {2, 3, 4, 5}
+dq.push_front(1);    // {1, 2, 3, 4, 5}
+dq.push_back(6);     // {1, 2, 3, 4, 5, 6}
+dq.pop_front();      // {2, 3, 4, 5, 6}
+```
+
+Use `deque` when you need fast insertion at both ends. Use `vector` otherwise -- `vector`'s cache efficiency is better for sequential access.
+
+---
+
+## `std::map<K, V>` -- Sorted Key-Value Store
+
+```python
+# Python dict -- hash map
+scores = {"Alice": 95, "Bob": 87, "Carol": 92}
+scores["Dave"] = 78
+print(scores["Alice"])  # 95
+```
+
+```cpp
+// C++ map -- sorted by key (balanced BST internally)
+#include <map>
+std::map<std::string, int> scores;
+scores["Alice"] = 95;
+scores["Bob"]   = 87;
+scores["Carol"] = 92;
+scores["Dave"]  = 78;
+
+std::cout << scores["Alice"] << "\n";   // 95
+```
+
+### Key Difference: `std::map` vs Python `dict`
+
+| Feature | Python `dict` | `std::map` | `std::unordered_map` |
+|---------|--------------|-----------|---------------------|
+| Order | Insertion order (3.7+) | Sorted by key | No guaranteed order |
+| Lookup | O(1) average | O(log n) | O(1) average |
+| Key requirement | Hashable | Comparable (`<`) | Hashable |
+| Memory | Compact | BST nodes (pointers) | Hash buckets |
+
+Use `std::map` when you need ordered iteration. Use `std::unordered_map` when you need fast lookups and don't care about order.
+
+### Safe Lookup: `at()` vs `operator[]`
+
+```cpp
+std::map<std::string, int> m = {{"a", 1}, {"b", 2}};
+
+m["c"];        // WARNING: inserts "c" with default value 0 if not present!
+               // m is now {"a":1, "b":2, "c":0}
+
+m.at("d");     // throws std::out_of_range: "d" not in map (no insertion)
+m.at("a");     // 1 -- safe read
+
+// Best: check first
+if (m.count("a")) { std::cout << m.at("a") << "\n"; }
+
+// Or use find:
+auto it = m.find("a");
+if (it != m.end()) {
+    std::cout << it->first << " -> " << it->second << "\n";
+}
+```
+
+The `operator[]` creates missing keys with a default-constructed value. This is a very common source of bugs: you check `map[key]` to see if a key exists, and it silently inserts a zero.
+
+### Iterating Over a Map
+
+```cpp
+std::map<std::string, int> m = {{"Alice", 95}, {"Bob", 87}, {"Carol", 92}};
+
+// Iteration is in sorted key order:
+for (const auto& [key, value] : m) {   // structured binding (C++17)
+    std::cout << key << ": " << value << "\n";
+}
+// Alice: 95
+// Bob: 87
+// Carol: 92
+```
+
+### Inserting and Checking Simultaneously
+
+```cpp
+// insert_or_assign (C++17): always sets the value
+m.insert_or_assign("Dave", 78);   // inserts if new, overwrites if exists
+
+// try_emplace (C++17): inserts only if key is absent, does nothing if present
+m.try_emplace("Alice", 100);      // Alice already exists: nothing happens (still 95)
+m.try_emplace("Eve", 88);         // Eve is new: inserted with 88
+
+// erase:
+m.erase("Bob");
+```
+
+---
+
+## `std::unordered_map<K, V>` -- Hash Map
+
+Same interface as `std::map` but uses hashing for O(1) average lookup:
+
+```cpp
+#include <unordered_map>
+std::unordered_map<std::string, int> umap;
+umap["Alice"] = 95;
+umap["Bob"]   = 87;
+
+// Same interface as map:
+umap.at("Alice");       // 95
+umap.count("Carol");    // 0 -- not present
+auto it = umap.find("Bob");
+
+// But NO guaranteed iteration order:
+for (const auto& [k, v] : umap) { ... }  // order is unpredictable
+```
+
+Use `unordered_map` for most cases where you need key-value lookup. Use `map` when sorted order matters (e.g., printing in alphabetical order, range queries).
+
+---
+
+## `std::set<K>` -- Sorted Unique Keys
+
+```python
+# Python set
+s = {3, 1, 4, 1, 5, 9, 2}
+print(s)  # {1, 2, 3, 4, 5, 9} (unordered)
+```
+
+```cpp
+#include <set>
+std::set<int> s = {3, 1, 4, 1, 5, 9, 2};   // duplicates silently ignored
+// s contains: {1, 2, 3, 4, 5, 9} (sorted, unique)
+
+s.insert(7);             // {1, 2, 3, 4, 5, 7, 9}
+s.erase(4);              // {1, 2, 3, 5, 7, 9}
+s.count(5);              // 1 (present)
+s.count(4);              // 0 (erased)
+
+for (int n : s)
+    std::cout << n << " ";    // 1 2 3 5 7 9 (sorted order)
+```
+
+For hash-based set: `std::unordered_set<K>` -- O(1) lookup, no order.
+
+---
+
+## Choosing the Right Container
+
+```
+I need to store N items and access by position:
+  - Size known at compile time: std::array<T, N>
+  - Size varies at runtime:     std::vector<T>
+  - Need fast front insertion:  std::deque<T>
+
+I need key-value lookup:
+  - Order matters / sorted iteration: std::map<K, V>
+  - Maximum speed, order irrelevant:  std::unordered_map<K, V>
+
+I need to track unique items:
+  - Order matters:               std::set<K>
+  - Maximum speed, no order:     std::unordered_set<K>
+
+I need LIFO (stack) behavior:   std::stack<T>
+I need FIFO (queue) behavior:   std::queue<T>
+I need the max element always:  std::priority_queue<T>
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `map[key]` to Check Existence
+
+**The bug:**
+```cpp
+std::map<std::string, int> m = {{"a", 1}};
+if (m["b"]) { ... }   // inserts "b" with value 0! "b" is now in the map.
+```
+**The fix:** `if (m.count("b"))` or `if (m.find("b") != m.end())`
+
+### Mistake 2: Invalidating Iterators by Modifying the Container
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (auto it = v.begin(); it != v.end(); ++it) {
+    if (*it == 3) v.erase(it);  // erase invalidates 'it' and all iterators after it!
+}
+```
+**The fix:**
+```cpp
+v.erase(std::remove(v.begin(), v.end(), 3), v.end()); // erase-remove idiom
+```
+
+### Mistake 3: Linear Search on an Unsorted `vector` When a `set` Would Be O(log n)
+
+If you are repeatedly calling `std::find` on a `vector`, consider whether `std::set` or `std::unordered_set` would serve better.
+
+---
+
+## Exercises
+
+**Exercise 27.1 -- Word frequency count**
+
+Read a list of words and count how many times each word appears. Print words and counts in alphabetical order.
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, int> freq;
+    std::string word;
+    while (std::cin >> word) {
+        ++freq[word];    // OK to use [] here: we WANT insertion with 0 if new
+    }
+    for (const auto& [w, count] : freq) {
+        std::cout << w << ": " << count << "\n";
+    }
+}
+```
+
+---
+
+**Exercise 27.2 -- Reverse a deque**
+
+Push the integers 1 through 10 into a `std::deque`, then repeatedly pop from the front to print them in reverse order (10 down to 1). Do not use `std::reverse`.
+
+*Answer:*
+```cpp
+std::deque<int> dq;
+for (int i = 1; i <= 10; ++i) dq.push_front(i);
+// dq is now: 10 9 8 7 6 5 4 3 2 1
+
+while (!dq.empty()) {
+    std::cout << dq.front() << " ";
+    dq.pop_front();
+}   // prints: 10 9 8 7 6 5 4 3 2 1
+```
+
+---
+
+**Exercise 27.3 -- Unique elements**
+
+Given `std::vector<int> v = {5,3,1,4,2,3,5,1,4}`, produce a sorted vector of unique elements without writing a sort+unique manually.
+
+*Answer:*
+```cpp
+std::vector<int> v = {5,3,1,4,2,3,5,1,4};
+std::set<int> s(v.begin(), v.end());         // set removes duplicates, sorts
+std::vector<int> unique(s.begin(), s.end()); // back to vector: {1,2,3,4,5}
+```
+
+---
+
+<a name="ch28"></a>
+# Chapter 28: Iterators
+
+## What Is an Iterator?
+
+An iterator is an object that points into a container and can be advanced. It generalizes the concept of a pointer -- in fact, raw pointers are valid iterators for arrays.
+
+```python
+# Python iteration: the iterator protocol (hidden from you)
+it = iter([1, 2, 3])
+next(it)   # 1
+next(it)   # 2
+next(it)   # 3
+```
+
+```cpp
+// C++ iterators: explicit objects you manipulate
+std::vector<int> v = {1, 2, 3};
+auto it = v.begin();   // iterator to first element
+std::cout << *it << "\n";  // 1   -- dereference like a pointer
+++it;
+std::cout << *it << "\n";  // 2
+++it;
+std::cout << *it << "\n";  // 3
+++it;
+// it == v.end() -- one past the last element (do not dereference!)
+```
+
+`v.begin()` returns an iterator to the first element.
+`v.end()` returns an iterator to one-past-the-last element.
+
+The half-open range `[begin, end)` is a C++ convention. `end` itself is never valid to dereference -- it is a sentinel.
+
+---
+
+## Iterator Categories
+
+Different containers support different iterator capabilities:
+
+```
+Input iterator:    read once, advance once (e.g., reading from a file stream)
+Output iterator:   write once, advance once
+Forward iterator:  read/write, advance forward, multi-pass
+Bidirectional:     forward + go backward (std::list, std::map)
+Random access:     any position in O(1) (std::vector, std::array, raw array)
+Contiguous:        random access + elements are contiguous in memory (std::vector, std::array)
+```
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+auto it = v.begin();
+
+it + 2;          // random access: jump forward by 2
+it[2];           // random access: subscript
+*(it + 2);       // 3
+it += 3;         // advance by 3
+
+std::list<int> l = {1, 2, 3};
+auto lit = l.begin();
+++lit;           // forward
+--lit;           // backward (bidirectional)
+// lit + 2;     // ERROR: list iterators are not random access
+```
+
+The algorithm functions in `<algorithm>` work on any appropriate iterator category. `std::sort` requires random-access iterators (works on `vector`, not `list`). `std::find` requires only forward iterators (works on both).
+
+---
+
+## The Iterator-Pair Pattern
+
+The standard library uses iterator pairs to describe ranges:
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// Operate on a subrange:
+std::sort(v.begin() + 2, v.begin() + 7);   // sort only elements [2, 7)
+// v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10} (already sorted, but you could sort reversed subrange)
+
+// Find in a subrange:
+auto it = std::find(v.begin(), v.begin() + 5, 3);   // search only first 5 elements
+```
+
+This is both powerful (you can describe any contiguous subrange) and error-prone (easy to get the boundaries wrong).
+
+---
+
+## `begin` / `end` Free Functions
+
+C++11 added free function versions that work on arrays too:
+
+```cpp
+int arr[5] = {5, 3, 1, 4, 2};
+std::sort(std::begin(arr), std::end(arr));   // sorts the C-array!
+
+std::vector<int> v = {5, 3, 1};
+std::sort(std::begin(v), std::end(v));       // same syntax
+```
+
+`std::begin(arr)` returns a pointer to `arr[0]`. `std::end(arr)` returns a pointer past the last element. Raw pointers are valid random-access iterators.
+
+---
+
+## Reverse Iterators
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// Iterate backward:
+for (auto it = v.rbegin(); it != v.rend(); ++it) {
+    std::cout << *it << " ";   // 5 4 3 2 1
+}
+
+// rbegin() = reverse iterator to last element
+// rend()   = reverse iterator to one-before-first (sentinel)
+// ++ on a reverse iterator goes backward
+```
+
+---
+
+## Insert Iterators
+
+Output iterators that insert into a container instead of overwriting:
+
+```cpp
+#include <iterator>
+std::vector<int> src = {1, 2, 3};
+std::vector<int> dst;
+
+// back_inserter: calls push_back on each write
+std::copy(src.begin(), src.end(), std::back_inserter(dst));
+// dst = {1, 2, 3}
+
+// front_inserter: calls push_front (only for deque, list)
+std::deque<int> dq;
+std::copy(src.begin(), src.end(), std::front_inserter(dq));
+// dq = {3, 2, 1}  (each is pushed to front)
+```
+
+---
+
+## Stream Iterators
+
+Treat input/output streams as iterators:
+
+```cpp
+#include <iterator>
+#include <fstream>
+#include <algorithm>
+
+// Read all ints from stdin into a vector:
+std::vector<int> v(
+    std::istream_iterator<int>{std::cin},   // begin: reads ints from stdin
+    std::istream_iterator<int>{}            // end: default-constructed = EOF
+);
+
+// Write a vector to stdout with spaces:
+std::copy(v.begin(), v.end(),
+          std::ostream_iterator<int>{std::cout, " "});
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Dereferencing `end()`
+
+**The bug:**
+```cpp
+auto it = v.end();
+std::cout << *it;   // undefined behavior -- end() is one past the last element
+```
+**The fix:** Always check `it != v.end()` before dereferencing.
+
+### Mistake 2: Iterator Invalidation
+
+When you modify a container, its iterators may become invalid:
+
+```cpp
+std::vector<int> v = {1, 2, 3};
+auto it = v.begin();
+v.push_back(4);       // may reallocate! it is now dangling
+std::cout << *it;     // undefined behavior
+```
+
+**Rules:**
+- `vector`: any operation that changes size may invalidate ALL iterators
+- `map`/`set`: erasing a node invalidates ONLY that node's iterator; other iterators remain valid
+- `list`: inserting never invalidates iterators; erasing only invalidates the erased node
+
+---
+
+## Exercises
+
+**Exercise 28.1 -- Manual iteration**
+
+Without using a range-based for loop, iterate over `std::vector<int> v = {10, 20, 30, 40, 50}` using begin/end iterators and print each element.
+
+*Answer:*
+```cpp
+for (auto it = v.begin(); it != v.end(); ++it) {
+    std::cout << *it << "\n";
+}
+```
+
+---
+
+**Exercise 28.2 -- Count with iterators**
+
+Use `std::count` (takes `begin`, `end`, `value`) to count how many times 3 appears in `std::vector<int> v = {1,3,2,3,4,3,5}`.
+
+*Answer:*
+```cpp
+int c = std::count(v.begin(), v.end(), 3);  // 3
+```
+
+---
+
+<a name="ch29"></a>
+# Chapter 29: Algorithms: `sort`, `find`, `transform`, and the Rest
+
+## Why Algorithms
+
+The standard library provides ~100 generic algorithms in `<algorithm>` and `<numeric>`. They work on any container via iterators, are highly optimized, and eliminate common hand-written loop bugs.
+
+```python
+# Python: built-in functions and list methods
+nums = [3, 1, 4, 1, 5, 9, 2]
+nums.sort()
+filtered = [x for x in nums if x > 3]
+doubled  = [x * 2 for x in nums]
+total    = sum(nums)
+```
+
+```cpp
+// C++: algorithms from <algorithm> and <numeric>
+#include <algorithm>
+#include <numeric>
+
+std::vector<int> nums = {3, 1, 4, 1, 5, 9, 2};
+
+std::sort(nums.begin(), nums.end());
+
+std::vector<int> filtered;
+std::copy_if(nums.begin(), nums.end(),
+             std::back_inserter(filtered),
+             [](int x) { return x > 3; });   // lambda as predicate
+
+std::vector<int> doubled(nums.size());
+std::transform(nums.begin(), nums.end(), doubled.begin(),
+               [](int x) { return x * 2; });
+
+int total = std::accumulate(nums.begin(), nums.end(), 0);
+```
+
+---
+
+## The Most Useful Algorithms
+
+### Searching
+
+```cpp
+std::vector<int> v = {1, 5, 2, 8, 3};
+
+// Find first element equal to 8:
+auto it = std::find(v.begin(), v.end(), 8);
+if (it != v.end()) std::cout << "Found at index " << (it - v.begin()) << "\n";
+
+// Find first element satisfying a predicate:
+auto it2 = std::find_if(v.begin(), v.end(), [](int x){ return x > 6; });
+// *it2 == 8
+
+// Check if any/all/none satisfy a predicate:
+bool any  = std::any_of(v.begin(), v.end(),  [](int x){ return x > 7; }); // true
+bool all  = std::all_of(v.begin(), v.end(),  [](int x){ return x > 0; }); // true
+bool none = std::none_of(v.begin(), v.end(), [](int x){ return x > 10;});  // true
+
+// Count elements satisfying predicate:
+int count = std::count_if(v.begin(), v.end(), [](int x){ return x % 2 == 0; }); // 1 (just 2)
+
+// Binary search (requires sorted range):
+std::vector<int> s = {1, 2, 3, 4, 5};
+bool found = std::binary_search(s.begin(), s.end(), 3);  // true
+```
+
+### Sorting and Ordering
+
+```cpp
+std::vector<int> v = {3, 1, 4, 1, 5, 9};
+
+// Sort ascending (default):
+std::sort(v.begin(), v.end());
+
+// Sort descending (custom comparator):
+std::sort(v.begin(), v.end(), std::greater<int>{});
+
+// Sort with lambda comparator:
+std::vector<std::string> words = {"banana", "apple", "cherry"};
+std::sort(words.begin(), words.end(),
+          [](const std::string& a, const std::string& b) {
+              return a.size() < b.size();   // sort by length
+          });
+// {"apple", "banana", "cherry"} (apple=5, banana=6, cherry=6)
+
+// Stable sort: preserves relative order of equal elements
+std::stable_sort(v.begin(), v.end());
+
+// Partial sort: get smallest 3 elements in sorted order
+std::partial_sort(v.begin(), v.begin() + 3, v.end());
+
+// nth_element: guarantees v[n] is what would be there if sorted
+// All elements before v[n] are ≤ v[n]; all after are ≥ v[n]
+std::nth_element(v.begin(), v.begin() + 3, v.end());
+```
+
+### Transforming
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+std::vector<int> result(v.size());
+
+// Apply function to each element, write to result:
+std::transform(v.begin(), v.end(), result.begin(),
+               [](int x){ return x * x; });
+// result = {1, 4, 9, 16, 25}
+
+// transform with two input ranges:
+std::vector<int> a = {1, 2, 3};
+std::vector<int> b = {10, 20, 30};
+std::vector<int> c(3);
+std::transform(a.begin(), a.end(), b.begin(), c.begin(),
+               [](int x, int y){ return x + y; });
+// c = {11, 22, 33}
+
+// Replace elements:
+std::replace(v.begin(), v.end(), 3, 99);    // replace all 3s with 99
+std::replace_if(v.begin(), v.end(),
+                [](int x){ return x > 3; },  // predicate
+                0);                           // replacement
+
+// Fill:
+std::fill(v.begin(), v.end(), 42);           // fill all with 42
+std::iota(v.begin(), v.end(), 1);            // fill with 1,2,3,4,5 (in <numeric>)
+```
+
+### The Erase-Remove Idiom
+
+Standard containers do not have a built-in "remove matching elements" operation. The pattern is:
+
+```cpp
+std::vector<int> v = {1, 2, 3, 2, 4, 2, 5};
+
+// std::remove moves non-matching elements to the front, returns new end:
+auto new_end = std::remove(v.begin(), v.end(), 2);
+// v = {1, 3, 4, 5, ?, ?, ?}   <- unspecified values after new_end
+// new_end points to the first '?'
+
+// Erase the "removed" elements:
+v.erase(new_end, v.end());
+// v = {1, 3, 4, 5}
+
+// C++20: std::erase / std::erase_if (cleaner):
+std::erase(v, 2);                                // remove all 2s
+std::erase_if(v, [](int x){ return x % 2 == 0; }); // remove all evens
+```
+
+### Numeric Algorithms (`<numeric>`)
+
+```cpp
+#include <numeric>
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// Sum: accumulate with + (init=0)
+int sum = std::accumulate(v.begin(), v.end(), 0);    // 15
+
+// Product: accumulate with *
+int product = std::accumulate(v.begin(), v.end(), 1,
+                              std::multiplies<int>{}); // 120
+
+// Prefix sums: {1, 3, 6, 10, 15}
+std::vector<int> prefix(5);
+std::partial_sum(v.begin(), v.end(), prefix.begin());
+
+// Inner product (dot product):
+std::vector<int> w = {2, 3, 4, 5, 6};
+int dot = std::inner_product(v.begin(), v.end(), w.begin(), 0);
+// 1*2 + 2*3 + 3*4 + 4*5 + 5*6 = 2+6+12+20+30 = 70
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting That `std::remove` Does Not Actually Remove
+
+**The bug:**
+```cpp
+std::remove(v.begin(), v.end(), 3);  // returns new_end, but v is unchanged in size
+std::cout << v.size();  // still original size -- elements not actually removed
+```
+**The fix:** Always pair with `.erase()`: `v.erase(std::remove(...), v.end());`
+
+### Mistake 2: Sorting Before a Linear Search (Mismatch of Algorithm)
+
+If you only search once, linear `std::find` (O(n)) is fine. If you search many times, sort first and use `std::binary_search` or a `set`. Sorting and then linear-searching every time is O(n log n + n) when you could do O(log n) per search after a one-time sort.
+
+---
+
+## Exercises
+
+**Exercise 29.1 -- Pipeline**
+
+Given `std::vector<int> v = {5, 3, 8, 1, 9, 2, 7, 4, 6}`:
+1. Sort it
+2. Remove all even numbers (use erase-remove or C++20 `std::erase_if`)
+3. Print the result
+
+*Answer:*
+```cpp
+std::sort(v.begin(), v.end());
+std::erase_if(v, [](int x){ return x % 2 == 0; });
+for (int n : v) std::cout << n << " ";   // 1 3 5 7 9
+```
+
+---
+
+**Exercise 29.2 -- Transform and accumulate**
+
+Given a vector of prices (doubles), apply a 10% discount to each, then compute the total.
+
+*Answer:*
+```cpp
+std::vector<double> prices = {10.0, 25.0, 8.5, 42.0};
+
+std::transform(prices.begin(), prices.end(), prices.begin(),
+               [](double p){ return p * 0.9; });
+
+double total = std::accumulate(prices.begin(), prices.end(), 0.0);
+std::cout << "Total after discount: " << total << "\n";  // 76.95
+```
+
+---
+
+<a name="ch30"></a>
+# Chapter 30: Lambdas and Function Objects
+
+## What Is a Lambda?
+
+A lambda is an anonymous function defined inline at the point of use. In Python they are limited to single expressions; in C++ they are full functions.
+
+```python
+# Python lambda (expression only)
+square = lambda x: x * x
+nums = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x*x, nums))
+```
+
+```cpp
+// C++ lambda (full function, multiple statements allowed)
+auto square = [](int x) { return x * x; };
+std::vector<int> nums = {1, 2, 3, 4, 5};
+std::transform(nums.begin(), nums.end(), nums.begin(),
+               [](int x) { return x * x; });
+```
+
+---
+
+## Lambda Syntax
+
+```
+[capture](parameters) -> return_type { body }
+
+  [capture]     -- what variables from the enclosing scope are accessible
+  (parameters)  -- function parameters (can be omitted if none)
+  -> return_type -- optional: compiler deduces it if omitted
+  { body }      -- function body (any C++ code)
+```
+
+Examples:
+
+```cpp
+auto greet = []() { std::cout << "Hello!\n"; };       // no capture, no params
+auto add   = [](int a, int b) { return a + b; };      // two params, deduced return
+auto mul   = [](int a, int b) -> int { return a*b; }; // explicit return type
+
+greet();          // "Hello!"
+add(3, 4);        // 7
+mul(3, 4);        // 12
+```
+
+---
+
+## Captures: Accessing the Enclosing Scope
+
+The capture clause controls which variables from the surrounding scope are accessible inside the lambda:
+
+```cpp
+int x = 10;
+int y = 20;
+
+// Capture by value (copy):
+auto f1 = [x]() { return x + 1; };   // x is copied into the lambda
+x = 99;
+f1();    // 11 -- uses the COPY made at capture time, not current x
+
+// Capture by reference:
+auto f2 = [&x]() { return x + 1; };
+x = 99;
+f2();    // 100 -- uses the CURRENT x (reference)
+
+// Capture all by value:
+auto f3 = [=]() { return x + y; };   // copies all used local variables
+
+// Capture all by reference:
+auto f4 = [&]() { return x + y; };   // references all used local variables
+
+// Mix: capture x by value, everything else by reference:
+auto f5 = [x, &]() { return x + y; };
+
+// Capture and modify (mutable lambda):
+int count = 0;
+auto counter = [count]() mutable { return ++count; };
+// 'mutable' allows modifying the captured copy
+counter();  // 1
+counter();  // 2
+// count is still 0 in the enclosing scope (captured by value)
+```
+
+---
+
+## Lambda Memory Model
+
+A lambda is syntactic sugar for a **function object** (a struct with `operator()`):
+
+```cpp
+int threshold = 5;
+auto above = [threshold](int x) { return x > threshold; };
+
+// The compiler generates something like:
+struct Lambda {
+    int threshold;  // captured variables become data members
+    Lambda(int t) : threshold{t} {}
+    bool operator()(int x) const { return x > threshold; }
+};
+Lambda above{threshold};  // lambda = instance of this struct
+above(3);   // false
+above(7);   // true
+```
+
+This means lambdas are not magic -- they are just convenient syntax for creating small, local function objects.
+
+---
+
+## Generic Lambdas (C++14)
+
+```cpp
+// 'auto' in parameters makes the lambda a template:
+auto square = [](auto x) { return x * x; };
+
+square(3);      // int: 9
+square(3.14);   // double: 9.8596
+square(3.0f);   // float
+```
+
+The compiler generates a different instantiation for each argument type. This is equivalent to a template `operator()`.
+
+---
+
+## Storing Lambdas: `std::function`
+
+`std::function<return_type(param_types)>` can store any callable -- lambda, function pointer, functor:
+
+```cpp
+#include <functional>
+
+// Store different callables in the same variable:
+std::function<int(int, int)> op;
+
+op = [](int a, int b) { return a + b; };
+op(3, 4);   // 7
+
+op = [](int a, int b) { return a * b; };
+op(3, 4);   // 12
+
+// Store in a vector of callbacks:
+std::vector<std::function<void()>> callbacks;
+callbacks.push_back([]{ std::cout << "first\n"; });
+callbacks.push_back([]{ std::cout << "second\n"; });
+for (auto& cb : callbacks) cb();
+```
+
+**Caveat:** `std::function` has overhead (type erasure, heap allocation for large lambdas). For performance-critical code, prefer `auto` or template parameters when the callable type is known.
+
+---
+
+## Immediately Invoked Lambdas
+
+```cpp
+// Call the lambda right away (useful for complex initialization):
+const int value = []() {
+    int result = 0;
+    for (int i = 1; i <= 100; ++i) result += i;
+    return result;
+}();   // <-- immediately invoked
+
+// value == 5050, computed at runtime (or at compile time if constexpr)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Capturing a Local Variable by Reference After It Goes Out of Scope
+
+**The bug:**
+```cpp
+std::function<int()> make_counter() {
+    int count = 0;
+    return [&count]() { return ++count; };   // DANGER: count is a local variable
+}   // count is destroyed here
+auto counter = make_counter();
+counter();   // undefined behavior: accesses destroyed 'count'
+```
+**The fix:** Capture by value `[count]` with `mutable`, or use a `shared_ptr<int>`:
+```cpp
+return [count]() mutable { return ++count; };  // captures a copy -- safe
+```
+
+### Mistake 2: `[=]` Capturing `this` by Value
+
+**The bug:**
+```cpp
+class Foo {
+    int x = 10;
+    auto make_lambda() {
+        return [=]() { return x; };   // captures 'this' by pointer, not x by value!
+        // 'x' inside a member function means 'this->x'
+        // [=] captures 'this' by value (the pointer), not the object
+    }
+};
+```
+**The fix:** In C++17+, use `[*this]` to capture the entire object by value, or `[x = this->x]` to capture the specific member.
+
+---
+
+## Exercises
+
+**Exercise 30.1 -- Sort with lambda**
+
+Sort `std::vector<std::string> words` by length (shortest first). Break ties alphabetically.
+
+*Answer:*
+```cpp
+std::sort(words.begin(), words.end(),
+    [](const std::string& a, const std::string& b) {
+        if (a.size() != b.size()) return a.size() < b.size();
+        return a < b;  // alphabetical for same length
+    });
+```
+
+---
+
+**Exercise 30.2 -- Closure counter**
+
+Write a function `make_counter(int start)` that returns a lambda. Each call to the lambda returns the next integer, starting from `start`.
+
+*Answer:*
+```cpp
+auto make_counter(int start) {
+    return [n = start]() mutable { return n++; };
+}
+
+auto c = make_counter(5);
+c();  // 5
+c();  // 6
+c();  // 7
+```
+
+---
+
+<a name="ch31"></a>
+# Chapter 31: Ranges and Views (C++20)
+
+## The Problem With Iterator Pairs
+
+The traditional algorithm interface requires two iterators:
+
+```cpp
+std::sort(v.begin(), v.end());
+std::find(v.begin(), v.end(), 3);
+```
+
+This is verbose and error-prone (mismatched iterators from different containers). You also cannot compose operations cleanly:
+
+```cpp
+// Sort, then filter, then transform -- with traditional algorithms:
+std::sort(v.begin(), v.end());
+std::vector<int> filtered;
+std::copy_if(v.begin(), v.end(), std::back_inserter(filtered),
+             [](int x){ return x % 2 == 0; });
+std::transform(filtered.begin(), filtered.end(), filtered.begin(),
+               [](int x){ return x * x; });
+// Each step creates a new vector -- three allocations
+```
+
+---
+
+## Ranges: The C++20 Solution
+
+C++20 introduces `std::ranges`, which lets algorithms take entire containers directly, and `std::views`, which provides lazy composable transformations:
+
+```cpp
+#include <ranges>
+#include <algorithm>
+
+std::vector<int> v = {5, 3, 1, 4, 2};
+
+// Algorithms take the whole range:
+std::ranges::sort(v);                             // {1, 2, 3, 4, 5}
+auto it = std::ranges::find(v, 3);               // finds 3
+bool any = std::ranges::any_of(v, [](int x){ return x > 4; });  // true
+```
+
+No more `v.begin(), v.end()`. The algorithm accepts the container directly.
+
+---
+
+## Views: Lazy, Composable Transformations
+
+A **view** is a lightweight, lazy adapter over a range. It does not copy data -- it creates a "window" that transforms elements on demand:
+
+```python
+# Python generators: lazy transformations
+nums = range(1, 11)
+evens = (x for x in nums if x % 2 == 0)
+squared = (x*x for x in evens)
+# Nothing computed yet -- all lazy
+list(squared)  # [4, 16, 36, 64, 100] -- computed here
+```
+
+```cpp
+// C++20 views: lazy transformations
+#include <ranges>
+
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// Compose views with | (pipe operator):
+auto result = v
+    | std::views::filter([](int x){ return x % 2 == 0; })   // keep evens
+    | std::views::transform([](int x){ return x * x; });     // square them
+
+for (int n : result) {
+    std::cout << n << " ";   // 4 16 36 64 100
+}
+// Nothing computed until the loop iterates! Zero intermediate vectors.
+```
+
+The `|` operator chains views. Each view wraps the previous one lazily. When you iterate, each element is pulled through the chain one at a time -- no intermediate allocations.
+
+---
+
+## Common Views
+
+```cpp
+namespace sv = std::views;  // shorthand
+
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// filter: keep elements satisfying predicate
+auto evens = v | sv::filter([](int x){ return x%2 == 0; });
+
+// transform: apply function to each element
+auto doubled = v | sv::transform([](int x){ return x * 2; });
+
+// take: first N elements
+auto first3 = v | sv::take(3);         // {1, 2, 3}
+
+// drop: skip first N elements
+auto last3  = v | sv::drop(2);         // {3, 4, 5}
+
+// reverse: iterate backward
+auto rev    = v | sv::reverse;          // {5, 4, 3, 2, 1}
+
+// iota: generate integers
+auto nums   = sv::iota(1, 6);          // {1, 2, 3, 4, 5} (no vector needed)
+
+// zip (C++23): iterate two ranges together
+auto zipped = sv::zip(v, std::vector{10,20,30,40,50});
+for (auto [a, b] : zipped)
+    std::cout << a << "+" << b << " ";  // 1+10 2+20 3+30 4+40 5+50
+```
+
+---
+
+## Materializing a View
+
+Since views are lazy, they produce values on demand. To get a concrete container, iterate into one:
+
+```cpp
+auto result_view = v
+    | sv::filter([](int x){ return x > 2; })
+    | sv::transform([](int x){ return x * 10; });
+
+// Materialize into a vector:
+std::vector<int> result(result_view.begin(), result_view.end());
+// or in C++23:
+std::vector<int> result2 = result_view | std::ranges::to<std::vector>();
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Storing a View to a Destroyed Container
+
+**The bug:**
+```cpp
+auto get_view() {
+    std::vector<int> v = {1, 2, 3};
+    return v | std::views::filter([](int x){ return x > 1; });
+}  // v is destroyed here!
+
+auto view = get_view();
+for (int n : view) { ... }  // undefined behavior: iterating view over dead vector
+```
+**The fix:** Views are non-owning. The source must outlive the view. Materialize to a vector if you need to return data.
+
+---
+
+## Exercises
+
+**Exercise 31.1 -- Views pipeline**
+
+Using `std::views`, create a pipeline that: takes `{1..20}`, keeps multiples of 3, squares them, and takes the first 4 results. Print them.
+
+*Answer:*
+```cpp
+auto result = std::views::iota(1, 21)
+    | std::views::filter([](int x){ return x % 3 == 0; })
+    | std::views::transform([](int x){ return x * x; })
+    | std::views::take(4);
+
+for (int n : result) std::cout << n << " ";
+// multiples of 3: 3,6,9,12,... -> squared: 9,36,81,144 -> first 4: 9 36 81 144
+```
+
+---
+
+<a name="ch32"></a>
+# Chapter 32: Utility Types: `optional`, `variant`, `any`, `tuple`
+
+## `std::optional<T>` -- A Value That May Not Exist
+
+`optional<T>` holds either a `T` or nothing. It replaces the pattern of using a sentinel value (`-1`, `nullptr`, `""`) to mean "no value."
+
+```python
+# Python: None means "no value"
+def find_user(id: int) -> dict | None:
+    if id in db: return db[id]
+    return None
+
+user = find_user(42)
+if user is not None:
+    print(user["name"])
+```
+
+```cpp
+// C++: std::optional
+#include <optional>
+
+std::optional<std::string> find_user(int id) {
+    if (id == 42) return std::string{"Alice"};
+    return std::nullopt;    // no value
+}
+
+auto user = find_user(42);
+if (user) {                         // bool conversion: true if has value
+    std::cout << *user << "\n";     // dereference like a pointer
+    std::cout << user.value() << "\n"; // or .value() (throws if empty)
+}
+
+// With default:
+std::string name = find_user(99).value_or("Unknown");  // "Unknown"
+```
+
+Use `optional` instead of:
+- Sentinel values (`-1` for "not found")
+- `bool` out-parameter pairs
+- Pointers just to express "maybe no value"
+
+---
+
+## `std::variant<Types...>` -- Type-Safe Union
+
+`variant` holds exactly one value from a set of possible types. It is like a tagged union -- you always know which type is currently stored.
+
+```python
+# Python: dynamic typing handles this naturally
+result = 42          # could be int
+result = "error"     # or str
+result = 3.14        # or float
+```
+
+```cpp
+// C++: variant -- exactly one of the listed types
+#include <variant>
+
+std::variant<int, std::string, double> v;
+
+v = 42;
+v = "hello";    // now holds string
+v = 3.14;       // now holds double
+
+// Check which type:
+if (std::holds_alternative<double>(v)) {
+    std::cout << "double: " << std::get<double>(v) << "\n";
+}
+
+// Visit: apply a callable to whatever is stored
+std::visit([](auto& val) {
+    std::cout << val << "\n";  // works for all types (generic lambda)
+}, v);
+
+// Pattern matching with overloaded visitor:
+struct Visitor {
+    void operator()(int i)          { std::cout << "int: " << i << "\n"; }
+    void operator()(const std::string& s) { std::cout << "str: " << s << "\n"; }
+    void operator()(double d)       { std::cout << "dbl: " << d << "\n"; }
+};
+
+std::visit(Visitor{}, v);
+```
+
+### Practical Use: Error Handling
+
+```cpp
+// Return either a value or an error message:
+std::variant<int, std::string> parse_int(const std::string& s) {
+    try {
+        return std::stoi(s);           // success: return int
+    } catch (...) {
+        return std::string{"parse error: "} + s;  // failure: return error
+    }
+}
+
+auto result = parse_int("42");
+if (auto val = std::get_if<int>(&result)) {
+    std::cout << "Parsed: " << *val << "\n";
+} else {
+    std::cout << "Error: " << std::get<std::string>(result) << "\n";
+}
+```
+
+---
+
+## `std::any` -- Type-Erased Storage
+
+`std::any` can hold a value of any copyable type. Unlike `variant`, the type is not fixed at compile time:
+
+```cpp
+#include <any>
+
+std::any a = 42;
+a = std::string{"hello"};
+a = 3.14;
+
+// Access requires knowing the type:
+std::cout << std::any_cast<double>(a) << "\n";    // 3.14
+std::any_cast<int>(a);   // throws std::bad_any_cast: stored type is double
+
+// Safe version:
+if (double* p = std::any_cast<double>(&a)) {
+    std::cout << *p << "\n";    // 3.14
+}
+```
+
+Use `any` when the type is genuinely unknown at compile time (plugin systems, scripting interfaces). Prefer `variant` when the set of possible types is known.
+
+---
+
+## `std::tuple` Revisited: Structured Bindings and Helpers
+
+```cpp
+// Creating tuples:
+auto t = std::make_tuple(42, 3.14, std::string{"hi"});
+
+// Access:
+auto& [n, d, s] = t;    // structured binding (C++17)
+std::get<0>(t);          // 42
+
+// std::tie: bind tuple elements to existing variables
+int x; double y; std::string z;
+std::tie(x, y, z) = t;
+
+// Return multiple values from a function:
+std::tuple<int, int> div_rem(int a, int b) {
+    return {a/b, a%b};
+}
+auto [quotient, remainder] = div_rem(17, 5);
+std::cout << quotient << " r " << remainder << "\n";  // 3 r 2
+```
+
+---
+
+## `std::pair<A, B>` -- Two Values
+
+`pair` is `tuple` with exactly two elements, more readable names:
+
+```cpp
+std::pair<int, std::string> p{42, "hello"};
+std::cout << p.first << " " << p.second << "\n";
+
+auto [num, str] = p;    // structured binding
+
+// Common with maps:
+for (const auto& [key, val] : my_map) {
+    std::cout << key << " -> " << val << "\n";
+}
+```
+
+---
+
+## Choosing the Right Utility Type
+
+```
+A value that might not exist:
+  std::optional<T>       -- simple, clear, fast
+
+A value that is one of several known types:
+  std::variant<A,B,C>    -- type-safe, visit with pattern matching
+
+A value of unknown type (runtime):
+  std::any               -- flexible, slower, use sparingly
+
+Multiple values of known types, fixed number:
+  std::tuple<A,B,C>      -- heterogeneous, structured bindings make it clean
+
+Two values:
+  std::pair<A,B>         -- when two is the right number
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Accessing Empty `optional`
+
+**The bug:**
+```cpp
+std::optional<int> opt;
+std::cout << *opt;        // undefined behavior -- opt has no value
+std::cout << opt.value(); // throws std::bad_optional_access
+```
+**The fix:** Check `if (opt)` or use `opt.value_or(default)`.
+
+### Mistake 2: `std::get` with Wrong Type on `variant`
+
+**The bug:**
+```cpp
+std::variant<int, std::string> v = 42;
+std::get<std::string>(v);   // throws std::bad_variant_access
+```
+**The fix:** Use `std::holds_alternative<T>(v)` to check, or `std::get_if<T>(&v)` which returns nullptr on mismatch.
+
+---
+
+## Exercises
+
+**Exercise 32.1 -- Safe division**
+
+Write `safe_divide(int a, int b)` returning `std::optional<double>`. Return `std::nullopt` if `b == 0`.
+
+*Answer:*
+```cpp
+std::optional<double> safe_divide(int a, int b) {
+    if (b == 0) return std::nullopt;
+    return static_cast<double>(a) / b;
+}
+
+auto r = safe_divide(10, 3);
+std::cout << r.value_or(0.0) << "\n";   // 3.333...
+
+auto r2 = safe_divide(10, 0);
+std::cout << r2.value_or(0.0) << "\n";  // 0.0
+```
+
+---
+
+**Exercise 32.2 -- Shape variant**
+
+Use `std::variant<Circle, Rectangle, Triangle>` (define these as simple structs with an `area()` method) and `std::visit` to compute and print the area of each shape in a vector.
+
+*Answer:*
+```cpp
+struct Circle    { double r;    double area() const { return 3.14159*r*r; } };
+struct Rectangle { double w, h; double area() const { return w*h; } };
+struct Triangle  { double b, h; double area() const { return 0.5*b*h; } };
+
+using Shape = std::variant<Circle, Rectangle, Triangle>;
+
+std::vector<Shape> shapes = {
+    Circle{5.0},
+    Rectangle{3.0, 4.0},
+    Triangle{6.0, 8.0}
+};
+
+for (const auto& shape : shapes) {
+    double area = std::visit([](const auto& s){ return s.area(); }, shape);
+    std::cout << "Area: " << area << "\n";
+}
+// Area: 78.5398
+// Area: 12
+// Area: 24
+```
+
+---
+
+**Exercise 32.3 -- Multiple return values**
+
+Write `parse_date(std::string)` that parses "YYYY-MM-DD" and returns a `std::tuple<int, int, int>` (year, month, day). Use structured bindings to unpack it.
+
+*Answer:*
+```cpp
+#include <tuple>
+#include <string>
+
+std::tuple<int,int,int> parse_date(const std::string& s) {
+    // Format: "YYYY-MM-DD"
+    int y = std::stoi(s.substr(0, 4));
+    int m = std::stoi(s.substr(5, 2));
+    int d = std::stoi(s.substr(8, 2));
+    return {y, m, d};
+}
+
+auto [year, month, day] = parse_date("2026-06-28");
+std::cout << year << "/" << month << "/" << day << "\n";  // 2026/6/28
+```
+
+---
+
+*Part VI is complete. You now know the standard library well enough to write real programs: choosing the right container for each job, using iterators correctly, composing algorithms and lambdas, building lazy data pipelines with ranges and views, and using the utility types that make C++ code expressive without sacrificing performance.*
+
+*Part VII covers modern C++ language features added since C++11 -- `auto`, `constexpr`, `std::format`, coroutines, and modules. Ask to continue.*
