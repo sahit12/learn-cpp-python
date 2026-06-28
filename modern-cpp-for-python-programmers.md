@@ -2874,3 +2874,2009 @@ double power(double base, int exponent = 2) {
 *Part I is complete. You now have the foundations: the compilation model, types and memory, operators, control flow, and functions.*
 
 *Part II begins with the concepts that most distinguish C++ from Python: references, pointers, the stack vs the heap, and const correctness. These are where C++ becomes its own language. Ask to continue.*
+
+---
+
+# Part II -- Core C++ (the part that is not like Python)
+
+The next six chapters cover the concepts that have no real equivalent in Python. Python hides all of this behind its object model and garbage collector. C++ exposes it -- and once you understand it, you understand why both languages make the choices they do.
+
+---
+
+<a name="ch6"></a>
+# Chapter 6: References -- Aliases for Variables
+
+## The Problem References Solve
+
+At the end of Chapter 5 you saw that passing a variable to a function copies it. That is usually fine for `int` and `double`. It is expensive for large objects and sometimes flat-out wrong when you need the function to modify the original.
+
+```cpp
+// Costs nothing to copy:
+void print_count(int n) { std::cout << n << "\n"; }
+
+// Copying a 50,000-byte buffer is painful:
+void compress(HugeBuffer data) { ... }    // copies 50,000 bytes on every call
+
+// Needs to modify the original -- copy is useless:
+void swap(int a, int b) {
+    int tmp = a;
+    a = b;          // modifies the copy, not main's variables
+    b = tmp;
+}
+int x = 10, y = 20;
+swap(x, y);
+// x is still 10, y is still 20 -- nothing swapped
+```
+
+References solve all three problems.
+
+---
+
+## What Is a Reference?
+
+A reference is an **alias** -- another name for an existing variable. It is not a copy. It is not a pointer (though it is implemented as one). It is a second name that refers to the exact same memory location.
+
+```cpp
+int x = 42;
+int& ref = x;    // ref is a reference to x. & after the type = reference.
+
+std::cout << x   << "\n";   // 42
+std::cout << ref << "\n";   // 42 -- same memory, same value
+
+ref = 100;       // modifying ref modifies x (they ARE the same thing)
+std::cout << x   << "\n";   // 100
+std::cout << ref << "\n";   // 100
+```
+
+Memory picture:
+
+```
+Before: ref = x declared
+
+  Address   Name     Value
+  0x1000    x        42
+             \
+              +-- ref is another name for this same location
+              |   No new memory is allocated for ref itself.
+              |   (The compiler may use a pointer internally,
+              |    but you never see it.)
+```
+
+Rules for references:
+1. A reference **must** be initialized when declared. `int& r;` is a compile error.
+2. A reference **cannot be reseated** -- once bound to a variable, it refers to that variable for its entire life.
+3. After initialization, using `ref` is exactly like using the original variable.
+
+```cpp
+int a = 1, b = 2;
+int& r = a;     // r refers to a
+r = b;          // this does NOT make r refer to b
+                // it assigns b's value (2) TO a via r
+std::cout << a; // 2
+// r still refers to a, not b
+```
+
+---
+
+## Pass by Reference
+
+To let a function modify its argument, pass it by reference:
+
+```cpp
+void swap(int& a, int& b) {    // & in parameter = reference parameter
+    int tmp = a;
+    a = b;
+    b = tmp;
+}
+
+int x = 10, y = 20;
+swap(x, y);
+std::cout << x << " " << y;   // 20 10 -- actually swapped
+```
+
+Inside `swap`, `a` IS `x` and `b` IS `y`. They share the same memory.
+
+```
+main's frame:           swap's frame:
++---------------+       +------------------+
+| x = 10        | <---> | a (reference)    |  a and x ARE the same memory
+| y = 20        | <---> | b (reference)    |  b and y ARE the same memory
++---------------+       +------------------+
+                              |
+                        a = 20, b = 10 executed
+                              |
++---------------+
+| x = 20        |   x changed through a
+| y = 10        |   y changed through b
++---------------+
+```
+
+Contrast with pass-by-value from Chapter 5:
+
+```cpp
+void swap_broken(int a, int b) {  // no &, copies made
+    int tmp = a; a = b; b = tmp;  // swaps the copies only
+}
+swap_broken(x, y);   // x and y unchanged
+```
+
+---
+
+## Pass by `const` Reference
+
+When you want to avoid copying a large object but do NOT need to modify it, use `const&`:
+
+```cpp
+// BAD: copies the entire string (potentially many bytes)
+void print_name(std::string name) {
+    std::cout << name << "\n";
+}
+
+// GOOD: no copy, but cannot modify (const ensures this)
+void print_name(const std::string& name) {
+    std::cout << name << "\n";
+    // name = "Bob";  // COMPILE ERROR -- const reference, cannot assign
+}
+```
+
+`const std::string& name` means:
+- `&` -- reference (no copy)
+- `const` -- cannot be modified through this reference
+
+The caller's string is not copied. The function gets direct read-only access to the original. This is the most common parameter style for anything larger than a few bytes.
+
+### The Decision Table for Parameter Style
+
+```
+Parameter type          When to use
+---------------------   -----------------------------------------
+int x                   Small types (int, double, bool, char, pointer)
+                        that are cheap to copy and you don't need to modify.
+
+int& x                  Small or large type that the function MUST modify.
+                        (signals to the caller: "I will change your variable")
+
+const std::string& x    Large type (string, vector, struct) that you only
+                        need to read, not modify. No copy. Fastest.
+
+std::string& x          Large type that the function must modify.
+                        (rare -- usually return a new value instead)
+```
+
+---
+
+## References Cannot Be Null
+
+Unlike pointers (next chapter), a reference is guaranteed to refer to a valid object. You cannot have a "null reference" in well-formed C++.
+
+```cpp
+int& bad_ref = *nullptr;   // undefined behavior -- DO NOT DO THIS
+                           // dereferencing null pointer gives "reference to nothing"
+```
+
+If validity is uncertain at the time of binding, use a pointer instead. References are for when you know the object exists.
+
+---
+
+## Returning References
+
+A function can return a reference to give the caller direct access to something inside the function... but only if that thing outlives the function call.
+
+```cpp
+// CORRECT: returning a reference to a member of an object that outlives the call
+int& get_element(std::vector<int>& v, int index) {
+    return v[index];   // v exists outside this function; safe
+}
+
+std::vector<int> nums = {10, 20, 30};
+get_element(nums, 1) = 99;    // assigns through the returned reference
+// nums is now {10, 99, 30}
+```
+
+```cpp
+// WRONG: returning a reference to a local variable
+int& bad() {
+    int x = 5;
+    return x;    // x is destroyed when bad() returns -- dangling reference!
+}
+int& r = bad();   // r refers to memory that no longer exists
+r = 10;           // undefined behavior -- corrupts memory
+```
+
+The compiler often warns about this:
+
+```
+warning: reference to local variable 'x' returned [-Wreturn-local-addr]
+    7 |     return x;
+      |            ^
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Expecting pass-by-reference from a non-reference parameter
+
+**The bug:**
+```cpp
+void double_it(int n) { n *= 2; }   // n is a copy
+int x = 5;
+double_it(x);
+std::cout << x;   // 5, not 10
+```
+**The fix:** `void double_it(int& n) { n *= 2; }`
+
+### Mistake 2: Forgetting `const` on read-only reference parameters
+
+**The bug:**
+```cpp
+void print_sum(std::string& s) {   // non-const reference
+    std::cout << s << "\n";
+}
+print_sum("hello");   // COMPILE ERROR: cannot bind non-const reference to rvalue
+```
+**Why it fails:** Temporary values (like string literals) cannot bind to non-const references because the compiler cannot take their address in a meaningful way.
+**The fix:** `void print_sum(const std::string& s)`
+
+### Mistake 3: Returning a reference to a local variable
+
+**The bug:** As shown above -- the local variable is destroyed on return, leaving a dangling reference.
+**The fix:** Only return references to objects that outlive the function (parameters, class members, statics).
+
+---
+
+## Exercises
+
+**Exercise 6.1 -- Trace the output**
+
+```cpp
+void increment(int& x) { ++x; }
+
+int a = 5;
+int& b = a;
+increment(b);
+std::cout << a << " " << b;
+```
+
+*Answer:* `6 6`. `b` is a reference to `a`, so they are the same variable. `increment(b)` increments `a` (via `b` via the parameter `x`). Both names show the new value.
+
+---
+
+**Exercise 6.2 -- Fix the swap**
+
+```cpp
+void swap(double a, double b) {
+    double tmp = a;
+    a = b;
+    b = tmp;
+}
+double x = 1.5, y = 2.5;
+swap(x, y);
+// x and y are unchanged -- fix swap so they actually swap
+```
+
+*Answer:*
+```cpp
+void swap(double& a, double& b) {
+    double tmp = a;
+    a = b;
+    b = tmp;
+}
+```
+
+---
+
+**Exercise 6.3 -- const& parameter**
+
+Write a function `print_stats(const std::vector<int>& v)` that prints the size, first element, and last element of a vector. It should not copy the vector.
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <vector>
+
+void print_stats(const std::vector<int>& v) {
+    std::cout << "Size:  " << v.size()        << "\n";
+    std::cout << "First: " << v.front()       << "\n";
+    std::cout << "Last:  " << v.back()        << "\n";
+}
+
+int main() {
+    std::vector<int> nums = {10, 20, 30, 40, 50};
+    print_stats(nums);   // no copy of nums made
+}
+```
+
+---
+
+<a name="ch7"></a>
+# Chapter 7: Pointers and Memory Addresses
+
+## The Address of a Variable
+
+Every variable lives at a specific location in memory -- a numbered address. On a 64-bit system, addresses are 64-bit numbers, usually displayed in hexadecimal.
+
+```cpp
+int x = 42;
+std::cout << &x << "\n";   // prints something like: 0x7ffee4b3c5ac
+```
+
+The `&` operator (when used in an expression, not a declaration) is the **address-of** operator. It gives you the memory address where a variable lives.
+
+```
+Variable x:
+
+Address    Value
+0x7fff10   [00][00][00][2A]   <- &x is 0x7fff10; *(&x) is 42
+```
+
+A **pointer** is a variable that stores an address. The `*` in the type means "pointer to":
+
+```cpp
+int  x   = 42;      // x is an int
+int* p   = &x;      // p is a pointer to int, stores x's address
+
+std::cout << p    << "\n";   // 0x7fff10  -- the address (the pointer value)
+std::cout << *p   << "\n";   // 42        -- the value at that address (dereference)
+std::cout << &p   << "\n";   // 0x7fff08  -- address of the pointer itself
+```
+
+The `*` when used with an existing pointer is the **dereference** operator -- it follows the address to get the value stored there.
+
+```
+Memory picture:
+
+Address    Variable    Value
+0x7fff10   x (int)     42
+0x7fff08   p (int*)    0x7fff10   <- p stores x's address
+
+p is the address 0x7fff10.
+*p follows that address and gives 42.
+```
+
+---
+
+## Modifying Through a Pointer
+
+```cpp
+int x = 42;
+int* p = &x;
+
+*p = 100;   // write 100 to the memory location p points to
+            // same as: x = 100
+
+std::cout << x;    // 100
+std::cout << *p;   // 100
+```
+
+This is the lower-level version of references. Pointers and references both allow indirect modification, but:
+
+| | Reference | Pointer |
+|--|-----------|---------|
+| Syntax | `int& r = x` | `int* p = &x` |
+| Must be initialized | Yes | No (but you should) |
+| Can be null | No | Yes (`nullptr`) |
+| Can be reseated | No | Yes |
+| Dereference syntax | just use `r` | `*p` |
+| When to use | Aliases, function parameters | Optional relationships, arrays, dynamic memory |
+
+---
+
+## `nullptr`: The Null Pointer
+
+A pointer that points to nothing is called a null pointer. Always use `nullptr` (C++11), never `NULL` (old C macro) or `0`:
+
+```cpp
+int* p = nullptr;   // p points to nothing
+
+if (p != nullptr) {
+    std::cout << *p;    // safe -- only dereference if not null
+}
+
+// Dereferencing a null pointer is undefined behavior (usually a crash):
+int* q = nullptr;
+std::cout << *q;   // CRASH -- segmentation fault
+```
+
+```
+Null pointer:
+
+Address    Variable    Value
+0x7fff08   p (int*)    0x0000000000000000   <- nullptr (address zero)
+
+Dereferencing: *p means "go to address 0 and read from there"
+OS protects address 0 -- your program gets SIGSEGV (segfault)
+```
+
+Always check pointers before dereferencing if they might be null.
+
+---
+
+## Pointer Arithmetic
+
+Pointers support arithmetic that advances by the size of the pointed-to type:
+
+```cpp
+int arr[5] = {10, 20, 30, 40, 50};
+int* p = arr;     // p points to arr[0]
+
+std::cout << *p       << "\n";   // 10
+std::cout << *(p + 1) << "\n";   // 20  (moves 4 bytes forward, one int)
+std::cout << *(p + 2) << "\n";   // 30
+
+p++;              // p now points to arr[1]
+std::cout << *p   << "\n";       // 20
+```
+
+```
+Memory (each int is 4 bytes):
+
+Address    Value
+0x1000     10   <- arr[0], p points here initially
+0x1004     20   <- arr[1], p+1 points here
+0x1008     30   <- arr[2]
+0x100C     40   <- arr[3]
+0x1010     50   <- arr[4]
+```
+
+`p + 1` moves by `sizeof(int) = 4` bytes, landing on the next integer. This is why arrays are contiguous in memory -- pointer arithmetic only works correctly because of that contiguity.
+
+---
+
+## Pointers vs Python References
+
+In Python, every variable is a reference (pointer) to an object. Python programmers are already using pointers -- they just don't see the mechanics.
+
+```python
+# Python: all "variables" are pointers
+a = [1, 2, 3]
+b = a          # b and a point to the SAME list
+b.append(4)
+print(a)       # [1, 2, 3, 4] -- a was affected through b
+
+# Python explicitly shows this with id():
+print(id(a) == id(b))   # True -- same memory address
+```
+
+```cpp
+// C++: copying by default, pointer explicitly
+std::vector<int> a = {1, 2, 3};
+std::vector<int> b = a;          // b is a COPY -- different memory
+b.push_back(4);
+std::cout << a.size();            // 3 -- a is unaffected
+
+std::vector<int>* p = &a;        // p points to a
+p->push_back(4);                 // modifies a through the pointer
+std::cout << a.size();            // 4
+```
+
+In Python, `b = a` for a list makes two labels for one object. In C++, `b = a` copies everything. To share, you explicitly use a pointer or reference.
+
+---
+
+## The `->` Operator
+
+When you have a pointer to an object and want to access its members, `->` is shorthand for `(*p).member`:
+
+```cpp
+struct Point {
+    double x, y;
+};
+
+Point pt{3.0, 4.0};
+Point* p = &pt;
+
+std::cout << (*p).x << "\n";   // 3.0  -- dereference then member access
+std::cout << p->x   << "\n";   // 3.0  -- same thing, cleaner syntax
+p->x = 10.0;                   // modifies pt.x through the pointer
+```
+
+`->` is the idiomatic way to access members through a pointer. You will see it constantly in C++ code.
+
+---
+
+## `const` and Pointers
+
+There are two things that can be `const` with a pointer: the pointer itself (where it points) and the value it points to.
+
+```cpp
+int a = 1, b = 2;
+
+// Pointer to const int: cannot change the pointed-to value
+const int* p1 = &a;
+*p1 = 10;    // ERROR: *p1 is const
+p1  = &b;    // OK: p1 itself can be changed (points to b now)
+
+// Const pointer to int: cannot change where it points
+int* const p2 = &a;
+*p2  = 10;   // OK: the int it points to can be changed
+p2   = &b;   // ERROR: p2 is const (cannot reseat)
+
+// Const pointer to const int: cannot change either
+const int* const p3 = &a;
+*p3  = 10;   // ERROR
+p3   = &b;   // ERROR
+
+// Memory trick: read the type right-to-left
+// const int*       --> pointer to const int
+// int* const       --> const pointer to int
+// const int* const --> const pointer to const int
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Dereferencing a Null or Uninitialized Pointer
+
+**The bug:**
+```cpp
+int* p;        // uninitialized -- contains garbage address
+*p = 5;        // writes to garbage address -- undefined behavior
+```
+
+**The symptom:** Immediate crash (segfault), or silent memory corruption that crashes later.
+
+**The fix:** Always initialize pointers: `int* p = nullptr;` or `int* p = &some_variable;`
+
+---
+
+### Mistake 2: Using a Pointer After the Pointed-To Variable is Destroyed
+
+**The bug:**
+```cpp
+int* get_ptr() {
+    int local = 42;
+    return &local;   // local is destroyed when function returns
+}
+int* p = get_ptr();  // p now points to freed stack memory
+std::cout << *p;     // undefined behavior -- dangling pointer
+```
+
+**The fix:** Never return a pointer to a local variable. Return the value, or make the variable `static`, or allocate on the heap (Chapter 8).
+
+---
+
+### Mistake 3: Confusing `&` as Address-Of vs `&` as Reference Type
+
+**The confusion:**
+```cpp
+int x = 5;
+int& r = x;      // & in declaration = reference type
+int* p = &x;     // & in expression  = address-of operator
+```
+
+The position matters: `&` after a type in a declaration means "reference." `&` before a variable in an expression means "take the address of."
+
+---
+
+## Exercises
+
+**Exercise 7.1 -- Trace the pointer**
+
+```cpp
+int a = 10, b = 20;
+int* p = &a;
+*p = 30;
+p = &b;
+*p += 5;
+std::cout << a << " " << b;
+```
+
+*Answer:* `30 25`. Step by step: `*p = 30` sets `a` to 30. `p = &b` makes `p` point to `b`. `*p += 5` adds 5 to `b` (20 + 5 = 25).
+
+---
+
+**Exercise 7.2 -- Pointer parameter**
+
+Rewrite `double_it` to take a pointer parameter instead of a reference:
+
+```cpp
+void double_it(int* p) {
+    *p *= 2;
+}
+int x = 7;
+double_it(&x);    // must pass address explicitly
+std::cout << x;   // 14
+```
+
+Which style (reference or pointer) is more idiomatic in modern C++ for this use case? Why?
+
+*Answer:* Reference is more idiomatic. It is simpler (`double_it(x)` vs `double_it(&x)`), cannot be null, and cannot be reseated. Pointers are used when nullability or reseating is needed.
+
+---
+
+**Exercise 7.3 -- const correctness with pointers**
+
+Declare a pointer `p` to `double` such that:
+- The value at `p` cannot be changed through `p`
+- `p` itself can be pointed at a different `double`
+
+Then declare `q` such that:
+- `q` is fixed to always point to the same `double`
+- The value at `q` CAN be changed through `q`
+
+*Answer:*
+```cpp
+double a = 1.0, b = 2.0;
+const double* p = &a;   // ptr to const double
+p = &b;                 // OK -- p can be reseated
+// *p = 5.0;           // ERROR -- cannot modify through p
+
+double* const q = &a;   // const pointer to double
+*q = 5.0;               // OK -- can modify value
+// q = &b;             // ERROR -- cannot reseat q
+```
+
+---
+
+<a name="ch8"></a>
+# Chapter 8: The Stack and the Heap
+
+## Two Regions of Memory
+
+Every running program has two main regions where variables can live:
+
+```
++------------------------------------------+
+|  Stack                                   |
+|  - Fast (just moves a pointer)           |
+|  - Automatic (compiler manages lifetime) |
+|  - Limited size (~1-8 MB)               |
+|  - Local variables, function parameters  |
++------------------------------------------+
+|  (other memory: code, globals...)        |
++------------------------------------------+
+|  Heap                                    |
+|  - Slower (OS/allocator involved)        |
+|  - Manual (YOU manage lifetime in C++)   |
+|  - Huge (limited by RAM)                |
+|  - Dynamic allocation: new, malloc       |
++------------------------------------------+
+```
+
+Python hides this entirely -- all objects live on the heap, managed by the garbage collector. C++ exposes both regions and lets you choose where memory comes from.
+
+---
+
+## The Stack in Detail
+
+The stack is a LIFO (Last In, First Out) structure. Local variables and function parameters live here.
+
+```cpp
+void bar() {
+    int z = 30;
+    // z lives on the stack while bar() is running
+}
+
+void foo() {
+    int y = 20;
+    bar();     // bar's frame pushed on top of foo's
+    // z is gone (bar's frame popped); y is back on top
+}
+
+int main() {
+    int x = 10;
+    foo();
+    // y is gone; x is still here
+}
+```
+
+```
+Call stack during bar():
+
+High addresses  +-------------------+
+                | main's frame      |
+                |   x = 10          |
+                +-------------------+
+                | foo's frame       |
+                |   y = 20          |
+                +-------------------+
+                | bar's frame       |
+                |   z = 30          |
+Low addresses   +-------------------+   <- stack pointer (SP) is here
+
+After bar() returns:
+                +-------------------+
+                | main's frame      |
+                |   x = 10          |
+                +-------------------+
+                | foo's frame       |
+                |   y = 20          |
+                +-------------------+
+                (bar's memory freed -- SP moved up)
+```
+
+Allocating stack memory is nearly free: the CPU just decrements the stack pointer register by the number of bytes needed. Freeing stack memory is also free: the CPU increments the stack pointer back.
+
+**Stack overflow:** If you allocate too much on the stack (e.g., declaring a 10MB array locally, or infinitely deep recursion), the stack runs into other memory and the OS kills your program.
+
+```cpp
+// Stack overflow example:
+void recurse() { recurse(); }   // infinite recursion
+recurse();   // segfault when stack space exhausted
+
+// Stack overflow with large local array:
+void dangerous() {
+    int huge[2000000];   // ~8 MB on the stack -- likely crashes
+}
+```
+
+---
+
+## The Heap in Detail
+
+The heap is a large pool of memory managed by the OS and your allocator. You request chunks with `new` and release them with `delete`.
+
+```cpp
+int* p = new int{42};      // allocates 4 bytes on the heap; p stores the address
+std::cout << *p << "\n";   // 42
+delete p;                  // releases the 4 bytes back to the allocator
+p = nullptr;               // good practice: prevents accidental reuse
+```
+
+```
+After `int* p = new int{42}`:
+
+Stack:                         Heap:
++-------------------+          +-------------------+
+| p = 0x555f2a1b10  | -------> | 42                | (4 bytes)
++-------------------+          +-------------------+
+
+After `delete p`:
+
+Stack:                         Heap:
++-------------------+          (memory returned to heap pool)
+| p = 0x555f2a1b10  | ---X-->  (no longer valid to access)
++-------------------+
+
+After `p = nullptr`:
++-------------------+
+| p = 0x0           |          (safe -- cannot accidentally dereference)
++-------------------+
+```
+
+### Heap Arrays
+
+```cpp
+int n = 1000;
+int* arr = new int[n]{};      // allocate n ints on the heap, zero-initialized
+arr[0] = 10;
+arr[n-1] = 99;
+
+delete[] arr;   // MUST use delete[] for arrays (not delete)
+arr = nullptr;
+```
+
+The size does not need to be a compile-time constant -- you can compute it at runtime. This is the main use case for heap allocation.
+
+---
+
+## Why Python Uses the Heap for Everything
+
+Python allocates every object on the heap and uses reference counting to track when objects can be freed. This is why Python is flexible but slower:
+
+```python
+x = [1, 2, 3]   # list allocated on heap
+y = x            # y is another reference to the same heap object
+                 # reference count goes from 1 to 2
+del x            # reference count goes from 2 to 1 -- NOT freed
+del y            # reference count goes from 1 to 0 -- freed!
+```
+
+C++ gives you the choice:
+- Stack: fast, automatic, size known at compile time
+- Heap: flexible, manual (or smart pointers), any size
+
+```cpp
+// Stack -- automatic lifetime, fast
+std::vector<int> v = {1, 2, 3};   // v is on the stack
+// vector's CONTENTS are on the heap (internally), but you don't manage that
+// v is automatically destroyed when it goes out of scope
+
+// Heap -- manual lifetime (rare in modern C++ -- use smart pointers instead)
+std::vector<int>* vp = new std::vector<int>{1, 2, 3};
+delete vp;   // you must remember to do this
+```
+
+---
+
+## Memory Leaks
+
+A memory leak is heap memory that was allocated but never freed. In C++, the OS reclaims all memory when the process exits, so short-lived programs don't suffer from leaks permanently. But long-running programs (servers, games) slowly consume more and more memory until they crash or the machine runs out.
+
+```cpp
+void leaky() {
+    int* p = new int{42};   // allocates heap memory
+    // forgot: delete p;
+    // function returns -- p (the pointer) is gone
+    // the heap memory at p's address is still allocated, now unreachable
+}
+
+for (int i = 0; i < 1000000; ++i)
+    leaky();   // leaks 4 bytes per call = 4 MB leaked
+```
+
+**Detection:** Run with `valgrind ./program` or compile with `-fsanitize=address`:
+
+```
+==12345== LEAK SUMMARY:
+==12345==    definitely lost: 4 bytes in 1 blocks
+==12345==    at 0x4C2FB0F: operator new(unsigned long) (vg_replace_malloc.c:334)
+==12345==    by 0x10868B: leaky() (example.cpp:2)
+```
+
+The real fix is to never use raw `new`/`delete`. Use `std::vector`, `std::string`, and smart pointers (Chapter 14), which manage heap memory automatically through RAII.
+
+---
+
+## Stack vs Heap: Which to Use
+
+```
+Use the stack (local variables) when:
+  - Size is known at compile time
+  - Lifetime matches the current scope
+  - Performance is critical (tight loops, small structures)
+  Examples: int, double, small structs, std::array<int, 10>
+
+Use the heap (via containers or smart pointers) when:
+  - Size is determined at runtime (user input, file content)
+  - Lifetime must extend beyond the creating function
+  - Data is very large (millions of elements)
+  Examples: std::vector, std::string, objects stored in maps
+
+In modern C++:
+  - You almost never write new/delete directly
+  - std::vector and std::string manage their heap memory internally
+  - smart pointers (unique_ptr, shared_ptr) handle ownership automatically
+  - Raw new/delete is a code smell in modern C++
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `delete` Instead of `delete[]` for Arrays
+
+**The bug:**
+```cpp
+int* arr = new int[100];
+delete arr;    // undefined behavior! Should be delete[]
+```
+**The symptom:** Memory corruption or crash -- the allocator uses the wrong size to free.
+**The fix:** `delete[] arr;`
+
+### Mistake 2: Double Delete
+
+**The bug:**
+```cpp
+int* p = new int{5};
+delete p;
+delete p;   // undefined behavior -- freeing already-freed memory
+```
+**The symptom:** Crash or silent heap corruption.
+**The fix:** Set pointer to `nullptr` after deleting. Deleting `nullptr` is a no-op.
+
+### Mistake 3: Using After Delete (Use-After-Free)
+
+**The bug:**
+```cpp
+int* p = new int{5};
+delete p;
+std::cout << *p;   // reads freed memory -- undefined behavior
+```
+**Detection:** `-fsanitize=address` reports "heap-use-after-free" with a stack trace.
+
+---
+
+## Exercises
+
+**Exercise 8.1 -- Where does it live?**
+
+For each variable, say whether it lives on the stack or heap:
+
+```cpp
+int a = 5;
+int* b = new int{10};
+std::string s = "hello";
+std::vector<int> v = {1, 2, 3};
+```
+
+*Answer:*
+- `a`: stack
+- `b`: stack (the pointer). The `int` it points to: heap.
+- `s`: stack (the `std::string` object itself). The character data it manages: heap (internally).
+- `v`: stack (the `std::vector` object). The `int` elements it manages: heap (internally).
+
+---
+
+**Exercise 8.2 -- Spot the leak**
+
+How many memory leaks does this code have?
+
+```cpp
+void process() {
+    int* a = new int{1};
+    int* b = new int{2};
+    if (*a > 0) return;   // early return!
+    delete a;
+    delete b;
+}
+```
+
+*Answer:* Two leaks when `*a > 0` (which is always true here, since `a = 1`). The early `return` bypasses both `delete` calls. This is exactly why RAII (Chapter 12) and smart pointers (Chapter 14) exist -- they clean up even when exceptions or early returns happen.
+
+---
+
+**Exercise 8.3 -- Heap array**
+
+Allocate an array of 5 doubles on the heap, set them to `1.1, 2.2, 3.3, 4.4, 5.5`, print them, then free the memory correctly.
+
+*Answer:*
+```cpp
+double* arr = new double[5]{1.1, 2.2, 3.3, 4.4, 5.5};
+for (int i = 0; i < 5; ++i)
+    std::cout << arr[i] << "\n";
+delete[] arr;
+arr = nullptr;
+```
+
+---
+
+<a name="ch9"></a>
+# Chapter 9: `const` Correctness
+
+## Why `const` Matters
+
+`const` is not just a safety net for your own mistakes. It is a contract: you tell the compiler "this value will not change," and the compiler enforces that contract everywhere the value is used. This contract propagates through the codebase, letting the compiler catch bugs at compile time that would otherwise be silent data corruption at runtime.
+
+In Python, there is no `const`. You use naming conventions (ALL_CAPS) to signal "don't change this," but nothing enforces it. C++'s `const` is enforced.
+
+---
+
+## `const` Variables
+
+```cpp
+const int MAX_PLAYERS = 8;
+MAX_PLAYERS = 10;   // COMPILE ERROR: assignment of read-only variable
+```
+
+The compiler rejects any assignment to `MAX_PLAYERS` after initialization. Every future reader of the code knows with certainty: this value never changes.
+
+```cpp
+const double PI = 3.14159265358979;
+const std::string GREETING = "Hello";
+```
+
+Prefer `const` for anything that does not need to change. It is documentation that is enforced.
+
+---
+
+## `const` Function Parameters
+
+A `const` parameter promises not to modify the argument:
+
+```cpp
+void print_length(const std::string& s) {
+    std::cout << s.size() << "\n";
+    s = "modified";   // COMPILE ERROR -- s is const reference
+}
+```
+
+This is important for `const&` parameters: you can pass temporaries (rvalues) to them:
+
+```cpp
+void print_length(const std::string& s) { ... }
+
+print_length("hello");            // OK: string literal binds to const&
+print_length(std::string{"hi"});  // OK: temporary binds to const&
+
+void modify(std::string& s) { ... }
+modify("hello");            // ERROR: non-const reference cannot bind to temporary
+```
+
+---
+
+## `const` Member Functions
+
+When you write a class, member functions that do not modify the object's state should be marked `const`. This is the `const` at the end of the function signature:
+
+```cpp
+class Rectangle {
+public:
+    Rectangle(double w, double h) : width{w}, height{h} {}
+
+    double area() const {        // const: does not modify this object
+        return width * height;
+    }
+
+    void scale(double factor) {  // non-const: modifies this object
+        width  *= factor;
+        height *= factor;
+    }
+
+private:
+    double width, height;
+};
+
+const Rectangle r{3.0, 4.0};
+std::cout << r.area();    // OK -- area() is const, usable on const objects
+r.scale(2.0);             // ERROR -- scale() is non-const, not usable on const objects
+```
+
+The `const` after the parameter list means: "this function can be called on `const` objects, and it promises not to modify the object."
+
+Rules:
+- On a `const` object, only `const` member functions can be called
+- A non-`const` object can call both `const` and non-`const` member functions
+- Inside a `const` member function, you cannot assign to member variables
+
+```cpp
+double area() const {
+    width = 0;    // COMPILE ERROR -- modifying member in const function
+    return width * height;
+}
+```
+
+---
+
+## `constexpr` -- Compile-Time Constants
+
+`constexpr` goes further than `const` -- the value must be computable at compile time:
+
+```cpp
+constexpr int BOARD_SIZE = 8;
+constexpr double TAX_RATE = 0.085;
+constexpr int CELLS = BOARD_SIZE * BOARD_SIZE;   // 64, computed at compile time
+
+// constexpr functions:
+constexpr int factorial(int n) {
+    return n <= 1 ? 1 : n * factorial(n - 1);
+}
+
+constexpr int FACT_10 = factorial(10);   // 3628800, computed at compile time
+// The result is embedded in the binary as a constant -- zero runtime cost
+```
+
+```cpp
+// Cannot be constexpr if value comes from runtime:
+int n;
+std::cin >> n;
+constexpr int x = n;   // ERROR: n is not a compile-time constant
+const int y = n;       // OK: const, but runtime value
+```
+
+`constexpr` is useful for:
+- Mathematical constants (`PI`, `E`, conversion factors)
+- Array sizes (`int grid[BOARD_SIZE][BOARD_SIZE];` -- array size must be compile-time)
+- Lookup tables computed at compile time
+- Performance: zero-cost named constants
+
+---
+
+## Cascading `const`
+
+`const` propagates: once you have a `const` object, everything you do with it must also be `const`.
+
+```cpp
+std::vector<int> v1 = {1, 2, 3};
+const std::vector<int> v2 = {4, 5, 6};
+
+v1.push_back(4);     // OK -- v1 is not const
+v2.push_back(7);     // ERROR -- v2 is const; push_back is non-const
+
+int x = v1[0];       // OK
+int y = v2[0];       // OK -- operator[] has a const overload (returns const ref)
+v2[0] = 99;          // ERROR -- v2[0] returns const int&, cannot assign
+```
+
+When you pass by `const&`, you can only call `const` member functions on the object. The compiler checks the entire call chain.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Omitting `const` on Member Functions That Should Be `const`
+
+**The bug:**
+```cpp
+class Circle {
+    double radius;
+public:
+    double area() {   // forgot const
+        return 3.14159 * radius * radius;
+    }
+};
+
+const Circle c{5.0};
+c.area();   // ERROR: 'this' argument discards qualifiers (area is non-const)
+```
+**The fix:** `double area() const { ... }` -- add `const` after the parameter list.
+
+### Mistake 2: Trying to Modify Through a `const` Reference
+
+**The bug:**
+```cpp
+void process(const std::string& s) {
+    s += " world";   // ERROR: s is const, cannot modify
+}
+```
+**The fix:** Take by value (`std::string s`) if you need a modifiable copy, or by non-const reference (`std::string& s`) if you intend to modify the original.
+
+---
+
+## Exercises
+
+**Exercise 9.1 -- Mark const correctly**
+
+Which of these should be `const` members?
+
+```cpp
+class Counter {
+    int count = 0;
+public:
+    void increment()       { ++count; }
+    int  get_count()       { return count; }
+    void reset()           { count = 0; }
+    bool is_zero()         { return count == 0; }
+};
+```
+
+*Answer:* `get_count()` and `is_zero()` should be `const` -- they read but do not modify `count`. `increment()` and `reset()` modify `count`, so they cannot be `const`.
+
+```cpp
+void increment()        { ++count; }
+int  get_count() const  { return count; }
+void reset()            { count = 0; }
+bool is_zero()   const  { return count == 0; }
+```
+
+---
+
+**Exercise 9.2 -- constexpr table**
+
+Write a `constexpr` function `celsius_to_fahrenheit(double c)` and use it to create a compile-time constant for the boiling point of water (100°C).
+
+*Answer:*
+```cpp
+constexpr double celsius_to_fahrenheit(double c) {
+    return c * 9.0 / 5.0 + 32.0;
+}
+constexpr double WATER_BOILING_F = celsius_to_fahrenheit(100.0);   // 212.0
+```
+
+---
+
+<a name="ch10"></a>
+# Chapter 10: Arrays, `std::vector`, and `std::string`
+
+## C-Style Arrays (Understand, then Avoid)
+
+The C language had arrays built in. C++ inherited them. They are the underlying model behind everything else, so understand them, then use `std::vector` instead.
+
+```cpp
+int scores[5];                    // array of 5 ints (uninitialized -- garbage!)
+int primes[5] = {2, 3, 5, 7, 11}; // initialized
+int zeros[100] = {};              // all zeros (zero-initialized with {})
+
+std::cout << primes[0] << "\n";   // 2   -- zero-indexed
+std::cout << primes[4] << "\n";   // 11
+```
+
+```
+Memory layout of primes[5]:
+
+Address    Value
+0x1000     2     <- primes[0]
+0x1004     3     <- primes[1]
+0x1008     5     <- primes[2]
+0x100C     7     <- primes[3]
+0x1010     11    <- primes[4]
+
+The name 'primes' in expressions decays to a pointer to primes[0].
+```
+
+### Critical Weakness: No Bounds Checking
+
+C++ does not check if your index is valid at runtime:
+
+```cpp
+int arr[3] = {1, 2, 3};
+std::cout << arr[5];   // reads memory past the array -- undefined behavior
+arr[5] = 99;           // writes past the array -- corrupts other data!
+```
+
+This is one of the leading causes of security vulnerabilities. The compiler doesn't catch it and there is no runtime exception -- it just reads or writes whatever is at that address.
+
+### Size Is Not Carried With the Array
+
+```cpp
+int arr[5] = {1, 2, 3, 4, 5};
+sizeof(arr);    // 20 -- size in bytes (only works if arr is in scope as an array)
+
+void bad_print(int arr[]) {   // array decays to pointer when passed to function
+    sizeof(arr);              // 8 -- size of pointer, NOT the array!
+}
+```
+
+You must pass the size separately, which is error-prone. `std::vector` solves this.
+
+---
+
+## `std::vector` -- The Right Way to Do Dynamic Arrays
+
+`std::vector` is C++'s resizable array. It is what Python's `list` most closely corresponds to:
+
+```python
+# Python list
+numbers = [10, 20, 30]
+numbers.append(40)
+print(len(numbers))   # 4
+print(numbers[1])     # 20
+```
+
+```cpp
+// C++ vector
+#include <vector>
+std::vector<int> numbers = {10, 20, 30};
+numbers.push_back(40);
+std::cout << numbers.size() << "\n";   // 4
+std::cout << numbers[1]     << "\n";   // 20
+```
+
+### What's Inside `std::vector`
+
+A `std::vector` is a small object (24 bytes typically) that internally manages a heap-allocated array:
+
+```
+std::vector<int> numbers = {10, 20, 30, 40}:
+
+Stack:                          Heap:
++-------------------+           +----+----+----+----+
+| data ptr -------> | ------->  | 10 | 20 | 30 | 40 |   <- actual elements
+| size: 4           |           +----+----+----+----+
+| capacity: 4       |
++-------------------+
+```
+
+- `size`: number of elements currently in the vector
+- `capacity`: how many elements fit in the currently allocated heap space
+- When size == capacity and you `push_back`, the vector allocates a bigger heap array (typically doubles), copies all elements, and frees the old array.
+
+You never see any of this. The vector manages it transparently.
+
+### Key Operations
+
+```cpp
+std::vector<int> v;            // empty vector
+v.push_back(10);               // append 10: v = {10}
+v.push_back(20);               // append 20: v = {10, 20}
+v.push_back(30);               // append 30: v = {10, 20, 30}
+
+v.size();                      // 3   -- number of elements
+v.empty();                     // false -- is it empty?
+v.front();                     // 10  -- first element
+v.back();                      // 30  -- last element
+v.pop_back();                  // removes last: v = {10, 20}
+
+v[0];                          // 10  -- no bounds check (unsafe, fast)
+v.at(0);                       // 10  -- bounds-checked (throws if out of range)
+
+v.insert(v.begin() + 1, 99);  // insert 99 at index 1: v = {10, 99, 20}
+v.erase(v.begin() + 1);       // remove element at index 1: v = {10, 20}
+
+v.clear();                     // remove all elements (size = 0, capacity kept)
+v.resize(5, 0);                // resize to 5 elements, new ones initialized to 0
+
+std::vector<int> w(10, 42);   // 10 elements all set to 42
+```
+
+### Iterating Over a Vector
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// Range-based for (preferred):
+for (int n : v)        std::cout << n << " ";   // copies each element
+for (int& n : v)       n *= 2;                  // modifies in place
+for (const int& n : v) std::cout << n << " ";   // read-only, no copy
+
+// Index-based (when you need the index):
+for (int i = 0; i < (int)v.size(); ++i) {
+    std::cout << i << ": " << v[i] << "\n";
+}
+
+// Note: v.size() returns size_t (unsigned). Comparing int i < size_t is
+// technically a warning. Cast to (int)v.size() or use size_t i.
+```
+
+### 2D Vectors
+
+```cpp
+// 3 rows, 4 columns, all initialized to 0:
+std::vector<std::vector<int>> grid(3, std::vector<int>(4, 0));
+
+grid[1][2] = 99;
+std::cout << grid[1][2];  // 99
+```
+
+---
+
+## `std::string` -- The Right Way to Handle Text
+
+```python
+# Python strings
+s = "hello"
+s += " world"
+print(len(s))       # 11
+print(s.upper())    # HELLO WORLD
+print(s[1:5])       # ello
+```
+
+```cpp
+// C++ strings
+#include <string>
+std::string s = "hello";
+s += " world";
+std::cout << s.size() << "\n";         // 11
+// (no built-in upper() -- use a loop or std::transform)
+
+std::string sub = s.substr(1, 4);      // "ello" (start=1, length=4)
+```
+
+`std::string` internally manages a heap-allocated buffer of characters, similar to `std::vector<char>`.
+
+### Key Operations
+
+```cpp
+std::string s = "Hello, World!";
+
+s.size();                         // 13 -- number of characters
+s.empty();                        // false
+s[0];                             // 'H' -- no bounds check
+s.at(0);                          // 'H' -- bounds-checked
+s.front();                        // 'H'
+s.back();                         // '!'
+
+s.find("World");                  // 7  -- index where found
+s.find("xyz");                    // std::string::npos -- not found
+
+s.substr(7, 5);                   // "World" (start=7, length=5)
+
+s.replace(7, 5, "C++");           // "Hello, C++!"
+
+std::string t = "hello";
+s.compare(t);                     // negative (s < t lexicographically)
+
+// Concatenation:
+std::string a = "foo", b = "bar";
+std::string c = a + b;            // "foobar"
+a += "!";                         // "foo!"
+
+// Convert to/from numbers:
+#include <string>
+std::string num_str = std::to_string(42);        // "42"
+int n = std::stoi("123");                         // 123
+double d = std::stod("3.14");                     // 3.14
+```
+
+### String Comparison
+
+Unlike Python where `==` compares value, C++ `std::string` also uses `==` for value comparison:
+
+```cpp
+std::string a = "hello", b = "hello";
+if (a == b) std::cout << "equal\n";     // equal -- compares content
+```
+
+### Raw C-Style Strings
+
+You will see C-style strings (`const char*`) in older code and C interfaces:
+
+```cpp
+const char* cs = "hello";    // points to read-only character array
+std::string s = cs;          // convert: C-string to std::string (fine)
+
+// std::string to C-string (for C library functions):
+const char* c = s.c_str();   // null-terminated char array
+// valid only as long as s is alive and unmodified
+```
+
+Always use `std::string` for your own code. Use `const char*` only when a C API requires it, and immediately pass it through -- do not store it.
+
+---
+
+## `std::array` -- Fixed-Size Array With Safety
+
+When the size is known at compile time, use `std::array` instead of a C-style array:
+
+```cpp
+#include <array>
+std::array<int, 5> primes = {2, 3, 5, 7, 11};
+
+primes.size();       // 5 -- size is always available
+primes[2];           // 5
+primes.at(10);       // throws std::out_of_range -- bounds checked
+primes.front();      // 2
+primes.back();       // 11
+```
+
+`std::array` knows its own size, can be passed to functions without separately passing the size, and supports all the standard iteration patterns.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Off-By-One / Out-of-Bounds Access
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3};
+for (int i = 0; i <= (int)v.size(); ++i)   // <= instead of <
+    std::cout << v[i] << "\n";             // v[3] is past the end
+```
+**Detection:** `-fsanitize=address` reports "heap-buffer-overflow."
+**The fix:** Use `<` not `<=`. Better: use range-based for.
+
+### Mistake 2: Modifying a Vector While Iterating With Indices
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (int i = 0; i < (int)v.size(); ++i) {
+    if (v[i] % 2 == 0) v.erase(v.begin() + i);
+    // After erasing index 1 (value 2), index 1 now holds 3 (shifted)
+    // The loop increments i to 2, skipping 3
+}
+```
+**The fix:** Iterate backward, or use the erase-remove idiom (Chapter 29).
+
+### Mistake 3: Using `+` to Concatenate Non-String Literals
+
+**The bug:**
+```cpp
+std::string result = "Count: " + 42;   // ERROR: no + between const char* and int
+```
+**The fix:**
+```cpp
+std::string result = "Count: " + std::to_string(42);
+// or better (C++23):
+std::string result = std::format("Count: {}", 42);
+```
+
+### Mistake 4: Accessing `.c_str()` Pointer After Modifying the String
+
+**The bug:**
+```cpp
+std::string s = "hello";
+const char* p = s.c_str();
+s += " world";          // may reallocate the internal buffer
+printf("%s\n", p);      // p may now be dangling
+```
+**The fix:** Call `.c_str()` immediately before passing it to the C function, never store it.
+
+---
+
+## Exercises
+
+**Exercise 10.1 -- Vector operations**
+
+Starting from an empty `std::vector<int>`:
+1. Push back 5, 10, 15, 20, 25
+2. Print the size (should be 5)
+3. Remove the last element
+4. Insert the value 99 at index 2
+5. Print all elements
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    v.push_back(5);
+    v.push_back(10);
+    v.push_back(15);
+    v.push_back(20);
+    v.push_back(25);
+
+    std::cout << v.size() << "\n";   // 5
+
+    v.pop_back();                    // removes 25; v = {5,10,15,20}
+
+    v.insert(v.begin() + 2, 99);    // v = {5,10,99,15,20}
+
+    for (int n : v)
+        std::cout << n << " ";      // 5 10 99 15 20
+    std::cout << "\n";
+}
+```
+
+---
+
+**Exercise 10.2 -- String manipulation**
+
+Given `std::string sentence = "the quick brown fox"`:
+1. Print its length
+2. Extract and print the substring "quick" (starts at index 4, length 5)
+3. Find where "brown" appears
+4. Replace "fox" with "cat"
+5. Print the final string
+
+*Answer:*
+```cpp
+std::string sentence = "the quick brown fox";
+std::cout << sentence.size() << "\n";          // 19
+std::cout << sentence.substr(4, 5) << "\n";    // quick
+std::cout << sentence.find("brown") << "\n";   // 10
+
+size_t pos = sentence.find("fox");
+sentence.replace(pos, 3, "cat");
+std::cout << sentence << "\n";                 // the quick brown cat
+```
+
+---
+
+**Exercise 10.3 -- 2D grid**
+
+Create a 4x4 grid (vector of vectors), fill position [row][col] with the value `row * 4 + col`, then print it as a square.
+
+*Answer:*
+```cpp
+std::vector<std::vector<int>> grid(4, std::vector<int>(4));
+for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c)
+        grid[r][c] = r * 4 + c;
+
+for (const auto& row : grid) {
+    for (int n : row)
+        std::cout << std::setw(3) << n;
+    std::cout << "\n";
+}
+```
+
+Output:
+```
+  0  1  2  3
+  4  5  6  7
+  8  9 10 11
+ 12 13 14 15
+```
+
+---
+
+<a name="ch11"></a>
+# Chapter 11: Scope, Lifetime, and Organizing Code into Files
+
+## Scope
+
+Scope is the region of code where a name is visible. In C++, every pair of `{}` creates a new scope.
+
+```cpp
+int x = 1;              // x in outer scope
+
+{
+    int x = 2;          // x in inner scope -- SHADOWS the outer x
+    std::cout << x;     // 2 -- inner x
+}                       // inner x destroyed here
+
+std::cout << x;         // 1 -- outer x, back in scope
+```
+
+Shadowing (declaring an inner variable with the same name as an outer one) is legal but confusing. Avoid it. Compile with `-Wshadow` to get warnings.
+
+### Scope in Loops and Conditionals
+
+```cpp
+for (int i = 0; i < 10; ++i) {
+    // i only visible inside the loop body
+}
+// i does NOT exist here
+
+if (int n = get_value(); n > 0) {  // C++17 initializer
+    // n only visible inside the if/else
+} else {
+    // n also visible here
+}
+// n does NOT exist here
+```
+
+---
+
+## Lifetime
+
+Lifetime is the period during which a variable's storage is valid. For stack variables, it matches scope. For heap variables, it starts at `new` and ends at `delete`.
+
+```cpp
+{
+    std::string s = "hello";   // s constructed, storage allocated
+    // ... use s ...
+}                              // s destructed, storage freed
+// using s here is undefined behavior (it no longer exists)
+```
+
+The key insight: in C++, when a variable goes out of scope, its **destructor** is called automatically. For `std::string`, the destructor frees the heap-allocated character buffer. For `std::vector`, it frees the element array. This automatic cleanup is called **RAII** (Chapter 12) and is C++'s answer to garbage collection.
+
+---
+
+## Organizing Code: The Header/Source Split
+
+As programs grow, you split code into multiple files. The organization:
+
+```
+projectname/
+  include/
+    math_utils.h      <- declarations (the public interface)
+  src/
+    math_utils.cpp    <- definitions (the implementation)
+    main.cpp          <- uses the functions
+```
+
+### Why Headers Exist
+
+C++ compiles each `.cpp` file separately. When `main.cpp` calls `multiply(3, 4)`, the compiler must know (at compile time) what `multiply` looks like -- its parameter types and return type -- to type-check the call.
+
+The linker resolves where `multiply`'s actual code is. But the compiler must see the declaration.
+
+The solution: put declarations in a header file. Every `.cpp` that needs to call `multiply` includes the header.
+
+```cpp
+// math_utils.h -- declarations only
+#pragma once
+
+int add(int a, int b);
+int subtract(int a, int b);
+int multiply(int a, int b);
+double divide(double a, double b);
+```
+
+`#pragma once` tells the preprocessor: include this file at most once per compilation unit, even if it is `#include`d multiple times. It prevents duplicate declaration errors from diamond-shaped include chains.
+
+```cpp
+// math_utils.cpp -- definitions
+#include "math_utils.h"   // include own header to verify declarations match
+
+int add(int a, int b)          { return a + b; }
+int subtract(int a, int b)     { return a - b; }
+int multiply(int a, int b)     { return a * b; }
+double divide(double a, double b) { return a / b; }
+```
+
+```cpp
+// main.cpp -- uses the functions
+#include <iostream>
+#include "math_utils.h"   // gets the declarations; tells compiler the signatures
+
+int main() {
+    std::cout << add(3, 4)         << "\n";   // 7
+    std::cout << multiply(6, 7)    << "\n";   // 42
+    std::cout << divide(10.0, 4.0) << "\n";   // 2.5
+}
+```
+
+Build:
+
+```bash
+$ g++ -std=c++23 -Wall -o program src/main.cpp src/math_utils.cpp -I include/
+```
+
+The `-I include/` tells the compiler to look in the `include/` directory for headers.
+
+### The Compilation Model With Multiple Files
+
+```
+math_utils.cpp --> [compiler] --> math_utils.o  --+
+main.cpp       --> [compiler] --> main.o         --+--> [linker] --> program
+```
+
+Each `.cpp` is compiled independently. The compiler only needs to see the header (declarations) to compile `main.cpp`. It trusts that `math_utils.cpp` will provide the actual definitions. The linker connects everything.
+
+### What Goes In Headers vs Source Files
+
+```
+Headers (.h):
+  - Function declarations
+  - Class declarations (but not the bodies of non-inline methods)
+  - Type definitions (structs, enums, using aliases)
+  - #include directives needed by the declarations
+  - inline functions (small utility functions that are called often)
+  - constexpr and const variable definitions
+
+Source (.cpp):
+  - Function definitions (the actual code)
+  - Class method definitions
+  - Global variable definitions
+  - #include of their own header + other headers needed for the implementation
+  - Implementation details not exposed to users
+```
+
+**Do NOT put in headers:**
+- `using namespace std;` -- it pollutes every file that includes your header
+- Non-inline function definitions -- causes "multiple definition" linker errors if included in multiple `.cpp` files
+- Definitions of non-`const` global variables -- also causes linker errors
+
+### Include Guards (Alternative to `#pragma once`)
+
+Older code uses include guards instead of `#pragma once`:
+
+```cpp
+#ifndef MATH_UTILS_H
+#define MATH_UTILS_H
+
+// ... declarations ...
+
+#endif   // MATH_UTILS_H
+```
+
+If `math_utils.h` is included twice in the same compilation unit, the second inclusion sees that `MATH_UTILS_H` is already defined and skips everything inside. `#pragma once` does the same thing more concisely and is supported by all modern compilers.
+
+---
+
+## Namespaces
+
+Namespaces prevent name collisions between libraries. When two libraries both define `Matrix`, they can put it in different namespaces.
+
+```cpp
+namespace geometry {
+    struct Point { double x, y; };
+    double distance(Point a, Point b);
+}
+
+namespace graphics {
+    struct Point { float x, y, z; };   // different Point, no conflict
+    void draw(Point p);
+}
+
+// Use with ::
+geometry::Point p1{1.0, 2.0};
+graphics::Point p2{3.0f, 4.0f, 5.0f};
+```
+
+The standard library lives in `std`. That is why everything is `std::cout`, `std::vector`, `std::string`.
+
+You can pull specific names into scope:
+
+```cpp
+using std::cout;      // just cout, not everything
+using std::vector;
+
+cout << "hello\n";    // OK
+vector<int> v;        // OK
+```
+
+Do this inside functions, not at file scope (it affects the rest of the file, which may cause surprises in headers).
+
+### Writing Your Own Namespace
+
+```cpp
+// mylib.h
+#pragma once
+
+namespace mylib {
+
+int clamp(int value, int lo, int hi);
+double lerp(double a, double b, double t);
+
+}   // namespace mylib
+
+// mylib.cpp
+#include "mylib.h"
+
+namespace mylib {
+
+int clamp(int value, int lo, int hi) {
+    if (value < lo) return lo;
+    if (value > hi) return hi;
+    return value;
+}
+
+double lerp(double a, double b, double t) {
+    return a + t * (b - a);
+}
+
+}   // namespace mylib
+```
+
+---
+
+## Static Local Variables
+
+A `static` local variable is initialized once and persists across calls:
+
+```cpp
+int counter() {
+    static int count = 0;   // initialized only once (first call)
+    ++count;
+    return count;
+}
+
+std::cout << counter() << "\n";   // 1
+std::cout << counter() << "\n";   // 2
+std::cout << counter() << "\n";   // 3
+```
+
+The variable `count` lives for the entire program duration (like a global), but is only accessible inside `counter`. This is useful for functions that need to remember state between calls without using a class.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Defining a Non-Inline Function in a Header
+
+**The bug:**
+```cpp
+// utils.h
+int add(int a, int b) { return a + b; }   // DEFINITION in header
+
+// main.cpp includes utils.h
+// utils.cpp also includes utils.h
+// Both .cpp files define add() -- linker error!
+```
+
+```
+linker error: multiple definition of `add(int, int)'
+```
+
+**The fix:** Declarations in headers, definitions in `.cpp` files. Or mark the function `inline` (which tells the linker to allow multiple identical definitions).
+
+---
+
+### Mistake 2: Missing `#pragma once` (or Include Guard)
+
+**The bug:**
+```cpp
+// a.h includes b.h and c.h
+// b.h includes c.h
+// c.h has no include guard
+
+// When a.h is processed: c.h is included twice, all declarations in c.h appear twice
+error: redefinition of 'class Foo'
+```
+
+**The fix:** Start every header with `#pragma once`.
+
+---
+
+### Mistake 3: `using namespace std;` in a Header
+
+**The bug:**
+```cpp
+// utils.h
+#include <string>
+using namespace std;    // pollutes every file that includes utils.h
+
+// Now every file including utils.h gets all of std:: imported
+// Causes conflicts with user-defined names like 'vector', 'string', 'max', 'min'
+```
+
+**The fix:** Never put `using namespace X;` in a header. In `.cpp` files it is acceptable (though `using std::cout;` for specific names is better style).
+
+---
+
+## Exercises
+
+**Exercise 11.1 -- Trace scope**
+
+Predict the output:
+
+```cpp
+int x = 10;
+{
+    int x = 20;
+    {
+        int x = 30;
+        std::cout << x << "\n";
+    }
+    std::cout << x << "\n";
+}
+std::cout << x << "\n";
+```
+
+*Answer:* `30`, `20`, `10`. Each inner `x` shadows the outer one. When the inner scope ends, the outer `x` becomes visible again.
+
+---
+
+**Exercise 11.2 -- Split into files**
+
+Split this single-file program into `main.cpp`, `greeting.h`, and `greeting.cpp`:
+
+```cpp
+#include <iostream>
+#include <string>
+
+std::string make_greeting(const std::string& name) {
+    return "Hello, " + name + "!";
+}
+
+int main() {
+    std::cout << make_greeting("Alice") << "\n";
+    std::cout << make_greeting("Bob")   << "\n";
+}
+```
+
+*Answer:*
+
+```cpp
+// greeting.h
+#pragma once
+#include <string>
+
+std::string make_greeting(const std::string& name);
+```
+
+```cpp
+// greeting.cpp
+#include "greeting.h"
+
+std::string make_greeting(const std::string& name) {
+    return "Hello, " + name + "!";
+}
+```
+
+```cpp
+// main.cpp
+#include <iostream>
+#include "greeting.h"
+
+int main() {
+    std::cout << make_greeting("Alice") << "\n";
+    std::cout << make_greeting("Bob")   << "\n";
+}
+```
+
+Build: `g++ -std=c++23 -o program main.cpp greeting.cpp`
+
+---
+
+**Exercise 11.3 -- Static local counter**
+
+Write a function `next_id()` that returns 1 on the first call, 2 on the second, and so on, without using any global variable.
+
+*Answer:*
+```cpp
+int next_id() {
+    static int id = 0;
+    return ++id;
+}
+// next_id() == 1, next_id() == 2, next_id() == 3 ...
+```
+
+---
+
+**Exercise 11.4 -- Namespace**
+
+Write a namespace `convert` with two functions: `km_to_miles(double km)` and `miles_to_km(double miles)`. 1 km = 0.621371 miles.
+
+*Answer:*
+```cpp
+// convert.h
+#pragma once
+
+namespace convert {
+    double km_to_miles(double km);
+    double miles_to_km(double miles);
+}
+```
+
+```cpp
+// convert.cpp
+#include "convert.h"
+
+namespace convert {
+    double km_to_miles(double km)    { return km * 0.621371; }
+    double miles_to_km(double miles) { return miles / 0.621371; }
+}
+```
+
+Usage:
+```cpp
+std::cout << convert::km_to_miles(100.0) << "\n";   // 62.1371
+std::cout << convert::miles_to_km(62.0)  << "\n";   // 99.79...
+```
+
+---
+
+*Part II is complete. You now understand the concepts that have no Python equivalent: references as aliases, pointers and memory addresses, the stack vs heap memory model, const correctness enforced by the compiler, the standard library containers, and how C++ organizes multi-file projects.*
+
+*Part III covers ownership and memory management -- the RAII pattern, smart pointers, and move semantics. These are what make modern C++ safe while staying fast. Ask to continue.*
