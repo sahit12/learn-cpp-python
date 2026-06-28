@@ -4880,3 +4880,1414 @@ std::cout << convert::miles_to_km(62.0)  << "\n";   // 99.79...
 *Part II is complete. You now understand the concepts that have no Python equivalent: references as aliases, pointers and memory addresses, the stack vs heap memory model, const correctness enforced by the compiler, the standard library containers, and how C++ organizes multi-file projects.*
 
 *Part III covers ownership and memory management -- the RAII pattern, smart pointers, and move semantics. These are what make modern C++ safe while staying fast. Ask to continue.*
+
+---
+
+# Part III -- Ownership and Memory Management
+
+This part covers what separates experienced C++ programmers from beginners: understanding *who owns a resource* and *when it gets cleaned up*. Python's garbage collector answers both questions automatically. C++ makes you -- or your types -- answer them explicitly.
+
+The central pattern is RAII. Everything in this part flows from it.
+
+---
+
+<a name="ch12"></a>
+# Chapter 12: RAII -- The Core Idea That Replaces Garbage Collection
+
+## The Problem: Resources Need Cleanup
+
+Some things you acquire must eventually be released:
+
+| Resource | Acquire | Release |
+|----------|---------|---------|
+| Heap memory | `new` | `delete` |
+| File | `fopen` / open | `fclose` / close |
+| Mutex lock | `lock()` | `unlock()` |
+| Network socket | `socket()` / `connect()` | `close()` |
+| Database connection | `connect()` | `disconnect()` |
+
+If you forget to release, you get leaks, deadlocks, or corruption. If an exception or early `return` happens between acquire and release, the release never runs.
+
+```cpp
+void risky() {
+    int* data = new int[1000];
+
+    if (something_failed()) {
+        return;        // LEAK: data never deleted
+    }
+
+    if (something_else_failed()) {
+        throw std::runtime_error("oops");  // LEAK: data never deleted
+    }
+
+    delete[] data;   // only reached on the happy path
+}
+```
+
+This is the problem RAII solves.
+
+---
+
+## What RAII Is
+
+**RAII** stands for **Resource Acquisition Is Initialization**. The name is cryptic; the idea is simple:
+
+> Tie a resource's lifetime to the lifetime of an object.
+> Acquire the resource in the constructor.
+> Release the resource in the destructor.
+
+When the object goes out of scope, C++ automatically calls its destructor. The destructor releases the resource. This happens even if an exception is thrown, even if there is an early `return`. The cleanup is guaranteed.
+
+```cpp
+class IntArray {
+    int* data;
+    int  size;
+public:
+    IntArray(int n) : data{new int[n]{}}, size{n} {
+        // constructor: acquires the resource (heap memory)
+    }
+
+    ~IntArray() {             // destructor: ~ prefix, no return type
+        delete[] data;        // releases the resource
+    }
+
+    int& operator[](int i) { return data[i]; }
+    int  get_size() const  { return size; }
+};
+
+void safe() {
+    IntArray arr{1000};       // constructor runs: allocates 1000 ints
+
+    if (something_failed()) {
+        return;               // destructor runs: delete[] data -- NO LEAK
+    }
+
+    if (something_else_failed()) {
+        throw std::runtime_error("oops");   // destructor runs -- NO LEAK
+    }
+
+    // destructor runs at end of scope -- NO LEAK
+}
+```
+
+The destructor runs at scope exit **no matter how the scope exits**. Return, exception, fall-through -- the destructor always runs.
+
+---
+
+## The Destructor
+
+A destructor is a special member function:
+
+```cpp
+class Foo {
+public:
+    Foo()  { std::cout << "constructed\n"; }   // constructor
+    ~Foo() { std::cout << "destructed\n"; }    // destructor (~ prefix)
+};
+
+{
+    Foo a;
+    Foo b;
+    std::cout << "inside block\n";
+}   // b destructs first (LIFO), then a
+```
+
+Output:
+```
+constructed
+constructed
+inside block
+destructed    <- b (last in, first out)
+destructed    <- a
+```
+
+Destructors run in **reverse order of construction** (last in, first out -- like the stack). This matters when objects depend on each other.
+
+---
+
+## RAII for File Handling
+
+Without RAII:
+
+```cpp
+void write_data_bad(const std::string& filename) {
+    FILE* f = fopen(filename.c_str(), "w");
+    if (!f) return;          // ok, no file to close
+
+    // ... write stuff ...
+
+    if (error_condition) {
+        return;              // LEAK: file never closed!
+    }
+
+    fclose(f);               // only reached on happy path
+}
+```
+
+With RAII (using `std::fstream` from the standard library):
+
+```cpp
+#include <fstream>
+
+void write_data_good(const std::string& filename) {
+    std::ofstream f{filename};   // constructor opens the file
+    if (!f) return;
+
+    // ... write stuff ...
+
+    if (error_condition) {
+        return;              // destructor closes the file -- always
+    }
+
+}   // destructor closes the file -- always
+```
+
+`std::ofstream`'s destructor closes the file handle. You never call `fclose`. The file is always closed, regardless of how the function exits.
+
+---
+
+## RAII for Mutex Locks
+
+```cpp
+#include <mutex>
+
+std::mutex mtx;
+
+void bad_worker() {
+    mtx.lock();
+    if (error) {
+        return;        // DEADLOCK: mutex never unlocked!
+    }
+    mtx.unlock();
+}
+
+void good_worker() {
+    std::lock_guard<std::mutex> guard{mtx};  // constructor: locks mtx
+    if (error) {
+        return;        // destructor: unlocks mtx -- always
+    }
+}   // destructor: unlocks mtx -- always
+```
+
+`std::lock_guard` is a tiny RAII wrapper. It locks on construction and unlocks on destruction. The mutex is always released, even if an exception is thrown.
+
+---
+
+## Python's Equivalent: Context Managers
+
+Python's `with` statement provides similar guarantees:
+
+```python
+# Python RAII equivalent: context manager
+with open("file.txt", "w") as f:
+    f.write("hello")
+# f.__exit__() called here -- file closed even on exception
+```
+
+C++'s RAII is more general and automatic: it applies to every object with a destructor, with no special syntax at the call site. In Python you must explicitly write `with`.
+
+---
+
+## The Lifetime Guarantee Visualized
+
+```
+Scope:
+    {
+        IntArray arr{1000};    <- constructor: allocates memory
+        process(arr);
+        if (fail) return;      <- early return?  destructor still runs!
+        if (err) throw ...;    <- exception?      destructor still runs!
+    }                          <- normal exit:   destructor runs
+    
+Stack unwind on exception:
+    When an exception propagates, C++ calls the destructor of every
+    local object as it unwinds each stack frame. No resource is leaked.
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Not Writing a Destructor for Resource-Owning Classes
+
+**The bug:**
+```cpp
+class Buffer {
+    int* data;
+public:
+    Buffer(int n) { data = new int[n]; }
+    // forgot: ~Buffer() { delete[] data; }
+};
+// Every Buffer that goes out of scope leaks its allocation.
+```
+**The fix:** If a class owns a raw pointer acquired with `new`, it needs a destructor with `delete`.
+
+### Mistake 2: Destructors That Throw
+
+**The bug:**
+```cpp
+~MyClass() {
+    if (!cleanup()) throw std::runtime_error("cleanup failed");  // DANGEROUS
+}
+```
+**Why it's dangerous:** If a destructor throws while the stack is already unwinding from another exception, `std::terminate` is called and the program crashes with no recovery.
+**The fix:** Never let destructors throw. Swallow or log errors inside destructors.
+
+---
+
+## Exercises
+
+**Exercise 12.1 -- Trace the destructor order**
+
+```cpp
+struct Log {
+    std::string name;
+    Log(std::string n) : name{n} { std::cout << "create " << name << "\n"; }
+    ~Log()                       { std::cout << "destroy " << name << "\n"; }
+};
+
+int main() {
+    Log a{"A"};
+    {
+        Log b{"B"};
+        Log c{"C"};
+    }
+    Log d{"D"};
+}
+```
+
+What is the output?
+
+*Answer:*
+```
+create A
+create B
+create C
+destroy C
+destroy B
+create D
+destroy D
+destroy A
+```
+C and B are destroyed in reverse order when the inner block ends. D is created after the block. Then A and D are destroyed in reverse order when main ends.
+
+---
+
+**Exercise 12.2 -- Design a RAII wrapper**
+
+Design (declarations only, no need to implement) an RAII class `FileHandle` that wraps `FILE*`. What members does it need? What should the constructor and destructor do?
+
+*Answer:*
+```cpp
+class FileHandle {
+    FILE* file;
+public:
+    FileHandle(const char* path, const char* mode);  // opens: file = fopen(path, mode)
+    ~FileHandle();                                    // closes: if (file) fclose(file)
+    bool is_open() const;                             // returns file != nullptr
+    FILE* get() const;                                // returns the raw FILE* for C API use
+
+    // Disable copy (two wrappers closing the same file = double-close bug):
+    FileHandle(const FileHandle&) = delete;
+    FileHandle& operator=(const FileHandle&) = delete;
+};
+```
+
+---
+
+<a name="ch13"></a>
+# Chapter 13: Dynamic Allocation: `new`, `delete`, and Why You Avoid Them
+
+## `new` and `delete` Revisited
+
+We introduced `new` and `delete` in Chapter 8. Here is the complete picture.
+
+```cpp
+// Single object:
+int*  p  = new int{42};     // allocate one int on heap, initialize to 42
+delete p;                   // free it
+p = nullptr;                // prevent accidental reuse
+
+// Array:
+int*  arr = new int[100]{};  // allocate 100 ints, zero-initialized
+delete[] arr;                // MUST use delete[] for arrays
+arr = nullptr;
+
+// Default-initialized (no value specified):
+int*  q  = new int;          // value is garbage (same as uninitialized local)
+delete q;
+
+// Value-initialized (zero):
+int*  r  = new int{};        // value is 0
+delete r;
+```
+
+### What `new` Actually Does
+
+1. Calls `operator new` to ask the allocator for N bytes of heap memory
+2. Constructs the object in that memory (runs the constructor)
+3. Returns a typed pointer to the constructed object
+
+### What `delete` Actually Does
+
+1. Calls the destructor of the object
+2. Calls `operator delete` to return the memory to the allocator
+
+If you use `delete` on an array (allocated with `new[]`), the destructor for each element is called, and then the memory is freed. If you use `delete` instead of `delete[]`, only one destructor is called and the allocator is given the wrong size -- undefined behavior.
+
+---
+
+## The Problems With Raw `new`/`delete`
+
+### Problem 1: Exception Safety
+
+```cpp
+int* a = new int{1};
+int* b = new int{2};    // if this throws (out of memory), a leaks
+process(a, b);          // if this throws, a and b leak
+delete a;
+delete b;
+```
+
+### Problem 2: Ownership Ambiguity
+
+```cpp
+int* create() { return new int{42}; }   // who must call delete?
+
+void use(int* p) {
+    // Am I supposed to delete p? Is it heap-allocated? Who owns it?
+}
+```
+
+When raw pointers are passed around, ownership becomes unclear. This leads to either leaks (nobody deletes) or double-frees (two places both delete).
+
+### Problem 3: Paired Delete is Fragile
+
+Every `new` must be matched by exactly one `delete`. This is an invariant you must maintain manually across hundreds or thousands of lines of code, through exceptions and early returns. One mistake = leak or crash.
+
+---
+
+## When Raw `new`/`delete` Is Acceptable
+
+Almost never in modern C++. The standard library provides better alternatives:
+
+| Old pattern | Modern replacement |
+|-------------|-------------------|
+| `new int[n]` | `std::vector<int>` |
+| `new SomeClass(...)` | `std::make_unique<SomeClass>(...)` |
+| Shared ownership | `std::make_shared<SomeClass>(...)` |
+| Fixed-size array | `std::array<T, N>` |
+
+The only legitimate uses of raw `new`/`delete` are:
+- Writing a custom allocator or container
+- Interfacing with a C API that expects you to `free()` memory it returned
+- Writing `operator new` / `operator delete` for a class
+
+If you find yourself writing `new` in application code, stop and use a smart pointer or container.
+
+---
+
+## `std::bad_alloc` -- Out of Memory
+
+When `new` cannot get memory (system is out of RAM), it throws `std::bad_alloc`. Most programs do not handle this because there is little useful you can do, but for critical systems:
+
+```cpp
+#include <new>
+try {
+    int* p = new int[1'000'000'000'000];  // 1 trillion ints ~ 4TB
+} catch (const std::bad_alloc& e) {
+    std::cerr << "Out of memory: " << e.what() << "\n";
+}
+```
+
+If you want `new` to return `nullptr` instead of throwing:
+
+```cpp
+int* p = new(std::nothrow) int[1'000'000'000'000];
+if (p == nullptr) {
+    // handle out of memory
+}
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `delete` on Stack Memory
+
+**The bug:**
+```cpp
+int x = 5;
+int* p = &x;
+delete p;   // undefined behavior -- x is on the stack, not heap
+```
+**The symptom:** Crash or heap corruption.
+**The rule:** Only `delete` memory that came from `new`.
+
+### Mistake 2: Accessing Memory After `delete`
+
+```cpp
+int* p = new int{10};
+delete p;
+std::cout << *p;   // use-after-free: undefined behavior
+```
+**Detection:** `-fsanitize=address` reports "heap-use-after-free."
+**The fix:** Set `p = nullptr` immediately after `delete`.
+
+---
+
+## Exercises
+
+**Exercise 13.1 -- Manual heap string**
+
+Without using `std::string`, allocate a char array on the heap large enough to hold "Hello, C++!" (including the null terminator), fill it using `strcpy`, print it, then free it correctly.
+
+*Answer:*
+```cpp
+#include <cstring>
+const char* src = "Hello, C++!";
+int len = strlen(src) + 1;        // +1 for null terminator
+char* buf = new char[len];
+strcpy(buf, src);
+std::cout << buf << "\n";
+delete[] buf;
+buf = nullptr;
+```
+
+---
+
+**Exercise 13.2 -- Identify the errors**
+
+How many bugs does this code have? Classify each as leak, double-free, or use-after-free:
+
+```cpp
+int* p = new int{5};
+int* q = p;
+delete p;
+delete q;        // (a)
+std::cout << *p; // (b)
+int x = 10;
+delete &x;       // (c)
+```
+
+*Answer:*
+- (a): double-free -- `p` and `q` point to the same memory; freeing both is double-free.
+- (b): use-after-free -- `p` was deleted; reading `*p` is undefined behavior.
+- (c): delete on stack memory -- `x` is a local variable, not heap-allocated.
+
+---
+
+<a name="ch14"></a>
+# Chapter 14: Smart Pointers: `unique_ptr`, `shared_ptr`, `weak_ptr`
+
+## The Core Idea
+
+Smart pointers are RAII wrappers around raw pointers. They manage ownership: when the smart pointer is destroyed, it automatically deletes the object it owns.
+
+```cpp
+#include <memory>
+
+// Instead of:
+int* raw = new int{42};
+// ... possibly forget to delete ...
+delete raw;
+
+// Use:
+auto smart = std::make_unique<int>(42);
+// ... no delete needed -- automatically freed when smart goes out of scope ...
+```
+
+There are three kinds, each for a different ownership pattern.
+
+---
+
+## `std::unique_ptr` -- Exclusive Ownership
+
+`unique_ptr` represents **sole ownership**: exactly one `unique_ptr` owns the object at any time. When the `unique_ptr` is destroyed, it deletes the owned object.
+
+```cpp
+#include <memory>
+
+auto p = std::make_unique<int>(42);   // allocates int{42} on heap
+                                      // p is the sole owner
+
+std::cout << *p << "\n";              // 42   -- dereference like a raw pointer
+std::cout << p.get() << "\n";        // raw address (for C API use)
+
+// p is automatically deleted when it goes out of scope
+// No manual delete. No leaks.
+```
+
+`make_unique<T>(args...)` is the right way to create a `unique_ptr`. It:
+1. Allocates the object on the heap
+2. Constructs it with the given arguments
+3. Returns a `unique_ptr` owning it
+
+### Unique Ownership Enforced at Compile Time
+
+```cpp
+auto p = std::make_unique<int>(42);
+auto q = p;   // COMPILE ERROR: unique_ptr cannot be copied
+```
+
+You cannot copy a `unique_ptr` -- that would create two owners for one object (a contradiction of unique ownership). The compiler enforces this.
+
+You CAN move it (transfer ownership):
+
+```cpp
+auto p = std::make_unique<int>(42);
+auto q = std::move(p);   // ownership transferred from p to q
+// p is now empty (nullptr); q owns the int
+std::cout << *q << "\n";   // 42
+// *p would be undefined behavior -- p is now empty
+```
+
+`std::move` is covered in Chapter 15. For now, understand that `std::move(p)` says "I am done with `p`; transfer what it owns to `q`."
+
+### Unique Pointer to a Custom Class
+
+```cpp
+struct Player {
+    std::string name;
+    int health;
+    Player(std::string n, int h) : name{n}, health{h} {}
+    ~Player() { std::cout << name << " destroyed\n"; }
+};
+
+{
+    auto hero = std::make_unique<Player>("Alice", 100);
+    hero->health -= 20;          // -> accesses members (same as raw pointer)
+    std::cout << hero->name << " has " << hero->health << " HP\n";
+}   // hero goes out of scope -- Player destructor called, memory freed
+// prints: "Alice has 80 HP" then "Alice destroyed"
+```
+
+### `unique_ptr` as a Function Parameter
+
+```cpp
+// Takes ownership (caller cannot use the pointer after this):
+void consume(std::unique_ptr<Player> p) {
+    std::cout << "consuming " << p->name << "\n";
+}   // p destroyed here
+
+// Borrows (caller keeps ownership, function just uses the object):
+void use(const Player& p) {                   // prefer this
+    std::cout << "using " << p.name << "\n";
+}
+void use_ptr(const Player* p) {               // raw ptr = borrow, no ownership
+    if (p) std::cout << "using " << p->name << "\n";
+}
+
+auto hero = std::make_unique<Player>("Bob", 80);
+use(*hero);               // dereference to get Player&
+use_ptr(hero.get());      // .get() returns raw pointer, no ownership transfer
+consume(std::move(hero)); // hero is empty after this
+```
+
+The guideline: pass `unique_ptr` only when you intend to transfer ownership. For "just using" the object, pass a reference or raw pointer (raw pointer = borrow, no ownership implied).
+
+---
+
+## `std::shared_ptr` -- Shared Ownership
+
+`shared_ptr` uses **reference counting**: multiple `shared_ptr`s can all own the same object. The object is deleted when the last `shared_ptr` to it is destroyed.
+
+```python
+# Python reference counting -- the same idea Python uses for all objects
+a = [1, 2, 3]   # ref count = 1
+b = a            # ref count = 2
+del a            # ref count = 1
+del b            # ref count = 0 --> freed
+```
+
+```cpp
+auto sp1 = std::make_shared<int>(42);   // ref count = 1
+{
+    auto sp2 = sp1;    // ref count = 2 (COPY IS ALLOWED for shared_ptr)
+    std::cout << *sp2 << "\n";   // 42
+    std::cout << sp1.use_count() << "\n";   // 2
+}   // sp2 destroyed, ref count = 1
+// int still alive (sp1 holds it)
+std::cout << sp1.use_count() << "\n";   // 1
+// sp1 goes out of scope, ref count = 0, int deleted
+```
+
+```
+Memory layout of shared_ptr:
+
++------------------+         +-------------------+
+| sp1              |         | control block      |
+|   ptr  --------> | ------> | ref count: 2       |
+|   ctrl --------> | ---+    | weak count: 0      |
++------------------+    |    +-------------------+
+                         |                        
++------------------+    +--> +-------------------+
+| sp2 (copy)       |         | managed object     |
+|   ptr  --------> | ------> | int: 42            |
+|   ctrl --------> | ------> | (same ctrl block)  |
++------------------+         +-------------------+
+```
+
+### When to Use `shared_ptr`
+
+Use `shared_ptr` when multiple objects genuinely need to share ownership and you cannot determine statically which one will outlive the others:
+
+- Scene graph nodes that can be referenced from multiple places
+- Cache entries referenced by many users
+- Callbacks registered with multiple event systems
+
+**Do NOT use `shared_ptr` by default**. It has overhead (atomic ref-count increment/decrement on every copy and destroy). If one owner makes sense, use `unique_ptr`. If no ownership is needed (just borrowing), use a reference or raw pointer.
+
+---
+
+## `std::weak_ptr` -- Non-Owning Observer
+
+A `weak_ptr` holds a non-owning reference to an object managed by `shared_ptr`. It does not affect the ref count. You must convert it to a `shared_ptr` to actually use the object, and that conversion can fail if the object was already deleted.
+
+The main use: breaking reference cycles.
+
+```cpp
+// Without weak_ptr: a cycle keeps both objects alive forever (memory leak)
+struct Node {
+    std::shared_ptr<Node> next;   // strong reference
+};
+auto a = std::make_shared<Node>();
+auto b = std::make_shared<Node>();
+a->next = b;
+b->next = a;   // cycle: a holds b, b holds a -- neither ever freed
+
+// With weak_ptr: the cycle is broken
+struct Node {
+    std::weak_ptr<Node> next;    // weak reference (non-owning)
+};
+// Now b->next does not keep a alive. When a goes out of scope, it is freed.
+```
+
+Using a `weak_ptr`:
+
+```cpp
+auto sp = std::make_shared<int>(99);
+std::weak_ptr<int> wp = sp;
+
+if (auto locked = wp.lock()) {   // lock() returns shared_ptr if alive, empty if dead
+    std::cout << *locked << "\n";  // 99
+} else {
+    std::cout << "object was deleted\n";
+}
+
+sp.reset();   // delete the object
+
+if (auto locked = wp.lock()) {
+    std::cout << *locked << "\n";
+} else {
+    std::cout << "object was deleted\n";   // this prints
+}
+```
+
+---
+
+## Choosing the Right Smart Pointer
+
+```
+Is there exactly one owner that will definitely outlive all users?
+  --> std::unique_ptr (default choice)
+
+Do multiple owners genuinely need to share the object's lifetime?
+  --> std::shared_ptr
+
+Do you need to observe a shared_ptr-managed object without affecting its lifetime?
+  --> std::weak_ptr
+
+Are you just borrowing -- the object's owner is clear and nearby?
+  --> T& (reference) or const T& (const reference)
+  --> T* (raw pointer) if nullability is needed
+```
+
+90% of cases: use `unique_ptr`. 9%: `shared_ptr`. 1%: `weak_ptr`.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Creating a `shared_ptr` From a Raw Pointer Twice
+
+**The bug:**
+```cpp
+int* raw = new int{42};
+auto sp1 = std::shared_ptr<int>(raw);
+auto sp2 = std::shared_ptr<int>(raw);  // two independent shared_ptrs own raw!
+// When both are destroyed: double-free
+```
+**The fix:** Always use `std::make_shared`. If you must wrap an existing pointer, do it once and copy the `shared_ptr`.
+
+### Mistake 2: Calling `.get()` and Storing the Result
+
+**The bug:**
+```cpp
+auto sp = std::make_shared<int>(5);
+int* raw = sp.get();   // raw is a non-owning pointer -- fine so far
+sp.reset();            // sp destroys the int
+std::cout << *raw;     // use-after-free
+```
+**The fix:** Never store the result of `.get()` beyond the lifetime of the smart pointer.
+
+### Mistake 3: Passing `unique_ptr` by Value When Borrowing
+
+**The bug:**
+```cpp
+void display(std::unique_ptr<Player> p) { ... }  // takes ownership!
+auto hero = std::make_unique<Player>("Alice", 100);
+display(hero);         // ERROR: cannot copy unique_ptr
+display(std::move(hero));  // compiles, but hero is now empty -- likely a bug
+```
+**The fix:** For borrowing, pass `const Player&` or `Player*` (via `.get()`).
+
+---
+
+## Exercises
+
+**Exercise 14.1 -- unique_ptr basics**
+
+Rewrite this raw-pointer code using `unique_ptr`:
+
+```cpp
+double* compute() {
+    double* result = new double{3.14};
+    return result;    // caller must delete
+}
+
+int main() {
+    double* r = compute();
+    std::cout << *r << "\n";
+    delete r;
+}
+```
+
+*Answer:*
+```cpp
+#include <memory>
+#include <iostream>
+
+std::unique_ptr<double> compute() {
+    return std::make_unique<double>(3.14);
+}
+
+int main() {
+    auto r = compute();      // unique_ptr takes ownership
+    std::cout << *r << "\n"; // 3.14
+    // r automatically deleted at end of main
+}
+```
+
+---
+
+**Exercise 14.2 -- shared_ptr ref count**
+
+Predict the ref count at each comment:
+
+```cpp
+auto a = std::make_shared<int>(10);  // (1)
+{
+    auto b = a;                       // (2)
+    auto c = a;                       // (3)
+    c.reset();                        // (4)
+}                                     // (5)
+// (6)
+```
+
+*Answer:*
+- (1): 1
+- (2): 2
+- (3): 3
+- (4): 2 (`c.reset()` releases `c`'s ownership)
+- (5): 1 (`b` goes out of scope)
+- (6): 1 (`a` is still alive outside the block)
+
+---
+
+**Exercise 14.3 -- Choose the smart pointer**
+
+For each scenario, say whether to use `unique_ptr`, `shared_ptr`, `weak_ptr`, or a raw reference:
+
+a. A game entity that owns a weapon (weapon lives exactly as long as the entity)
+b. A texture loaded into a cache, referenced by hundreds of sprites
+c. A parent node in a tree that wants to observe its own child (child is managed by parent via `shared_ptr`)
+d. A function that needs to read-only access an object whose lifetime is certain to outlast the function
+
+*Answer:*
+- a: `unique_ptr<Weapon>` -- one owner, no sharing.
+- b: `shared_ptr<Texture>` -- many owners, object lives until last sprite is done.
+- c: `weak_ptr<Node>` -- parent already holds a `shared_ptr` to child; back-reference via `weak_ptr` avoids cycle.
+- d: `const T&` (reference) -- just borrowing, no ownership needed.
+
+---
+
+<a name="ch15"></a>
+# Chapter 15: Move Semantics, lvalues, and rvalues
+
+## The Performance Problem With Copies
+
+Consider what happens when you return a `std::vector` from a function:
+
+```cpp
+std::vector<int> make_million() {
+    std::vector<int> v(1'000'000, 0);   // 1 million ints on heap: ~4 MB
+    return v;
+}
+
+std::vector<int> result = make_million();
+```
+
+Naively, this would copy 4 MB from `v` into `result`. That is a lot of work. But modern C++ avoids this copy entirely. To understand how, you need lvalues and rvalues.
+
+---
+
+## lvalues and rvalues
+
+An **lvalue** is an expression that has a stable memory address -- you can take its address with `&`, and it persists beyond the current expression. Named variables are lvalues.
+
+An **rvalue** is a temporary -- it has no persistent address. Literals, arithmetic results, and return values are rvalues.
+
+```cpp
+int x = 5;
+int y = x + 3;
+
+// x is an lvalue: it has an address, it persists
+// 5 is an rvalue: it is a temporary value with no address of its own
+// x + 3 is an rvalue: the result is a temporary
+
+int* p = &x;         // OK: x is an lvalue, can take its address
+int* q = &(x + 3);   // ERROR: x+3 is an rvalue, no persistent address
+```
+
+The shorthand: if you can put it on the left side of an assignment, it is an lvalue. Rvalues cannot be assigned to.
+
+```cpp
+x = 42;        // OK: x is an lvalue
+x + 3 = 42;   // ERROR: x+3 is an rvalue, you cannot assign to it
+```
+
+---
+
+## The Move Operation
+
+An rvalue is a temporary that is about to be discarded. If you are initializing a new object from a temporary, there is no need to copy the temporary's data -- you can just steal it.
+
+This is the **move operation**: instead of copying data from source to destination and then destroying the source, move hands ownership of the source's resources directly to the destination, then puts the source in a valid-but-empty state.
+
+```
+Copy:
+  [Source]  --> makes a duplicate --> [Destination]
+  [Source] still valid and full     [Destination] is a new copy
+
+Move:
+  [Source]  --> hands over resources --> [Destination]
+  [Source] is now empty (valid but empty)  [Destination] owns the data
+```
+
+For a `std::vector` with 1 million elements:
+
+```
+Copy: allocate 4MB, copy 1M integers, now two 4MB allocations exist
+Move: copy 3 pointers (data, size, capacity), set source to empty state
+      -- essentially free
+```
+
+---
+
+## `std::move` -- Casting to rvalue
+
+By default, named variables are lvalues and are copied. To tell C++ "treat this lvalue as a temporary so it can be moved," use `std::move`:
+
+```cpp
+std::vector<int> a(1'000'000, 42);   // a: 4MB
+
+std::vector<int> b = a;              // COPY: 4MB allocated, 1M ints copied
+std::vector<int> c = std::move(a);   // MOVE: 3 pointers copied, a is now empty
+// a is empty after the move -- do not use a anymore
+```
+
+`std::move` does NOT move anything. It just casts `a` to an rvalue reference, signaling that the move constructor (instead of the copy constructor) should be used.
+
+---
+
+## Move Semantics and Returned Values
+
+```cpp
+std::vector<int> make_million() {
+    std::vector<int> v(1'000'000, 0);
+    return v;   // v is a local variable, about to be destroyed
+                // compiler applies NRVO (named return value optimization)
+                // or the implicit move -- either way, no copy
+}
+
+auto result = make_million();   // no copy of 4MB
+```
+
+The compiler applies **NRVO** (Named Return Value Optimization) or uses the implicit move. In practice, returning a local variable from a function is always efficient in modern C++. Do not write `return std::move(v)` -- that actually disables NRVO.
+
+---
+
+## Move Constructor and Move Assignment
+
+You can define how your own class moves:
+
+```cpp
+class Buffer {
+    int* data;
+    int  size;
+
+public:
+    // Constructor
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // Destructor
+    ~Buffer() { delete[] data; }
+
+    // Copy constructor (deep copy -- expensive)
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
+        std::copy(other.data, other.data + size, data);
+    }
+
+    // Move constructor (steal the pointer -- cheap)
+    Buffer(Buffer&& other) noexcept        // && = rvalue reference
+        : data{other.data}, size{other.size} {
+        other.data = nullptr;              // source is now empty
+        other.size = 0;
+    }
+
+    // Move assignment
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            delete[] data;             // free current data
+            data = other.data;         // steal other's data
+            size = other.size;
+            other.data = nullptr;      // leave other empty
+            other.size = 0;
+        }
+        return *this;
+    }
+};
+```
+
+The `&&` in `Buffer(Buffer&& other)` is an **rvalue reference** -- a reference that binds only to temporaries (rvalues). This overload is chosen when moving from a temporary.
+
+`noexcept` tells the compiler "this function will not throw." Move operations should be `noexcept` whenever possible -- some standard library algorithms (like `std::vector` reallocation) can only use the move constructor if it is `noexcept`.
+
+---
+
+## `std::string` and `std::vector` Move in Action
+
+```cpp
+std::string s1 = "This is a long string that lives on the heap";
+std::string s2 = s1;              // copy: s2 gets its own copy of the chars
+std::string s3 = std::move(s1);   // move: s3 steals the char buffer from s1
+                                  // s1 is now an empty string ""
+
+std::cout << s2 << "\n";  // "This is a long string..."
+std::cout << s3 << "\n";  // "This is a long string..."
+std::cout << s1 << "\n";  // "" (empty -- moved-from state)
+```
+
+---
+
+## When C++ Moves Automatically
+
+You do not always need `std::move` explicitly. Moves happen automatically:
+
+1. **Returning a local variable from a function** (NRVO or implicit move)
+2. **Initializing from a temporary** (rvalue): `auto s = get_string();`
+3. **Passing a temporary to a function**: `process(std::vector<int>{1,2,3});`
+
+You need explicit `std::move` when:
+1. You want to transfer ownership from one named variable to another
+2. You want to move-insert into a container
+
+```cpp
+std::vector<std::string> words;
+std::string word = "hello";
+words.push_back(word);             // copy: word still valid
+words.push_back(std::move(word));  // move: word is now empty, faster
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using a Moved-From Object
+
+**The bug:**
+```cpp
+std::vector<int> src = {1, 2, 3};
+auto dst = std::move(src);
+for (int n : src) { ... }   // src is empty -- loop runs zero times
+                             // (well-defined but probably wrong)
+```
+**The rule:** After `std::move(x)`, treat `x` as if it were default-constructed (empty). Reassign before using.
+
+### Mistake 2: `return std::move(local)` Disabling NRVO
+
+**The bug:**
+```cpp
+std::vector<int> make() {
+    std::vector<int> v = {1, 2, 3};
+    return std::move(v);   // PESSIMIZATION: disables NRVO
+}
+```
+**The fix:** Just write `return v;`. The compiler already knows to move or elide.
+
+---
+
+## Exercises
+
+**Exercise 15.1 -- lvalue or rvalue?**
+
+Classify each expression as lvalue or rvalue:
+
+```cpp
+int x = 5;
+int arr[3] = {1,2,3};
+
+x           // (a)
+x + 1       // (b)
+arr[0]      // (c)
+42          // (d)
+std::string{"hello"}  // (e)
+```
+
+*Answer:*
+- (a) lvalue -- `x` is a named variable with a persistent address
+- (b) rvalue -- `x + 1` is a temporary result
+- (c) lvalue -- `arr[0]` refers to a specific array element with an address
+- (d) rvalue -- `42` is a literal, no persistent address
+- (e) rvalue -- a temporary `std::string` constructed inline
+
+---
+
+**Exercise 15.2 -- Move vs copy performance**
+
+Explain in your own words why moving a `std::vector<int>` with 1 million elements is faster than copying it.
+
+*Answer:* A `std::vector` consists of three things: a pointer to the heap-allocated element array, a size, and a capacity. Copying requires allocating a new heap array and copying all 1 million integers -- O(N) work proportional to the number of elements. Moving just copies the three pointer/size/capacity values and sets the source to empty -- O(1) work, regardless of the number of elements. The move does not touch the elements at all; it transfers ownership of the existing heap array.
+
+---
+
+**Exercise 15.3 -- Efficient string collection**
+
+Write a function that takes a `std::string` and pushes it into a `std::vector<std::string>`. Write two versions: one that copies, one that moves. When would you use each?
+
+*Answer:*
+```cpp
+std::vector<std::string> words;
+
+// Version 1: copy (use when you need to keep the original)
+void add_copy(const std::string& s) {
+    words.push_back(s);           // copies s into the vector
+}
+
+// Version 2: move (use when you are done with the original)
+void add_move(std::string s) {    // takes by value (already a copy or move from caller)
+    words.push_back(std::move(s)); // moves into the vector
+}
+
+std::string word = "hello";
+add_copy(word);                   // word still valid ("hello")
+add_move(std::move(word));        // word is now empty
+```
+
+---
+
+<a name="ch16"></a>
+# Chapter 16: The Rule of 0, 3, and 5
+
+## The Problem: Special Member Functions
+
+C++ classes have six **special member functions** that the compiler can generate automatically:
+
+| Function | Signature | What it does |
+|----------|-----------|-------------|
+| Default constructor | `T()` | Creates an object with no arguments |
+| Copy constructor | `T(const T&)` | Creates a copy of another object |
+| Copy assignment | `T& operator=(const T&)` | Overwrites this object with a copy |
+| Destructor | `~T()` | Cleans up when the object goes out of scope |
+| Move constructor | `T(T&&)` | Creates object by stealing from a temporary |
+| Move assignment | `T& operator=(T&&)` | Overwrites this object by stealing a temporary |
+
+The compiler generates these automatically if you do not write them. The compiler-generated versions do **memberwise** operations -- they copy/move/destroy each member in turn.
+
+The problem: the compiler-generated versions are wrong when your class **owns a resource** (raw pointer, file handle, socket, etc.).
+
+---
+
+## The Rule of Zero
+
+If your class does **not** own any raw resources, do not define any special member functions. Let the compiler generate them all. The compiler's versions will correctly copy/move/destroy each member.
+
+```cpp
+// Rule of Zero: no raw resources, no user-defined special members
+struct PlayerStats {
+    std::string name;        // std::string manages its own memory
+    int score{0};
+    std::vector<int> history; // std::vector manages its own memory
+    // No raw pointers, no new/delete -- compiler generates correct defaults
+};
+
+PlayerStats a{"Alice", 100, {90, 95, 100}};
+PlayerStats b = a;           // correct memberwise copy
+PlayerStats c = std::move(a); // correct memberwise move
+```
+
+This is the best outcome. Use `std::string`, `std::vector`, and smart pointers as members, so the Rule of Zero applies.
+
+---
+
+## The Rule of Three
+
+If you define **any** of: destructor, copy constructor, or copy assignment -- define all three.
+
+**Why:** If you need a custom destructor, your class probably manages a resource. If it manages a resource, the compiler's copy operations (which do a shallow copy of the pointer) are wrong.
+
+```cpp
+class Buffer {
+    int* data;
+    int  size;
+
+public:
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // 1. Destructor: free the resource
+    ~Buffer() { delete[] data; }
+
+    // 2. Copy constructor: deep copy
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
+        std::copy(other.data, other.data + size, data);
+    }
+
+    // 3. Copy assignment: free old, deep copy new
+    Buffer& operator=(const Buffer& other) {
+        if (this == &other) return *this;   // self-assignment guard
+        delete[] data;
+        size = other.size;
+        data = new int[size]{};
+        std::copy(other.data, other.data + size, data);
+        return *this;
+    }
+};
+```
+
+Without copy constructor and copy assignment, the compiler generates shallow copies -- both objects' `data` pointer points to the same heap memory. When both destructors run, `delete[]` is called twice on the same pointer. Crash.
+
+---
+
+## The Rule of Five
+
+C++11 added move semantics. If you are defining the Rule of Three, also define the move constructor and move assignment for efficiency: the **Rule of Five**.
+
+```cpp
+class Buffer {
+    int* data;
+    int  size;
+
+public:
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // 1. Destructor
+    ~Buffer() { delete[] data; }
+
+    // 2. Copy constructor (deep copy)
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
+        std::copy(other.data, other.data + size, data);
+    }
+
+    // 3. Copy assignment (free old, deep copy)
+    Buffer& operator=(const Buffer& other) {
+        if (this == &other) return *this;
+        delete[] data;
+        size = other.size;
+        data = new int[size]{};
+        std::copy(other.data, other.data + size, data);
+        return *this;
+    }
+
+    // 4. Move constructor (steal pointer)
+    Buffer(Buffer&& other) noexcept
+        : data{other.data}, size{other.size} {
+        other.data = nullptr;
+        other.size = 0;
+    }
+
+    // 5. Move assignment (free old, steal pointer)
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this == &other) return *this;
+        delete[] data;
+        data = other.data;
+        size = other.size;
+        other.data = nullptr;
+        other.size = 0;
+        return *this;
+    }
+};
+```
+
+---
+
+## `= delete` and `= default`
+
+You can explicitly suppress or request the default implementation:
+
+```cpp
+class Unique {
+public:
+    Unique() = default;                          // use compiler's default constructor
+
+    Unique(const Unique&) = delete;              // copying is forbidden
+    Unique& operator=(const Unique&) = delete;   // copy assignment is forbidden
+
+    Unique(Unique&&) = default;                  // move is fine, use default
+    Unique& operator=(Unique&&) = default;
+};
+
+Unique a;
+Unique b = a;             // COMPILE ERROR: copy constructor is deleted
+Unique c = std::move(a);  // OK: move is allowed
+```
+
+`= delete` is how `std::unique_ptr` prevents copying. It causes a clear compile error rather than a silent wrong-copy.
+
+`= default` explicitly requests the compiler-generated version, which is useful when you need to declare one special member (which inhibits some compiler-generated ones) but still want the defaults for others.
+
+---
+
+## Compiler-Generated Functions Are Suppressed When You Define Others
+
+The rules for when the compiler generates special members are complex. Key interactions:
+
+| You define | Compiler suppresses |
+|------------|-------------------|
+| Destructor | Move constructor, move assignment (still generates copy ops) |
+| Copy constructor | Default constructor, move constructor, move assignment |
+| Copy assignment | Move constructor, move assignment |
+| Move constructor | Copy constructor, copy assignment |
+| Move assignment | Copy constructor, copy assignment |
+
+This is why the Rule of Five says: if you define any one, define all five. Defining just a destructor silently disables move semantics, forcing expensive copies everywhere.
+
+---
+
+## The Practical Takeaway
+
+In priority order:
+
+1. **Rule of Zero** (best): use standard containers and smart pointers as members. The compiler generates correct defaults. No special member functions needed.
+
+2. **Rule of Five** (when you must own raw resources): write all five explicitly. This is mainly for implementing containers and RAII wrappers, not typical application code.
+
+3. Never write only a destructor without the others. The compiler's default copy does a shallow copy of raw pointers, leading to double-free crashes.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Shallow Copy of Owning Pointer (Forgetting Rule of Three)
+
+**The bug:**
+```cpp
+class Buffer {
+    int* data;
+public:
+    Buffer(int n) { data = new int[n]{}; }
+    ~Buffer() { delete[] data; }
+    // forgot copy constructor and copy assignment
+};
+
+Buffer a{10};
+Buffer b = a;    // compiler shallow-copies: b.data == a.data (same pointer!)
+// both destructors run: double-free crash
+```
+**The fix:** Implement copy constructor and copy assignment (or use `= delete` to forbid copying).
+
+### Mistake 2: Forgetting the Self-Assignment Guard
+
+**The bug:**
+```cpp
+Buffer& operator=(const Buffer& other) {
+    delete[] data;             // frees data
+    size = other.size;
+    data = new int[size]{};
+    std::copy(other.data, ...); // if other IS *this, other.data was just deleted!
+}
+// buf = buf; --> crash
+```
+**The fix:** `if (this == &other) return *this;` at the top of copy assignment.
+
+---
+
+## Exercises
+
+**Exercise 16.1 -- Rule of Zero or Three?**
+
+For each class, say whether the Rule of Zero (no user-defined specials needed) or Rule of Three/Five applies:
+
+```cpp
+struct Point { double x, y; };                          // (a)
+class Socket { int fd; public: Socket(int f):fd{f}{}    // (b)
+               ~Socket() { close(fd); } };
+struct Config { std::string name; std::vector<int> v; }; // (c)
+class RawArr { int* p; int n; public: RawArr(int n):p{new int[n]{}},n{n}{}
+               ~RawArr(){delete[]p;} };                  // (d)
+```
+
+*Answer:*
+- (a): Rule of Zero -- `double` members, no resource ownership. Compiler generates correct copy/move.
+- (b): Rule of Five -- owns a file descriptor (OS resource). Needs explicit copy/move handling (probably `= delete` for copy, custom move that sets `fd = -1`).
+- (c): Rule of Zero -- `std::string` and `std::vector` manage their own resources. Compiler generates correct defaults.
+- (d): Rule of Five -- owns a raw `int*`. Needs destructor (done), copy constructor (deep copy), copy assignment, move constructor (steal pointer), move assignment.
+
+---
+
+**Exercise 16.2 -- Complete the Rule of Five**
+
+Complete `RawArr` from the exercise above with all five special members. The copy should make a deep copy; the move should steal the pointer.
+
+*Answer:*
+```cpp
+class RawArr {
+    int* p;
+    int  n;
+public:
+    RawArr(int sz) : p{new int[sz]{}}, n{sz} {}
+
+    ~RawArr() { delete[] p; }
+
+    RawArr(const RawArr& o) : p{new int[o.n]{}}, n{o.n} {
+        std::copy(o.p, o.p + n, p);
+    }
+
+    RawArr& operator=(const RawArr& o) {
+        if (this == &o) return *this;
+        delete[] p;
+        n = o.n;
+        p = new int[n]{};
+        std::copy(o.p, o.p + n, p);
+        return *this;
+    }
+
+    RawArr(RawArr&& o) noexcept : p{o.p}, n{o.n} {
+        o.p = nullptr; o.n = 0;
+    }
+
+    RawArr& operator=(RawArr&& o) noexcept {
+        if (this == &o) return *this;
+        delete[] p;
+        p = o.p; n = o.n;
+        o.p = nullptr; o.n = 0;
+        return *this;
+    }
+};
+```
+
+---
+
+*Part III is complete. You now understand the ownership model that makes C++ both safe and fast: RAII ties resource lifetime to object lifetime, smart pointers automate ownership, move semantics avoid unnecessary copies, and the Rule of Zero/Five ensures correct copy and move behavior for your own types.*
+
+*Part IV covers object-oriented programming -- classes, constructors, inheritance, virtual functions, and polymorphism. Ask to continue.*
