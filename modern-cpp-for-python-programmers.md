@@ -7939,3 +7939,1194 @@ struct Mat2 {
 *Part IV is complete. You can now design a full object-oriented C++ system: classes with proper encapsulation, constructors with initializer lists, inheritance hierarchies with virtual dispatch, abstract interfaces, and expressive operator overloading.*
 
 *Part V covers generic programming -- templates and concepts, which let you write type-safe code that works for any type that meets your requirements, with zero runtime overhead. Ask to continue.*
+
+---
+
+# Part V -- Generic Programming
+
+Python uses duck typing: if an object has the right methods, any algorithm works on it. C++ achieves the same expressiveness at compile time through **templates** -- code that is parameterized over types. The key difference: Python resolves method calls at runtime; C++ generates specialized code for each type at compile time, producing no overhead.
+
+---
+
+<a name="ch23"></a>
+# Chapter 23: Function and Class Templates
+
+## The Problem Without Templates
+
+You want a `max` function. You need it for `int`, `double`, `float`, `long long` -- every numeric type:
+
+```cpp
+int    max(int a,    int b)    { return a > b ? a : b; }
+double max(double a, double b) { return a > b ? a : b; }
+float  max(float a,  float b)  { return a > b ? a : b; }
+// ... and so on for every type
+```
+
+The logic is identical for every type. Only the type changes. This is what templates solve.
+
+---
+
+## Function Templates
+
+A function template is a pattern. You write it once with a placeholder type, and the compiler generates concrete functions for each type you use it with.
+
+```python
+# Python: works for any type automatically (duck typing)
+def my_max(a, b):
+    return a if a > b else b
+
+my_max(3, 5)       # int
+my_max(3.14, 2.7)  # float
+my_max("b", "a")   # str
+```
+
+```cpp
+// C++: template -- compiler generates a version for each type
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+
+my_max(3, 5);          // compiler generates: int my_max(int, int)
+my_max(3.14, 2.7);     // compiler generates: double my_max(double, double)
+my_max('b', 'a');      // compiler generates: char my_max(char, char)
+// my_max("b", "a");   // works too: const char* comparison (pointer comparison -- careful)
+```
+
+`template <typename T>` declares a **type parameter** `T`. Everywhere `T` appears in the function, the compiler substitutes the actual type when instantiating the template.
+
+### Template Type Deduction
+
+The compiler deduces `T` from the arguments. You usually do not need to specify it explicitly:
+
+```cpp
+my_max(3, 5);              // T deduced as int
+my_max<double>(3, 5);      // T explicitly specified as double (3 and 5 converted)
+my_max(3, 5.0);            // ERROR: ambiguous -- is T int or double?
+my_max<double>(3, 5.0);    // OK: explicit T=double
+```
+
+When arguments have different types, deduction fails (the compiler cannot pick one `T`). Specify `T` explicitly, or cast one argument.
+
+### Multiple Template Parameters
+
+```cpp
+template <typename T, typename U>
+auto add(T a, U b) {     // auto return type: deduced from the expression
+    return a + b;
+}
+
+add(1, 2.0);      // returns double (int + double = double)
+add(1, 2);        // returns int
+```
+
+---
+
+## How Templates Are Compiled
+
+Templates are compiled differently from regular functions. This is why template errors look strange and why templates must be in headers.
+
+When you write `my_max(3, 5)`, the compiler:
+1. Finds the template definition
+2. Substitutes `T = int` throughout
+3. Compiles the resulting `int my_max(int, int)` as if you wrote it by hand
+4. Places it in the object file
+
+```
+Source:
+  template<typename T> T my_max(T a, T b) { ... }
+  my_max(3, 5);     --> generates: int    my_max(int, int)    { ... }
+  my_max(3.0, 5.0); --> generates: double my_max(double, double) { ... }
+  my_max('a', 'b'); --> generates: char   my_max(char, char)   { ... }
+```
+
+Each instantiation is a separate compiled function. No runtime type dispatch. Zero overhead compared to writing three functions by hand.
+
+### Why Templates Must Live in Headers
+
+When the compiler processes `main.cpp` and sees `my_max(3, 5)`, it needs the template definition to generate the instantiation. It cannot use a declaration alone (unlike regular functions where the linker handles it later).
+
+Therefore: **template definitions go in header files**, not `.cpp` files.
+
+```cpp
+// math_utils.h  -- template definitions here, not in a .cpp
+#pragma once
+
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+```
+
+If you put a template definition in a `.cpp` file and try to use it from another file, you get "undefined reference" at link time -- the compiler in the other `.cpp` had no template definition to instantiate from.
+
+---
+
+## Class Templates
+
+The standard library containers (`std::vector<T>`, `std::map<K,V>`) are class templates. You can write your own:
+
+```cpp
+// A simple fixed-size stack
+template <typename T, int MaxSize = 16>    // T: type, MaxSize: non-type parameter
+class Stack {
+    T   data[MaxSize];
+    int top{0};
+
+public:
+    void push(const T& value) {
+        if (top >= MaxSize) throw std::overflow_error{"Stack full"};
+        data[top++] = value;
+    }
+
+    T pop() {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        return data[--top];
+    }
+
+    const T& peek() const {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        return data[top - 1];
+    }
+
+    bool empty() const { return top == 0; }
+    int  size()  const { return top; }
+};
+```
+
+Usage:
+
+```cpp
+Stack<int>     int_stack;          // Stack of ints, max 16
+Stack<double, 32> big_stack;       // Stack of doubles, max 32
+
+int_stack.push(1);
+int_stack.push(2);
+int_stack.push(3);
+std::cout << int_stack.pop() << "\n";  // 3
+std::cout << int_stack.pop() << "\n";  // 2
+
+Stack<std::string> str_stack;
+str_stack.push("hello");
+str_stack.push("world");
+std::cout << str_stack.peek() << "\n"; // "world" (not popped)
+```
+
+Each combination of type arguments generates a completely separate class. `Stack<int>` and `Stack<double>` are two distinct types with no relationship to each other.
+
+---
+
+## Non-Type Template Parameters
+
+Templates can be parameterized by values (not just types):
+
+```cpp
+template <int N>
+struct Factorial {
+    static constexpr int value = N * Factorial<N-1>::value;
+};
+
+template <>                                  // specialization for base case
+struct Factorial<0> {
+    static constexpr int value = 1;
+};
+
+constexpr int f5 = Factorial<5>::value;  // 120, computed entirely at compile time
+constexpr int f10 = Factorial<10>::value; // 3628800
+```
+
+Array sizes, buffer sizes, and algorithm tuning parameters can all be non-type template parameters. This is how `std::array<int, 10>` works -- the size `10` is a non-type template parameter.
+
+---
+
+## Template Functions in the Standard Library
+
+The standard library is built on templates. Some functions you will use constantly:
+
+```cpp
+#include <algorithm>
+#include <vector>
+
+std::vector<int> v = {5, 3, 1, 4, 2};
+
+// All work for any type that supports the required operations:
+std::sort(v.begin(), v.end());                   // {1,2,3,4,5}
+std::reverse(v.begin(), v.end());                // {5,4,3,2,1}
+auto it = std::find(v.begin(), v.end(), 3);      // iterator to 3
+int  mx = *std::max_element(v.begin(), v.end()); // 5
+
+std::vector<double> dv = {1.0, 2.0, 3.0};
+std::sort(dv.begin(), dv.end());                 // same template, different type
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Putting Template Definitions in a `.cpp` File
+
+**The bug:**
+```cpp
+// math.cpp:
+template <typename T>
+T square(T x) { return x * x; }
+
+// main.cpp:
+template <typename T> T square(T x);   // declaration only
+int main() { square(5); }              // linker error: no instantiation found
+```
+**Linker error:** `undefined reference to 'int square<int>(int)'`
+**The fix:** Move the template definition into the header.
+
+### Mistake 2: Mixed Types Without Explicit Instantiation
+
+**The bug:**
+```cpp
+template <typename T>
+T add(T a, T b) { return a + b; }
+
+add(1, 2.0);  // ERROR: deduction fails -- is T int or double?
+```
+**The fix:** `add<double>(1, 2.0)` or `add(1.0, 2.0)` or `add(1, 2)`.
+
+### Mistake 3: Confusing Template Errors With Logic Errors
+
+Template errors are notorious for long, cryptic messages because the error is reported after instantiation. Always look at the first error and the "required from" line that shows where you used the template.
+
+---
+
+## Exercises
+
+**Exercise 23.1 -- Write a swap template**
+
+Write `template_swap(a, b)` that swaps two values of any type. Test with `int`, `double`, and `std::string`.
+
+*Answer:*
+```cpp
+template <typename T>
+void template_swap(T& a, T& b) {
+    T tmp = std::move(a);
+    a = std::move(b);
+    b = std::move(tmp);
+}
+
+int a = 1, b = 2;
+template_swap(a, b);   // a=2, b=1
+
+double x = 1.5, y = 2.5;
+template_swap(x, y);   // x=2.5, y=1.5
+
+std::string s = "hello", t = "world";
+template_swap(s, t);   // s="world", t="hello"
+```
+
+---
+
+**Exercise 23.2 -- min/max template**
+
+Write `clamp<T>(value, lo, hi)` that returns `lo` if `value < lo`, `hi` if `value > hi`, otherwise `value`. The standard library has `std::clamp` -- write your own.
+
+*Answer:*
+```cpp
+template <typename T>
+T clamp(T value, T lo, T hi) {
+    if (value < lo) return lo;
+    if (value > hi) return hi;
+    return value;
+}
+
+clamp(5, 0, 10);    // 5
+clamp(-3, 0, 10);   // 0
+clamp(15, 0, 10);   // 10
+clamp(0.5, 0.0, 1.0); // 0.5
+```
+
+---
+
+**Exercise 23.3 -- Class template Pair**
+
+Write a class template `Pair<A, B>` that stores two values of potentially different types. Provide:
+- Constructor `Pair(A, B)`
+- `first()` and `second()` getters (const)
+- Non-member `make_pair(a, b)` that deduces the types
+
+*Answer:*
+```cpp
+template <typename A, typename B>
+class Pair {
+    A first_val;
+    B second_val;
+public:
+    Pair(A a, B b) : first_val{std::move(a)}, second_val{std::move(b)} {}
+    const A& first()  const { return first_val; }
+    const B& second() const { return second_val; }
+};
+
+template <typename A, typename B>
+Pair<A,B> make_pair(A a, B b) {
+    return Pair<A,B>{std::move(a), std::move(b)};
+}
+
+auto p = make_pair(42, std::string{"hello"});
+std::cout << p.first() << " " << p.second() << "\n";  // 42 hello
+```
+
+---
+
+<a name="ch24"></a>
+# Chapter 24: Template Specialization and Variadic Templates
+
+## Template Specialization
+
+Sometimes the generic template is wrong or inefficient for a specific type. **Full specialization** provides a completely custom implementation for a concrete type:
+
+```cpp
+// Primary template: works for any T
+template <typename T>
+struct TypeInfo {
+    static std::string name() { return "unknown"; }
+};
+
+// Full specialization for int:
+template <>                   // <> means: no template parameters -- this is a specialization
+struct TypeInfo<int> {
+    static std::string name() { return "int"; }
+};
+
+// Full specialization for double:
+template <>
+struct TypeInfo<double> {
+    static std::string name() { return "double"; }
+};
+
+std::cout << TypeInfo<int>::name()    << "\n";  // "int"
+std::cout << TypeInfo<double>::name() << "\n";  // "double"
+std::cout << TypeInfo<char>::name()   << "\n";  // "unknown" (uses primary template)
+```
+
+### Partial Specialization
+
+**Partial specialization** provides a custom implementation for a subset of type combinations, keeping some template parameters generic:
+
+```cpp
+// Primary template
+template <typename T, typename U>
+struct IsSame { static constexpr bool value = false; };
+
+// Partial specialization: both types are the same
+template <typename T>
+struct IsSame<T, T> { static constexpr bool value = true; };
+
+IsSame<int, int>::value    // true
+IsSame<int, double>::value // false
+```
+
+Another common example -- specializing for pointers:
+
+```cpp
+// Primary template: general case
+template <typename T>
+class Storage {
+    T data;
+public:
+    void set(T v) { data = v; }
+    T    get()    { return data; }
+};
+
+// Partial specialization for pointer types
+template <typename T>
+class Storage<T*> {          // specialization matches any T*
+    T* data{nullptr};
+public:
+    void set(T* p) { data = p; }
+    T*   get()     { return data; }
+    bool valid()   { return data != nullptr; }
+    // Extra: null check makes sense for pointers
+};
+
+Storage<int>    si;     // uses primary template
+Storage<int*>   sp;     // uses pointer specialization -- has valid() method
+```
+
+---
+
+## `if constexpr` -- Compile-Time Branching
+
+Before concepts (next chapter), `if constexpr` lets you branch based on compile-time conditions inside templates:
+
+```cpp
+#include <type_traits>
+
+template <typename T>
+void describe(T value) {
+    if constexpr (std::is_integral_v<T>) {
+        std::cout << "integer: " << value << "\n";
+    } else if constexpr (std::is_floating_point_v<T>) {
+        std::cout << "float:   " << value << "\n";
+    } else {
+        std::cout << "other:   " << value << "\n";
+    }
+}
+
+describe(42);       // "integer: 42"
+describe(3.14);     // "float:   3.14"
+describe("hello");  // "other:   hello"
+```
+
+Unlike a regular `if`, only the matching branch is compiled. The other branches can contain code that would fail to compile for this type -- they are simply discarded.
+
+```cpp
+template <typename T>
+void print_info(T v) {
+    if constexpr (std::is_integral_v<T>) {
+        std::cout << "bits: " << sizeof(T) * 8 << "\n";
+        std::cout << "max:  " << std::numeric_limits<T>::max() << "\n";
+    } else {
+        std::cout << "not an integer\n";
+    }
+}
+```
+
+---
+
+## Type Traits
+
+`<type_traits>` provides compile-time predicates about types:
+
+```cpp
+#include <type_traits>
+
+std::is_integral_v<int>         // true
+std::is_integral_v<double>      // false
+std::is_floating_point_v<float> // true
+std::is_pointer_v<int*>         // true
+std::is_reference_v<int&>       // true
+std::is_const_v<const int>      // true
+std::is_same_v<int, int>        // true
+std::is_same_v<int, long>       // false (on most platforms!)
+std::is_base_of_v<Animal, Dog>  // true
+std::is_convertible_v<int, double> // true
+```
+
+These are the building blocks of generic code that adapts to the type it receives.
+
+---
+
+## Variadic Templates
+
+A variadic template accepts **any number of type arguments** (including zero). This is how `std::tuple`, `std::make_unique`, and `std::format` are implemented.
+
+```python
+# Python: *args handles any number of arguments
+def print_all(*args):
+    for arg in args:
+        print(arg)
+
+print_all(1, "hello", 3.14)
+```
+
+```cpp
+// C++: variadic template with parameter pack
+template <typename... Args>   // Args is a "parameter pack" -- zero or more types
+void print_all(Args... args) {
+    // Expand the pack using fold expression (C++17):
+    (std::cout << ... << args);   // prints each arg with no separator
+    std::cout << "\n";
+}
+
+print_all(1, " hello ", 3.14);   // "1 hello 3.14"
+```
+
+The `...` is the pack expansion operator. `Args...` unpacks the types; `args...` unpacks the values.
+
+### Recursive Variadic Template (Classic Style)
+
+Before C++17 fold expressions, variadic templates were handled recursively:
+
+```cpp
+// Base case: zero arguments
+void print_all() {}
+
+// Recursive case: print first, then recurse on the rest
+template <typename First, typename... Rest>
+void print_all(First first, Rest... rest) {
+    std::cout << first << " ";
+    print_all(rest...);   // recurse with one fewer argument
+}
+
+print_all(1, "hello", 3.14, true);
+// Output: 1 hello 3.14 1
+```
+
+### Fold Expressions (C++17)
+
+More concise for common patterns:
+
+```cpp
+// Sum of any number of values:
+template <typename... Ts>
+auto sum(Ts... args) {
+    return (... + args);      // left fold: ((arg1 + arg2) + arg3) + ...
+}
+
+sum(1, 2, 3, 4, 5);   // 15
+sum(1.0, 2.5, 0.5);   // 4.0
+sum(std::string{"a"}, std::string{"b"}, std::string{"c"});  // "abc"
+```
+
+Fold expression forms:
+
+```cpp
+(... op pack)      // left fold:  (((a op b) op c) op d)
+(pack op ...)      // right fold: (a op (b op (c op d)))
+(init op ... op pack) // left fold with initial value
+(pack op ... op init) // right fold with initial value
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Full Specialization After the Template Is Already Instantiated
+
+**The bug:**
+```cpp
+template <typename T> void foo(T) { std::cout << "generic\n"; }
+foo(5);                              // instantiates foo<int> as generic
+template <> void foo<int>(int) { std::cout << "int\n"; }
+// Too late: the specialization after the call point may not be seen by the compiler
+```
+**The fix:** Declare all specializations before any instantiations -- usually by putting everything in the header, with specializations after the primary template.
+
+### Mistake 2: Forgetting `template <>` for Full Specialization
+
+**The bug:**
+```cpp
+template <typename T> struct Foo { };
+struct Foo<int> { };   // ERROR: looks like a redefinition of a non-template class
+```
+**The fix:** `template <> struct Foo<int> { };`
+
+---
+
+## Exercises
+
+**Exercise 24.1 -- Specialize for bool**
+
+The `Stack<T>` from Chapter 23 stores `bool` values as full `T data[MaxSize]` which wastes space. Write a full specialization `Stack<bool>` that uses a `uint64_t` as a bitset (packing 64 bools into one uint64_t). Only implement `push`, `pop`, and `size`.
+
+*Answer (simplified):*
+```cpp
+template <>
+class Stack<bool, 64> {
+    uint64_t bits{0};
+    int      top{0};
+public:
+    void push(bool v) {
+        if (top >= 64) throw std::overflow_error{"Stack full"};
+        if (v) bits |= (1ULL << top);
+        else   bits &= ~(1ULL << top);
+        ++top;
+    }
+    bool pop() {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        --top;
+        return (bits >> top) & 1;
+    }
+    int size() const { return top; }
+};
+```
+
+---
+
+**Exercise 24.2 -- Variadic min**
+
+Write a variadic `vmin(args...)` that returns the minimum of any number of values.
+
+*Answer:*
+```cpp
+template <typename T>
+T vmin(T only) { return only; }
+
+template <typename T, typename... Rest>
+T vmin(T first, Rest... rest) {
+    T rest_min = vmin(rest...);
+    return first < rest_min ? first : rest_min;
+}
+
+vmin(5, 3, 8, 1, 6);  // 1
+vmin(3.14, 2.71, 1.41); // 1.41
+```
+
+---
+
+<a name="ch25"></a>
+# Chapter 25: Concepts (C++20) -- Compile-Time Duck Typing
+
+## The Problem With Unconstrained Templates
+
+```cpp
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+
+struct Foo {};
+my_max(Foo{}, Foo{});  // ERROR -- but the error is inside the template, very confusing
+```
+
+The error message:
+
+```
+error: no match for 'operator>' (operand types are 'Foo' and 'Foo')
+   3 |     return a > b ? a : b;
+      |            ~~^~~
+note: in instantiation of function template specialization 'my_max<Foo>' requested here
+   8 |     my_max(Foo{}, Foo{});
+```
+
+The error tells you the problem, but for complex templates it can span dozens of lines. More importantly, the error message talks about the template's internals -- not about what the caller did wrong.
+
+**Concepts** let you state requirements on template parameters up front, producing clear error messages at the call site.
+
+---
+
+## Defining and Using Concepts
+
+A **concept** is a named compile-time predicate over types:
+
+```python
+# Python 3.12+ type hints (still runtime duck typing)
+from typing import Protocol
+
+class Comparable(Protocol):
+    def __gt__(self, other) -> bool: ...
+```
+
+```cpp
+// C++20 concept: compile-time, enforced by compiler
+#include <concepts>
+
+template <typename T>
+concept Comparable = requires(T a, T b) {
+    { a > b } -> std::convertible_to<bool>;   // expression 'a > b' must be valid
+    { a < b } -> std::convertible_to<bool>;   // and convertible to bool
+};
+
+// Use the concept to constrain the template:
+template <Comparable T>     // shorthand constraint syntax
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+
+// Or equivalent with 'requires' clause:
+template <typename T>
+requires Comparable<T>
+T my_max(T a, T b) { return a > b ? a : b; }
+```
+
+Now trying `my_max(Foo{}, Foo{})` gives:
+
+```
+error: no matching function for call to 'my_max(Foo, Foo)'
+note: constraints not satisfied
+note: 'Comparable<Foo>' evaluated to false
+note: 'a > b' is not a valid expression for type 'Foo'
+```
+
+The error is at the call site and says exactly what is missing.
+
+---
+
+## Standard Library Concepts (`<concepts>`)
+
+C++20 provides many ready-made concepts:
+
+```cpp
+#include <concepts>
+
+std::integral<int>          // true: int is integral
+std::integral<double>       // false
+std::floating_point<double> // true
+std::signed_integral<int>   // true
+std::same_as<int, int>      // true
+std::derived_from<Dog, Animal> // true (Dog derived from Animal)
+std::convertible_to<int, double> // true
+std::equality_comparable<int>   // true (int has == and !=)
+std::totally_ordered<int>       // true (int has <, >, <=, >=)
+std::copyable<std::vector<int>> // true
+std::movable<std::unique_ptr<int>> // true
+std::callable<std::function<int()>> // true
+```
+
+Use these in your own templates:
+
+```cpp
+#include <concepts>
+
+template <std::integral T>       // T must be an integral type
+T next(T n) { return n + 1; }
+
+template <std::floating_point T>  // T must be a float type
+T reciprocal(T n) { return T{1} / n; }
+
+next(5);         // OK
+next(3.14);      // ERROR: double does not satisfy 'integral'
+reciprocal(2.0); // OK
+reciprocal(2);   // ERROR: int does not satisfy 'floating_point'
+```
+
+---
+
+## Writing Your Own Concepts
+
+A concept is defined with `requires` expressions that describe what operations must be valid:
+
+```cpp
+// A type T is Printable if it can be inserted into an ostream:
+template <typename T>
+concept Printable = requires(T v, std::ostream& os) {
+    { os << v };    // this expression must compile
+};
+
+// A type T is Container if it has begin(), end(), and size():
+template <typename T>
+concept Container = requires(T c) {
+    { c.begin() } -> std::input_iterator;
+    { c.end()   } -> std::input_iterator;
+    { c.size()  } -> std::convertible_to<std::size_t>;
+};
+
+// A type T is Numeric if it supports +, -, *, / with itself:
+template <typename T>
+concept Numeric = requires(T a, T b) {
+    { a + b } -> std::same_as<T>;
+    { a - b } -> std::same_as<T>;
+    { a * b } -> std::same_as<T>;
+    { a / b } -> std::same_as<T>;
+};
+
+// Use all three:
+template <Container C, Printable E>
+requires std::same_as<typename C::value_type, E>
+void print_container(const C& c) {
+    for (const E& e : c)
+        std::cout << e << " ";
+    std::cout << "\n";
+}
+```
+
+---
+
+## Abbreviated Function Templates (C++20)
+
+The cleanest concept syntax uses `auto` with concept constraints:
+
+```cpp
+// Instead of:
+template <std::integral T>
+T double_it(T n) { return n * 2; }
+
+// Write:
+std::integral auto double_it(std::integral auto n) { return n * 2; }
+//              ^-- abbreviated function template: auto = template parameter
+//   std::integral auto means "auto, but constrained to integral types"
+```
+
+For simple cases this is much shorter. For complex cases with multiple interdependent parameters, the explicit `template <typename T>` form is clearer.
+
+---
+
+## Concepts vs Runtime Type Checks
+
+Concepts check types at **compile time**. The entire constraint system is resolved before any code runs. Failed constraints are compiler errors, not runtime exceptions.
+
+```
+Python (duck typing):
+  - Checked at runtime when the method is called
+  - TypeError raised if method missing
+  - Only the failing call path is caught
+
+C++ concepts:
+  - Checked at compile time when the template is instantiated
+  - Compile error if constraint not satisfied
+  - All call sites checked, not just the ones tested
+  - Zero runtime overhead
+```
+
+This is what C++ means by "you don't pay for what you don't use" -- concepts are checked once at compile time and then disappear from the runtime.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using `requires` in the Wrong Place
+
+**The bug:**
+```cpp
+template <typename T>
+T foo(T a) requires std::integral<T>  // requires clause at end of function signature
+{ return a; }
+// Fine syntactically, but easy to confuse with body. Prefer:
+template <std::integral T> T foo(T a) { return a; }
+```
+Both are legal; the second is cleaner for simple cases.
+
+### Mistake 2: Concept Is Too Strict or Too Loose
+
+**The bug:** Writing a concept that requires `operator<` but your algorithm actually needs `operator<=`:
+```cpp
+template <typename T>
+concept Ordered = requires(T a, T b) { a < b; };   // missing <=
+
+template <Ordered T>
+bool in_range(T val, T lo, T hi) {
+    return lo <= val && val <= hi;  // uses <= -- not checked by concept!
+}
+```
+**The fix:** List every operation your template actually uses in the concept.
+
+---
+
+## Exercises
+
+**Exercise 25.1 -- Constrain my_max**
+
+Rewrite `my_max` from Chapter 23 with a concept that requires `operator>`. Test that it rejects `Foo{}` with a clear error.
+
+*Answer:*
+```cpp
+template <typename T>
+concept HasGreaterThan = requires(T a, T b) {
+    { a > b } -> std::convertible_to<bool>;
+};
+
+template <HasGreaterThan T>
+T my_max(T a, T b) { return a > b ? a : b; }
+
+my_max(3, 5);     // OK
+my_max(3.0, 5.0); // OK
+// my_max(Foo{}, Foo{});  // Compile error with clear message
+```
+
+---
+
+**Exercise 25.2 -- Numeric concept**
+
+Write a `sum` function that computes the sum of a `std::vector<T>` where `T` must satisfy `std::integral` or `std::floating_point`. Use a combined concept.
+
+*Answer:*
+```cpp
+template <typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
+template <Arithmetic T>
+T sum(const std::vector<T>& v) {
+    T total{};
+    for (const T& x : v) total += x;
+    return total;
+}
+
+sum(std::vector<int>{1, 2, 3, 4, 5});     // 15
+sum(std::vector<double>{1.1, 2.2, 3.3});  // 6.6
+// sum(std::vector<std::string>{"a","b"}); // ERROR: string not Arithmetic
+```
+
+---
+
+<a name="ch26"></a>
+# Chapter 26: An Introduction to Template Metaprogramming
+
+## What Is Template Metaprogramming?
+
+**Template metaprogramming (TMP)** is using the C++ template system to compute values and make decisions at **compile time**. The template system is Turing-complete -- in principle you can compute anything at compile time.
+
+In practice, TMP is used for:
+- Computing compile-time constants (sizes, masks, lookup tables)
+- Selecting code paths based on types without runtime overhead
+- Generating optimized code for specific type configurations
+- Implementing type traits and concepts
+
+Modern C++ has made most raw TMP unnecessary. `constexpr` functions, `if constexpr`, and concepts replace many old TMP patterns more readably. But understanding TMP helps you read library code and write efficient generic code.
+
+---
+
+## Compile-Time Recursion
+
+TMP was originally done with recursive struct templates (before `constexpr`):
+
+```cpp
+// Fibonacci at compile time (old style):
+template <int N>
+struct Fib {
+    static constexpr int value = Fib<N-1>::value + Fib<N-2>::value;
+};
+template <> struct Fib<0> { static constexpr int value = 0; };
+template <> struct Fib<1> { static constexpr int value = 1; };
+
+constexpr int f10 = Fib<10>::value;  // 55, computed at compile time
+```
+
+Modern equivalent with `constexpr` function (far more readable):
+
+```cpp
+constexpr int fib(int n) {
+    if (n <= 1) return n;
+    return fib(n-1) + fib(n-2);
+}
+constexpr int f10 = fib(10);  // 55, computed at compile time
+```
+
+Always prefer `constexpr` functions over struct-recursion TMP for computations.
+
+---
+
+## `std::enable_if` -- Conditional Compilation (Old Style)
+
+Before concepts, `std::enable_if` was used to enable or disable template instantiations based on type traits:
+
+```cpp
+#include <type_traits>
+
+// Only enabled for integral types (old style, pre-C++20):
+template <typename T,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
+T next(T n) { return n + 1; }
+
+// With concepts (C++20, prefer this):
+template <std::integral T>
+T next(T n) { return n + 1; }
+```
+
+You will encounter `enable_if` in older code and library documentation. Understanding it: `std::enable_if_t<condition>` is `void` when `condition` is true (template is valid) and causes substitution failure when `condition` is false (template is removed from consideration). This is called **SFINAE** (Substitution Failure Is Not An Error).
+
+---
+
+## Type Lists -- Compile-Time Lists of Types
+
+Variadic templates let you create lists of types that exist purely at compile time:
+
+```cpp
+// A type list:
+template <typename... Ts>
+struct TypeList {};
+
+using MyTypes = TypeList<int, double, std::string, bool>;
+
+// Count the types in a list:
+template <typename List>
+struct Length;
+
+template <typename... Ts>
+struct Length<TypeList<Ts...>> {
+    static constexpr int value = sizeof...(Ts);
+};
+
+constexpr int n = Length<MyTypes>::value;  // 4
+```
+
+Type lists are the foundation of tuple implementations, plugin systems, and serialization frameworks that need to enumerate types at compile time.
+
+---
+
+## Compile-Time Lookup Tables
+
+A powerful pattern: compute a lookup table at compile time so it is a static constant array in the binary:
+
+```cpp
+#include <array>
+
+// Generate a table of squares at compile time:
+constexpr std::array<int, 10> squares = []() {
+    std::array<int, 10> arr{};
+    for (int i = 0; i < 10; ++i) arr[i] = i * i;
+    return arr;
+}();   // immediately invoked lambda
+
+// At runtime, squares is a pre-computed constant array in .rodata
+// No runtime computation at all:
+std::cout << squares[7] << "\n";   // 49 -- just a memory read
+```
+
+This pattern works because:
+1. The lambda is `constexpr`-evaluatable
+2. `std::array` is a literal type
+3. The entire computation happens at compile time
+
+For game engines, look-up tables for sin/cos, byte-reversal, CRC, and huffman trees are often pre-computed this way.
+
+---
+
+## `std::tuple` -- Compile-Time Heterogeneous Collections
+
+`std::tuple` is a variadic class template that holds values of different types:
+
+```python
+# Python tuple
+t = (42, "hello", 3.14)
+print(t[0])   # 42  (runtime indexing)
+```
+
+```cpp
+// C++ tuple
+#include <tuple>
+std::tuple<int, std::string, double> t{42, "hello", 3.14};
+
+// Access by index -- index must be a compile-time constant:
+std::get<0>(t);  // 42
+std::get<1>(t);  // "hello"
+std::get<2>(t);  // 3.14
+
+// Cannot do: std::get<i>(t) where i is a runtime variable
+// The index is resolved at compile time
+
+// C++17 structured bindings (much nicer):
+auto [num, str, flt] = t;
+std::cout << num << " " << str << " " << flt << "\n";
+```
+
+`std::get<N>` is resolved at compile time. Accessing `std::get<5>(t)` on a 3-element tuple is a compile error, not a runtime error.
+
+---
+
+## `std::conditional` -- Type Selection at Compile Time
+
+Choose between two types based on a condition:
+
+```cpp
+#include <type_traits>
+
+// If condition is true, type is int; otherwise long long
+template <bool IsSmall>
+using StorageType = std::conditional_t<IsSmall, int, long long>;
+
+StorageType<true>  a = 5;          // int
+StorageType<false> b = 5000000000; // long long
+
+// Practical use: choose between fast and accurate computation
+template <bool Fast>
+using Float = std::conditional_t<Fast, float, double>;
+```
+
+---
+
+## The Difference Between TMP and `constexpr`
+
+```
+Template Metaprogramming:
+  - Computation done by the template instantiation engine
+  - Types are first-class citizens
+  - Syntax is complex (recursive struct templates, enable_if)
+  - Result is a type or compile-time constant
+  - Use when you need to manipulate TYPES at compile time
+
+constexpr:
+  - Computation done by a regular function (or expression) evaluated at compile time
+  - Normal C++ syntax, easy to read
+  - Result is a VALUE (int, array, struct...)
+  - Use when you need to compute VALUES at compile time
+
+C++20 guidance:
+  - For compile-time values: use constexpr functions
+  - For type selection: use concepts, if constexpr, std::conditional
+  - Raw TMP (recursive struct templates) is rarely needed in new code
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Trying to Use a Runtime Value as a Template Argument
+
+**The bug:**
+```cpp
+int n;
+std::cin >> n;
+std::array<int, n> arr;  // ERROR: n is not a compile-time constant
+```
+**The fix:** Use `std::vector<int>(n)` for runtime sizes.
+
+### Mistake 2: Recursive TMP Instead of `constexpr`
+
+**The bug:**
+```cpp
+template <int N> struct Pow2 { static constexpr int v = 2 * Pow2<N-1>::v; };
+template <>      struct Pow2<0> { static constexpr int v = 1; };
+```
+**Better:** `constexpr int pow2(int n) { return 1 << n; }`
+
+---
+
+## Exercises
+
+**Exercise 26.1 -- Compile-time lookup table**
+
+Create a `constexpr std::array<int, 16>` of the first 16 powers of 2 (1, 2, 4, 8, ...). Access element 10 and verify it is 1024.
+
+*Answer:*
+```cpp
+constexpr std::array<int, 16> powers_of_2 = []() {
+    std::array<int, 16> arr{};
+    arr[0] = 1;
+    for (int i = 1; i < 16; ++i) arr[i] = arr[i-1] * 2;
+    return arr;
+}();
+
+static_assert(powers_of_2[10] == 1024);  // compile-time check
+std::cout << powers_of_2[10] << "\n";    // 1024
+```
+
+---
+
+**Exercise 26.2 -- Type traits**
+
+Write a function `type_name<T>()` that returns a `std::string` naming the type as "integral", "floating_point", "string", or "other":
+
+*Answer:*
+```cpp
+#include <concepts>
+#include <string>
+
+template <typename T>
+std::string type_name() {
+    if constexpr (std::integral<T>)        return "integral";
+    else if constexpr (std::floating_point<T>) return "floating_point";
+    else if constexpr (std::same_as<T, std::string>) return "string";
+    else                                   return "other";
+}
+
+type_name<int>();          // "integral"
+type_name<double>();       // "floating_point"
+type_name<std::string>();  // "string"
+type_name<bool>();         // "integral" (bool is integral)
+type_name<char*>();        // "other"
+```
+
+---
+
+**Exercise 26.3 -- Tuple structured binding**
+
+Create a function `minmax(std::vector<T>)` that returns a `std::pair<T, T>` containing the minimum and maximum element. Use structured bindings to unpack the result.
+
+*Answer:*
+```cpp
+#include <vector>
+#include <utility>
+#include <algorithm>
+
+template <typename T>
+std::pair<T, T> minmax_pair(const std::vector<T>& v) {
+    auto [mn, mx] = std::minmax_element(v.begin(), v.end());
+    return {*mn, *mx};
+}
+
+std::vector<int> v = {5, 2, 8, 1, 9, 3};
+auto [lo, hi] = minmax_pair(v);
+std::cout << "min=" << lo << " max=" << hi << "\n";  // min=1 max=9
+```
+
+---
+
+*Part V is complete. You now understand C++ generic programming: function and class templates, specialization, variadic templates, concepts for type-safe constraints, and the foundations of template metaprogramming.*
+
+*Part VI covers the C++ Standard Library in depth -- containers, iterators, algorithms, lambdas, ranges, and utility types. These are the tools you will use in every real program. Ask to continue.*
