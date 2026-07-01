@@ -1,36 +1,13 @@
 ---
 title: "Modern C++ for Python Programmers"
 subtitle: "From Absolute Beginner to Systems, Graphics, and Game Development"
-author: ""
+author: "Sahit"
 date: "2026"
 lang: en-US
 
-titlepage: true
-titlepage-color: "0F1117"
-titlepage-text-color: "E2E8F0"
-titlepage-rule-color: "4F9EE8"
-titlepage-rule-height: 6
-
-monofont: "DejaVu Sans Mono"
-fontsize: 10pt
-
-geometry: "top=30mm, bottom=30mm, left=28mm, right=28mm"
-book: true
+fontsize: 11pt
 toc: true
 toc-depth: 2
-toc-own-page: true
-numbersections: true
-
-listings: true
-listings-no-page-break: true
-code-block-font-size: \footnotesize
-
-colorlinks: true
-linkcolor: accentblue
-urlcolor: accentblue
-toccolor: accentblue
-
-header-includes:
-  - \usepackage{xcolor}
-  - \definecolor{accentblue}{HTML}{4F9EE8}
+numbersections: false
+top-level-division: chapter
 ---
