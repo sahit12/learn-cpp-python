@@ -1,38 +1,43 @@
 # Modern C++ for Python Programmers
 ## From Absolute Beginner to Systems, Graphics, and Game Development
 
-**Target Standard:** C++23 (notes on C++11/14/17/20 throughout)
-**Prerequisites:** Comfortable Python; zero C++ assumed
+**Target Standard:** C++23 | **Prerequisites:** Comfortable Python, zero C++ assumed
 
-> Every concept is taught from zero and contrasted with how Python does the same thing.
+---
+
+## How to Use This Book
+
+Each chapter teaches one concept from scratch. Every concept is first shown in Python (which you know), then explained in C++, then built up with multiple examples, memory diagrams where helpful, common mistakes, and exercises with answers.
+
+Work through Part I completely before moving on. The foundations -- types, memory, functions -- underpin everything else.
 
 ---
 
 ## Table of Contents
 
-**Part I — Foundations**
-1. [The Compilation Model & Your First Program](#ch1)
+**Part I -- Foundations**
+1. [The Compilation Model and Your First Program](#ch1)
 2. [Variables, Types, and the Static Type System](#ch2)
 3. [Operators and Expressions](#ch3)
 4. [Control Flow: Branching and Loops](#ch4)
 5. [Functions, Overloading, and Declarations vs Definitions](#ch5)
 
-**Part II — Core C++ (the part that isn't like Python)**
-6. [References — Aliases for Variables](#ch6)
+**Part II -- Core C++ (the part that is not like Python)**
+6. [References -- Aliases for Variables](#ch6)
 7. [Pointers and Memory Addresses](#ch7)
 8. [The Stack and the Heap](#ch8)
 9. [const Correctness](#ch9)
 10. [Arrays, std::vector, and std::string](#ch10)
 11. [Scope, Lifetime, and Organizing Code into Files](#ch11)
 
-**Part III — Ownership and Memory Management**
-12. [RAII — The Core Idea That Replaces Garbage Collection](#ch12)
+**Part III -- Ownership and Memory Management**
+12. [RAII -- The Core Idea That Replaces Garbage Collection](#ch12)
 13. [Dynamic Allocation: new, delete, and Why You Avoid Them](#ch13)
 14. [Smart Pointers: unique_ptr, shared_ptr, weak_ptr](#ch14)
 15. [Move Semantics, lvalues and rvalues](#ch15)
 16. [The Rule of 0, 3, and 5](#ch16)
 
-**Part IV — Object-Oriented Programming**
+**Part IV -- Object-Oriented Programming**
 17. [Classes, Objects, and Encapsulation](#ch17)
 18. [Constructors, Destructors, and Initialization](#ch18)
 19. [Inheritance and Composition](#ch19)
@@ -40,13 +45,13 @@
 21. [Abstract Classes and Interfaces](#ch21)
 22. [Operator Overloading](#ch22)
 
-**Part V — Generic Programming**
+**Part V -- Generic Programming**
 23. [Function and Class Templates](#ch23)
 24. [Template Specialization and Variadic Templates](#ch24)
-25. [Concepts (C++20) — Compile-Time Duck Typing](#ch25)
+25. [Concepts (C++20) -- Compile-Time Duck Typing](#ch25)
 26. [An Introduction to Template Metaprogramming](#ch26)
 
-**Part VI — The Standard Library (STL)**
+**Part VI -- The Standard Library**
 27. [Containers: vector, map, set, array, and friends](#ch27)
 28. [Iterators](#ch28)
 29. [Algorithms: sort, find, transform, and the rest](#ch29)
@@ -54,33 +59,33 @@
 31. [Ranges and Views (C++20)](#ch31)
 32. [Utility Types: optional, variant, any, tuple](#ch32)
 
-**Part VII — Modern C++ (C++11 → C++23)**
+**Part VII -- Modern C++ (C++11 to C++23)**
 33. [auto, type deduction, and structured bindings](#ch33)
 34. [constexpr and compile-time computation](#ch34)
 35. [std::format and modern string handling](#ch35)
 36. [Coroutines and Generators](#ch36)
 37. [Modules (C++20)](#ch37)
 
-**Part VIII — The Cost Model & Performance**
+**Part VIII -- Performance**
 38. [Value vs Reference Semantics](#ch38)
-39. [How Memory Layout Affects Speed (cache, locality)](#ch39)
+39. [How Memory Layout Affects Speed](#ch39)
 40. [Data-Oriented Design](#ch40)
 41. [Profiling and Flamegraphs](#ch41)
 
-**Part IX — Concurrency**
+**Part IX -- Concurrency**
 42. [Threads and std::jthread](#ch42)
 43. [Mutexes, Locks, and Race Conditions](#ch43)
 44. [Atomics and the C++ Memory Model](#ch44)
 45. [Async, Futures, and Tasks](#ch45)
 
-**Part X — Specialization A: Graphics & Game Development**
+**Part X -- Graphics and Game Development**
 46. [The Math: vectors, matrices, quaternions](#ch46)
 47. [How the GPU Works](#ch47)
 48. [OpenGL Fundamentals](#ch48)
 49. [Moving to Vulkan](#ch49)
 50. [Game Loop, ECS Architecture, and Engine Design](#ch50)
 
-**Part XI — Specialization B: Systems Programming**
+**Part XI -- Systems Programming**
 51. [The Machine: registers, memory, syscalls](#ch51)
 52. [Working with the OS and Linux APIs](#ch52)
 53. [Networking from the Ground Up](#ch53)
@@ -89,27 +94,34 @@
 **Appendices**
 - [A. Setting Up Your Toolchain](#appa)
 - [B. Compiler Flags Reference](#appb)
-- [C. Python → C++ Idiom Cheat Sheet](#appc)
+- [C. Python to C++ Cheat Sheet](#appc)
 - [D. Common Mistakes and How to Debug Them](#appd)
 
 ---
 
----
-
-# Part I — Foundations
+# Part I -- Foundations
 
 ---
 
 <a name="ch1"></a>
-## Chapter 1: The Compilation Model & Your First Program
+# Chapter 1: The Compilation Model and Your First Program
 
-### How Python Runs Your Code
+## What Does "Running a Program" Actually Mean?
 
-When you run `python hello.py`, the CPython interpreter reads your source file, parses it into an AST, compiles it to bytecode, and then executes that bytecode in a virtual machine — all in one step, invisibly. You never think about it.
+Before you write a single line of C++, you need to understand something Python completely hides: what a computer actually does to run your code.
+
+When you type `python hello.py`, a lot of invisible machinery kicks in. When you compile and run a C++ program, that machinery becomes visible -- and you control it. That visibility is both the source of C++'s power and the main source of beginner confusion.
+
+---
+
+## How Python Runs Your Code
+
+Let's trace exactly what happens when you run a Python script.
 
 ```python
 # hello.py
-print("Hello, world!")
+name = "world"
+print(f"Hello, {name}!")
 ```
 
 ```bash
@@ -117,37 +129,167 @@ $ python hello.py
 Hello, world!
 ```
 
-Python trades speed for convenience. The interpreter does a huge amount of work at runtime: looking up variable names in dictionaries, figuring out types on the fly, managing memory with a garbage collector.
-
-### How C++ Works
-
-C++ is a compiled language. Your source code is transformed into native machine code *before* it ever runs. There is no virtual machine. The CPU executes your program directly. This is why C++ programs are fast — and why they demand more from you up front.
-
-The transformation happens in three stages:
+CPython (the standard Python interpreter) runs your code through five stages:
 
 ```
-Source (.cpp) → Preprocessor → Compiler → Object file (.o)
-Object files + Libraries → Linker → Executable
+hello.py  (plain text file)
+    |
+    v
++-----------+
+| Tokenizer |   Breaks the text into tokens:
+|           |   NAME('name'), OP('='), STRING('"world"'), NEWLINE, ...
++-----------+
+    |
+    v
++--------+
+| Parser |   Builds an Abstract Syntax Tree (AST).
+|        |   A tree structure representing the grammar of your program.
++--------+
+    |
+    v
++-------------------+
+| Bytecode Compiler |   Converts the AST into bytecode instructions
+|                   |   and saves them to a .pyc file.
++-------------------+
+    |
+    v
++-------------------+
+| CPython VM        |   Reads each bytecode instruction one at a time
+| (the interpreter) |   and executes it using real CPU operations.
++-------------------+
+    |
+    v
+ Output: "Hello, world!"
 ```
 
-**Preprocessor:** Handles `#include`, `#define`, and other `#` directives. Purely textual substitution — it doesn't understand C++ at all.
+The `.pyc` file contains instructions for a **virtual machine** -- a software CPU that Python invented. These are NOT instructions your real CPU understands. The CPython VM translates each bytecode instruction into real CPU instructions as the program runs.
 
-**Compiler:** Reads the preprocessed source, checks types, and emits machine code into an *object file*. One `.cpp` → one `.o`.
+You can actually see the bytecode:
 
-**Linker:** Combines all the object files (yours and the standard library's) into a single executable. Resolves references between files — when `main.cpp` calls a function defined in `math.cpp`, the linker is what wires them together.
+```python
+import dis
 
-### Your First C++ Program
+def greet(name):
+    return f"Hello, {name}!"
+
+dis.dis(greet)
+```
+
+Output:
+```
+  2           0 RESUME                   0
+
+  3           2 LOAD_CONST               1 ('Hello, ')
+              4 LOAD_FAST                0 (name)
+              6 FORMAT_VALUE             0
+              8 BUILD_STRING             2
+             10 RETURN_VALUE
+```
+
+`LOAD_FAST`, `FORMAT_VALUE`, `BUILD_STRING` -- your CPU has never heard of these. The CPython VM reads each one and does the corresponding real work.
+
+**The consequence:** There is always a middleman between your code and the CPU. Every Python operation passes through the interpreter loop. This is why Python is typically 10 to 100 times slower than C++ for CPU-bound work.
+
+---
+
+## How C++ Runs Your Code
+
+C++ uses a completely different model. Your source code is **translated directly into CPU instructions** before the program runs. There is no interpreter, no virtual machine, no middleman. When you run the program, your CPU executes your instructions directly.
+
+This is called **ahead-of-time compilation**.
+
+The translation is done by a chain of three programs:
+
+```
+hello.cpp  (plain text, C++ source)
+    |
+    v
++---------------+
+| Preprocessor  |   Handles lines starting with #.
+|               |   Pastes #include files, substitutes #define macros.
+|               |   Pure text manipulation -- does NOT understand C++.
++---------------+
+    |
+    |   (preprocessed .cpp -- still text, but with all #includes pasted in)
+    v
++---------------+
+| Compiler      |   Parses C++, checks all types, optimizes, generates
+|               |   machine code for your CPU architecture.
++---------------+
+    |
+    |   (object file: .o -- real machine code, but references unresolved)
+    v
++---------------+
+| Linker        |   Combines all .o files plus library code into one
+|               |   self-contained executable.
++---------------+
+    |
+    v
+ ./hello  (executable -- native machine code, runs directly on CPU)
+```
+
+### Stage 1: The Preprocessor in Detail
+
+The preprocessor is a dumb text tool. It knows only three things:
+
+- `#include <file>` or `#include "file"` -- paste the entire text of that file here
+- `#define NAME text` -- replace every occurrence of NAME with text
+- `#ifdef / #ifndef / #else / #endif` -- include or exclude blocks of text
+
+It does not parse C++. It does not understand types. It just manipulates text.
+
+When you write `#include <iostream>`, the preprocessor pastes thousands of lines into your file before the compiler sees anything. You can see how much:
+
+```bash
+$ g++ -E hello.cpp | wc -l
+45231
+```
+
+One line expands to 45,231 lines. That is why large projects are slow to compile -- every `.cpp` file re-expands every header it includes.
+
+### Stage 2: The Compiler in Detail
+
+The compiler reads the preprocessed text and does the real work:
+
+1. **Parsing**: builds an AST (same concept as Python's parser)
+2. **Semantic analysis**: checks types, resolves names, catches errors
+3. **Optimization** (with `-O2`): rewrites your code to run faster
+4. **Code generation**: emits machine code for your target CPU
+
+The output is an **object file** (`.o`). It contains real machine code, but it has gaps -- references to functions defined in other files (like `std::cout`) that haven't been connected yet.
+
+### Stage 3: The Linker in Detail
+
+The linker takes all object files and the standard library and combines them into one executable. It resolves every function call to an actual memory address. When `main.cpp` calls `std::cout`, the linker finds `cout`'s implementation in the standard library and wires them together.
+
+### The Core Difference
+
+```
+Python:
+  source --> bytecode (at first run) --> CPU (via interpreter, every run)
+
+C++:
+  source --> machine code (once, at compile time) --> CPU (directly, every run)
+```
+
+After you compile once, running the program has zero translation overhead. The CPU just executes instructions.
+
+---
+
+## Your First C++ Program
+
+Create a file called `hello.cpp`:
 
 ```cpp
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, world!" << std::endl;
+    std::cout << "Hello, world!\n";
     return 0;
 }
 ```
 
-Save this as `hello.cpp`. Then compile and run:
+Compile and run:
 
 ```bash
 $ g++ -std=c++23 -o hello hello.cpp
@@ -155,383 +297,1535 @@ $ ./hello
 Hello, world!
 ```
 
-Let's break down every token:
+Now let's understand every token in this program.
 
-- `#include <iostream>` — tells the preprocessor to paste the contents of the `iostream` header here. This gives you access to `std::cout`. The angle brackets mean "look in the system include path."
-- `int main()` — the entry point of every C++ program. It must return `int`. The OS reads that return value; `0` means success.
-- `std::cout` — the standard output stream. `std` is a *namespace* (a named grouping of identifiers). `cout` lives inside it.
-- `<<` — the *stream insertion operator*. It sends the string to `cout`.
-- `std::endl` — flushes the stream and writes a newline. In tight loops, prefer `'\n'` (just a newline, no flush) for performance.
-- `return 0;` — exit code. You can actually omit this in `main` and the compiler inserts it, but being explicit is clearer.
+### `#include <iostream>`
 
-### The Compiler is Your Friend
+A preprocessor directive. Pastes the `iostream` header (thousands of lines) into your file.
 
-Unlike Python, which tells you about most errors at runtime, C++ tells you at compile time. Type mismatches, calling functions that don't exist, using variables before declaring them — all caught before the program runs. This feels annoying at first and becomes invaluable.
+`iostream` declares `std::cout`, the standard output stream. Without it:
+
+```
+error: 'cout' is not a member of 'std'
+    4 |     std::cout << "Hello, world!\n";
+      |     ^~~~~~~~~
+note: 'std::cout' is defined in header '<iostream>';
+      did you forget to '#include <iostream>'?
+```
+
+Angle brackets `<iostream>` mean "find this in the compiler's system include path." Double quotes `"myfile.h"` mean "look in my project directory first."
+
+### `int main()`
+
+The **entry point** of every C++ program. When the OS launches your executable, it calls `main()`. Everything begins here.
+
+`int` is the **return type**. The function returns an integer to the OS as an exit code:
+- `0` = success (by convention)
+- Non-zero = some kind of failure
+
+Unlike Python where top-level code runs directly, C++ requires exactly one function called `main` as the entry point. You can't rename it or have two of them.
+
+The `{}` braces delimit the function body, playing the same role as `:` and indentation in Python.
+
+### `std::cout << "Hello, world!\n";`
+
+This is how you print to the terminal.
+
+**`std`** is a **namespace** -- a named container for related identifiers. The entire C++ standard library lives inside `std`. The `::` operator means "look inside." So `std::cout` means "the `cout` that lives inside the `std` namespace."
+
+**`cout`** stands for "character output." It is an object representing your terminal's standard output.
+
+**`<<`** is the **stream insertion operator**. It sends the value on the right into the stream on the left. You can chain it:
+
+```cpp
+std::cout << "Hello" << ", " << "world" << "!\n";
+```
+
+Each `<<` sends one more thing into the stream.
+
+**`"Hello, world!\n"`** is a string literal. The `\n` is a newline character. Unlike Python's `print()`, which adds a newline automatically, C++ streams do not add newlines unless you include them.
+
+**`;`** terminates the statement. Every statement ends with a semicolon. This is the single most common beginner error. Forgetting it produces an error on the *next* line because the compiler doesn't notice until it sees an unexpected token.
+
+### `return 0;`
+
+Returns the exit code 0 (success) to the OS. In `main` specifically, you can omit this and the compiler inserts it, but writing it is explicit and clear.
+
+---
+
+## Compiling: What the Flags Mean
 
 ```bash
-# Ask the compiler to tell you everything it knows
 $ g++ -std=c++23 -Wall -Wextra -o hello hello.cpp
 ```
 
-`-Wall` and `-Wextra` enable warnings. A warning is the compiler saying "this compiles, but I suspect you made a mistake." Always treat warnings as errors when learning.
+| Flag | What it does |
+|------|-------------|
+| `g++` | The GNU C++ compiler. Also try `clang++` (often better error messages). |
+| `-std=c++23` | Use the C++23 standard. Without this you get an older, less capable standard. |
+| `-Wall` | Enable all common warnings. The W stands for Warning. |
+| `-Wextra` | Enable even more warnings. |
+| `-o hello` | Name the output executable `hello`. Default without `-o` is `a.out`. |
+| `hello.cpp` | The source file to compile. |
 
-### Compilation Unit Model
+### Two Build Modes You Will Use
 
-In Python you can split code across files and `import` them freely. In C++, the model is stricter.
+```bash
+# Development (use this while writing code):
+$ g++ -std=c++23 -Wall -Wextra -g -fsanitize=address,undefined -o hello hello.cpp
+#                               |   |
+#                               |   +-- catches memory bugs and UB at runtime
+#                               +------ adds debug symbols for stack traces
 
-Each `.cpp` file is an independent *translation unit*. It is compiled in isolation. If `main.cpp` wants to call a function defined in `util.cpp`, it needs a *declaration* of that function — typically provided via a header file `util.h`. The linker then resolves the actual address of the function.
+# Release (use this for final builds):
+$ g++ -std=c++23 -O2 -o hello hello.cpp
+#                 |
+#                 +-- enables optimization (2x-10x faster)
+```
+
+The sanitizers (`-fsanitize=address,undefined`) catch entire classes of bugs that would otherwise produce silent wrong answers or random crashes. Always use them during development.
+
+---
+
+## What Is in the Compiled Binary?
+
+The executable file is organized into sections:
 
 ```
-main.cpp   includes util.h (declaration)  →  compiled to main.o
-util.cpp   implements the function         →  compiled to util.o
-linker: main.o + util.o → executable
+./hello  (ELF executable on Linux, Mach-O on macOS, PE on Windows)
+
+Section    Contents
+--------   ------------------------------------------------
+.text      Your compiled machine code instructions
+.rodata    Read-only data: string literals like "Hello, world!\n"
+.data      Initialized global variables
+.bss       Uninitialized global variables (zeroed at program start)
 ```
 
-We cover this fully in Chapter 11. For now, keep everything in one file.
+You can disassemble the executable to see what your code became:
 
-### Key Takeaways
+```bash
+$ objdump -d -C hello | grep -A 15 "<main>"
+```
 
-- Python: interpreted at runtime. C++: compiled to machine code before running.
-- The pipeline is: preprocess → compile → link.
-- `main()` is the entry point and must return `int`.
-- `std::cout <<` is how you print to the terminal.
-- The compiler catches type errors before your program ever runs.
+```asm
+0000000000001149 <main>:
+    1149:  push   rbp
+    114a:  mov    rbp,rsp
+    114d:  lea    rdi,[rip+0xeb0]     <- loads address of "Hello, world!\n"
+    1154:  call   1060 <puts@plt>      <- calls puts() (compiler optimized cout to this)
+    1159:  mov    eax,0x0
+    115e:  pop    rbp
+    115f:  ret
+```
+
+Seven CPU instructions. No interpreter, no type checking, no reference counting. This is what runs when you execute `./hello`.
+
+---
+
+## Multi-File Programs
+
+Once programs grow beyond one file, you split them:
+
+```
+main.cpp   --compile-->  main.o  --+
+                                    +--> linker --> program
+greet.cpp  --compile--> greet.o  --+
+```
+
+```cpp
+// greet.h  -- declaration (the interface, what other files need to know)
+#pragma once
+#include <string>
+void greet(const std::string& name);
+
+// greet.cpp  -- definition (the actual implementation)
+#include <iostream>
+#include "greet.h"
+void greet(const std::string& name) {
+    std::cout << "Hello, " << name << "!\n";
+}
+
+// main.cpp  -- uses the function
+#include "greet.h"
+int main() {
+    greet("world");
+    return 0;
+}
+```
+
+```bash
+$ g++ -std=c++23 -o program main.cpp greet.cpp
+```
+
+Chapter 11 covers the full rationale for this split.
+
+---
+
+## Reading Compiler Errors
+
+The compiler is your most important tool. It catches errors before your program runs. Learning to read its output quickly is a core skill.
+
+### Missing Semicolon
+
+```cpp
+int main() {
+    std::cout << "Hello"    // missing semicolon here
+    return 0;
+}
+```
+
+```
+hello.cpp:4:5: error: expected ';' before 'return'
+    4 |     std::cout << "Hello"
+      |                         ^
+      |                         ;
+    5 |     return 0;
+```
+
+The caret `^` marks where the problem was detected -- the end of line 4. The message says "before 'return'" because the compiler only noticed something was wrong when it hit `return`.
+
+### Missing `#include`
+
+```cpp
+int main() {
+    std::cout << "Hello\n";
+}
+```
+
+```
+hello.cpp:2:5: error: 'cout' is not a member of 'std'
+    2 |     std::cout << "Hello\n";
+      |     ^~~~~~~~~
+note: 'std::cout' is defined in header '<iostream>';
+      did you forget to '#include <iostream>'?
+```
+
+Read every `note:` line. Modern compilers often tell you exactly what to do.
+
+### Undefined Reference (Linker Error)
+
+```cpp
+// main.cpp
+void greet(const std::string& name);  // declared but never defined anywhere
+
+int main() { greet("world"); }
+```
+
+```
+/usr/bin/ld: main.o: undefined reference to `greet(std::string const&)'
+collect2: error: ld returned 1 exit status
+```
+
+"Undefined reference" means the compiler accepted the code (it saw the declaration), but the linker couldn't find the function's body. Either you forgot to define it, or forgot to include its `.cpp` file in the build command.
+
+### Type Mismatch
+
+```cpp
+int x = "hello";
+```
+
+```
+error: invalid conversion from 'const char*' to 'int'
+    1 | int x = "hello";
+      |         ^~~~~~~
+```
+
+The static type system caught this before the program ran. Python would allow `x = 5; x = "hello"` -- C++ refuses.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting the semicolon
+
+**The bug:** `std::cout << "Hello"` with no `;`
+
+**The symptom:** Error message appears on the *next* line, not the line where you forgot it. The compiler doesn't notice until it encounters an unexpected token.
+
+**The fix:** Every statement ends with `;`. After `return 0`. After every `cout`. After every variable declaration.
+
+---
+
+### Mistake 2: Writing `cout` without `std::`
+
+**The bug:**
+```cpp
+cout << "Hello\n";   // 'cout' -- where is it?
+```
+
+**The symptom:**
+```
+error: 'cout' was not declared in this scope
+```
+
+**The fix:** Write `std::cout`. You can also add `using std::cout;` at the top of a function to avoid typing `std::` every time. Do not use `using namespace std;` -- it pulls in hundreds of names that may conflict with your own.
+
+---
+
+### Mistake 3: Confusing `#include <...>` with `#include "..."`
+
+**The bug:** Writing `#include "iostream"` instead of `#include <iostream>`
+
+**What happens:** The preprocessor looks for `iostream` in the current directory first. It may find nothing and fail, or find the wrong file.
+
+**The fix:** Use `<...>` for system and library headers. Use `"..."` for your own headers.
+
+---
+
+## Exercises
+
+**Exercise 1.1 -- Predict the output**
+
+What does this print? Work it out before running it.
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "Line 1\n";
+    std::cout << "Line " << 2 << "\n";
+    std::cout << "Line " << 1 + 2 << "\n";
+    return 0;
+}
+```
+
+*Answer:*
+```
+Line 1
+Line 2
+Line 3
+```
+`1 + 2` is evaluated to `3` before being inserted into the stream.
+
+---
+
+**Exercise 1.2 -- Find all three bugs**
+
+This program has exactly three syntax errors. Find them all.
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "Hello, world!"
+    std::cout << "How are you?"
+    return 0
+}
+```
+
+*Answer:*
+1. Missing `;` after `"Hello, world!"`
+2. Missing `;` after `"How are you?"`
+3. Missing `;` after `return 0`
+
+---
+
+**Exercise 1.3 -- Write from scratch**
+
+Write a program that prints this output exactly (copy the spacing):
+
+```
+=== My C++ Program ===
+Author: Your Name
+Version: 1.0
+```
+
+*Answer:*
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "=== My C++ Program ===\n";
+    std::cout << "Author: Your Name\n";
+    std::cout << "Version: 1.0\n";
+    return 0;
+}
+```
+
+---
+
+**Exercise 1.4 -- Explain the difference**
+
+In your own words: what is the difference between compiling with `-O0` and `-O2`? Why would you use each?
+
+*Answer:* `-O0` (no optimization) translates your code nearly literally into machine code. The machine code closely mirrors your source, making it easier to debug -- variables are in the places you'd expect, and the program steps through code the way you wrote it. Use this during development.
+
+`-O2` enables aggressive optimization: the compiler may inline functions, eliminate redundant computations, reorder instructions, and more. The program runs significantly faster. The machine code may look very different from your source. Use this for release builds.
 
 ---
 
 <a name="ch2"></a>
-## Chapter 2: Variables, Types, and the Static Type System
+# Chapter 2: Variables, Types, and the Static Type System
 
-### Python's Dynamic Types
+## What IS a Variable?
 
-In Python, variables are labels that point to objects. The object carries its type. You can rebind a label to anything:
+In Python, a variable is a **name tag** attached to an object. The object lives on the heap; the name is just a reference to it.
 
 ```python
-x = 42        # x points to an int object
-x = "hello"   # now x points to a str object — perfectly legal
-x = [1, 2, 3] # now a list — still fine
+x = 42          # 'x' is a label pointing to an int object on the heap
+y = x           # 'y' is another label pointing to the SAME object
+x = "hello"     # 'x' now points to a different object; y is unchanged
+print(y)        # 42
 ```
 
-The type lives with the data, not the variable name. Python figures out what operations are valid at runtime.
+The object carries its own type:
 
-### C++'s Static Types
+```
+Python memory:
 
-In C++, a variable *is* a named region of memory with a fixed type determined at compile time. The type tells the compiler how many bytes to reserve and how to interpret those bytes.
+  Variable   Points to
+  --------   --------
+  x -------> [ type: int | refcount: 2 | value: 42  ]
+  y -------> [ same object                           ]
+
+After x = "hello":
+  x -------> [ type: str | refcount: 1 | value: "hello" ]
+  y -------> [ type: int | refcount: 1 | value: 42      ]
+```
+
+Every Python variable is a pointer. The object it points to carries its type, a reference count, and metadata.
+
+In C++, a variable is a **named region of memory with a fixed type**. The variable IS the storage. There is no separate heap object (unless you explicitly create one), no reference count, no type tag at runtime.
 
 ```cpp
-int x = 42;      // x is always an int. Forever.
-// x = "hello";  // COMPILE ERROR — cannot assign string to int
+int x = 42;   // 'x' is 4 bytes of memory containing the bit pattern for 42
+              // The type 'int' exists only in the compiler's mind
 ```
 
-This is not a limitation; it is a design choice that enables the compiler to catch entire classes of bugs before your code runs and to generate maximally efficient machine code.
+```
+C++ memory:
 
-### Fundamental Types
-
-| C++ Type      | Python Equivalent | Size (typical) | Notes                          |
-|---------------|------------------|----------------|--------------------------------|
-| `bool`        | `bool`           | 1 byte         | `true` / `false`               |
-| `char`        | `str` (1 char)   | 1 byte         | Holds one ASCII character      |
-| `int`         | `int`            | 4 bytes        | −2,147,483,648 to 2,147,483,647|
-| `long`        | `int`            | 4 or 8 bytes   | Platform-dependent             |
-| `long long`   | `int`            | 8 bytes        | Guaranteed 64-bit              |
-| `float`       | `float`          | 4 bytes        | Single precision               |
-| `double`      | `float`          | 8 bytes        | Double precision (prefer this) |
-| `std::string` | `str`            | varies         | In `<string>` header           |
-
-Python's `int` is arbitrary precision. C++'s `int` wraps around (with undefined behavior for signed overflow — more on that later). If you need big integers in C++, use a library.
-
-### Declaring and Initializing Variables
-
-```cpp
-int age;           // declared but UNINITIALIZED — value is garbage, reading it is UB
-int age = 25;      // copy initialization
-int age(25);       // direct initialization
-int age{25};       // uniform/brace initialization (prefer this — prevents narrowing)
+  Address    Variable    Bytes stored
+  -------    --------    ------------
+  0x7fff10   x (int)     [00][00][00][2A]   <- that is 42 in hex
 ```
 
-**Always initialize your variables.** Uninitialized variables are one of C++'s most notorious pitfalls. The compiler may not warn you; the program may silently use whatever bytes happened to be in memory.
+No type tag. No reference count. No metadata. Four bytes. That is it.
 
-Brace initialization `{}` is safest because it prevents *narrowing conversions*:
+The type `int` tells the **compiler** (not the CPU, not the runtime):
+- Reserve 4 bytes
+- Treat those bytes as a signed two's complement integer
+- Allow operations like `+`, `-`, `*`, `/`
+- Reject operations like string concatenation
 
-```cpp
-int x{3.7};  // COMPILE ERROR — 3.7 can't fit in int without losing data
-int x = 3.7; // silently truncates to 3. No error. Bug.
-```
+At runtime, there are only bytes. Types are a compile-time concept.
 
-### Type Inference with `auto`
-
-You don't always have to write the type — you can let the compiler deduce it:
-
-```cpp
-auto x = 42;        // int
-auto y = 3.14;      // double
-auto z = true;      // bool
-auto s = std::string{"hello"};  // std::string
-```
-
-`auto` does not make C++ dynamically typed. The type is still fixed at compile time — `auto` just saves you from writing it. Use it when the type is obvious from the right-hand side.
-
-### `sizeof` and Memory
-
-Every type occupies a specific number of bytes. You can query it:
-
-```cpp
-#include <iostream>
-
-int main() {
-    std::cout << sizeof(int)    << "\n";  // 4
-    std::cout << sizeof(double) << "\n";  // 8
-    std::cout << sizeof(bool)   << "\n";  // 1
-    std::cout << sizeof(char)   << "\n";  // 1
-}
-```
-
-This matters because C++ gives you control over how much memory your data structures consume. A game storing 10 million particles cares whether each one uses 4 bytes or 8.
-
-### Fixed-Width Integer Types
-
-Avoid `int` when you need a specific size. Use the types from `<cstdint>`:
-
-```cpp
-#include <cstdint>
-
-int32_t  a = 42;   // exactly 32 bits, signed
-uint64_t b = 0;    // exactly 64 bits, unsigned
-int8_t   c = 127;  // exactly 8 bits, signed
-```
-
-These are aliases that map to the right platform type automatically.
-
-### Constants
-
-```cpp
-const double PI = 3.14159265358979;  // runtime constant — cannot be reassigned
-constexpr int MAX = 100;             // compile-time constant — value known at compile time
-```
-
-`constexpr` is stronger: the value must be computable at compile time. The compiler can use it in places a `const` cannot (array sizes, template arguments). Prefer `constexpr` for values that are truly constant.
-
-### Type Casting
-
-Python does implicit coercion freely. C++ requires explicit casts when converting between types:
-
-```cpp
-int a = 10;
-int b = 3;
-double result = static_cast<double>(a) / b;  // 3.333...
-double wrong  = a / b;                        // 3.0 — integer division first!
-```
-
-`static_cast<T>(x)` is the C++ way to convert. It is checked at compile time. Avoid C-style casts like `(double)a` — they are less safe and harder to grep for.
-
-### Key Takeaways
-
-- Variables have a fixed type set at compile time. The type cannot change.
-- Always initialize variables, preferably with `{}`.
-- `auto` lets the compiler infer the type — the variable is still statically typed.
-- Use `const` and `constexpr` for values that don't change.
-- `static_cast<T>` is the safe way to convert between types.
+This is the most fundamental difference between Python and C++. Almost every other difference you will encounter flows from this one.
 
 ---
 
-<a name="ch3"></a>
-## Chapter 3: Operators and Expressions
+## How Integers Are Stored: Binary and Two's Complement
 
-### Most Operators Are Familiar
+To understand C++ types, you need to understand how integers are stored in memory. If you already know two's complement, skim this section.
 
-C++ inherited most of its operators from C, and Python borrowed many of them. Addition, subtraction, multiplication, comparison — they work as you expect:
+A computer stores everything as bits: 0 or 1. Eight bits make one byte.
+
+The number 42 in binary:
+
+```
+42 = 32 + 8 + 2 = 2^5 + 2^3 + 2^1
+
+Bit positions (0 = rightmost):
+  7   6   5   4   3   2   1   0
+  0   0   1   0   1   0   1   0
+      |   |       |       |
+      |  32       8       2
+      0
+
+0*128 + 0*64 + 1*32 + 0*16 + 1*8 + 0*4 + 1*2 + 0*1 = 42
+```
+
+An `int` uses 4 bytes = 32 bits. So 42 stored as a 32-bit int:
+
+```
+Byte 3    Byte 2    Byte 1    Byte 0
+00000000  00000000  00000000  00101010
+                              = 42
+```
+
+No type metadata anywhere. The CPU interprets these bytes according to which instruction operates on them.
+
+### How Negative Numbers Work: Two's Complement
+
+For signed integers, the highest bit is the sign bit: 0 = positive, 1 = negative.
+
+For a 32-bit signed int:
+- Maximum positive: `0111 1111 ... 1111` = 2,147,483,647
+- Maximum negative: `1000 0000 ... 0000` = -2,147,483,648
+- -1: `1111 1111 ... 1111` (all bits set)
+
+To negate a number: flip all bits, then add 1.
+
+```
+ 42 in binary:  0000 0000 0000 0000 0000 0000 0010 1010
+Flip all bits:  1111 1111 1111 1111 1111 1111 1101 0101
+Add 1:          1111 1111 1111 1111 1111 1111 1101 0110  = -42
+```
+
+The critical implication: **signed integer overflow is undefined behavior in C++.**
+
+```cpp
+int max = 2147483647;     // the largest possible int
+int bad = max + 1;        // UNDEFINED BEHAVIOR
+                          // The standard does not define what happens.
+                          // In practice: wraps to -2147483648 on most systems.
+                          // But the compiler is allowed to assume overflow
+                          // never happens and optimize in ways that break you.
+```
+
+Python integers are arbitrary precision -- they never overflow. C++ `int` has fixed size and hard limits. Always think about whether your values can exceed the range.
+
+---
+
+## The Fundamental Types
+
+### `bool`
+
+```cpp
+bool yes = true;
+bool no  = false;
+
+std::cout << yes << "\n";   // prints 1
+std::cout << no  << "\n";   // prints 0
+```
+
+Stores true/false. Takes 1 byte (even though 1 bit would suffice -- byte is the smallest addressable unit on most hardware). `true` is stored as 1, `false` as 0.
+
+Any non-zero integer converts to `true`, zero converts to `false`:
+
+```cpp
+bool b1 = 42;    // true  (42 != 0)
+bool b2 = 0;     // false
+bool b3 = -1;    // true  (-1 != 0)
+```
+
+### `char`
+
+```cpp
+char letter  = 'A';    // single character, single quotes
+char newline = '\n';   // escape sequences work like Python
+char tab     = '\t';
+char null_c  = '\0';   // null character (value 0)
+```
+
+One byte. Holds one ASCII character. The character is stored as its ASCII code: `'A'` = 65, `'Z'` = 90, `'0'` = 48, `'\n'` = 10.
+
+You can do arithmetic on chars because they are just numbers:
+
+```cpp
+char c = 'A';
+std::cout << c + 1;                        // 66   (int arithmetic)
+std::cout << static_cast<char>(c + 1);     // 'B'  (cast back to char)
+std::cout << (char)('a' + 2);              // 'c'  (C-style cast, avoid)
+```
+
+### Integer Types
+
+| Type | Typical size | Signed range | Notes |
+|------|-------------|--------------|-------|
+| `short` | 2 bytes | -32,768 to 32,767 | Rarely used |
+| `int` | 4 bytes | -2.1B to 2.1B | Default integer type |
+| `long` | 4 or 8 bytes | platform-dependent | Avoid -- use long long |
+| `long long` | 8 bytes | -9.2e18 to 9.2e18 | Use when int overflows |
+
+To make a type unsigned (no negatives, larger maximum):
+
+```cpp
+unsigned int  u  = 4000000000u;   // 'u' suffix = unsigned literal
+unsigned long long big = 18446744073709551615ull;  // 'ull' suffix
+```
+
+An unsigned type with N bits holds 0 to 2^N - 1.
+A signed type with N bits holds -2^(N-1) to 2^(N-1) - 1.
+
+### `float` and `double`
+
+```cpp
+float  f = 3.14f;    // 32-bit floating point, 'f' suffix is required
+double d = 3.14;     // 64-bit floating point -- use this by default
+```
+
+`double` is what Python calls `float`. Use `double` unless you have a specific reason (memory, GPU/SIMD code).
+
+Why prefer `double`? Precision:
+- `float`:  approximately 7 significant decimal digits
+- `double`: approximately 15 significant decimal digits
+
+```cpp
+float  f = 1.23456789f;
+double d = 1.23456789;
+std::cout << std::setprecision(10) << f << "\n";  // 1.234567881  (wrong at 7th digit)
+std::cout << std::setprecision(10) << d << "\n";  // 1.23456789   (correct)
+```
+
+**Floating point is not exact -- same in Python and C++:**
 
 ```python
 # Python
-x = 10 + 3   # 13
-y = 10 - 3   # 7
-z = 10 * 3   # 30
-w = 10 / 3   # 3.333... (float division)
-v = 10 // 3  # 3        (integer division)
-m = 10 % 3   # 1        (modulo)
-p = 2 ** 8   # 256      (exponentiation)
+print(0.1 + 0.2)   # 0.30000000000000004
 ```
 
 ```cpp
 // C++
-int x = 10 + 3;   // 13
-int y = 10 - 3;   // 7
-int z = 10 * 3;   // 30
-double w = 10.0 / 3.0;  // 3.333...
-int v = 10 / 3;   // 3  — integer division when BOTH operands are int
-int m = 10 % 3;   // 1
-// No ** operator — use std::pow(2.0, 8.0) from <cmath>
+#include <iomanip>
+double x = 0.1 + 0.2;
+std::cout << x                                  << "\n";  // 0.3 (default rounds nicely)
+std::cout << std::setprecision(17) << x         << "\n";  // 0.30000000000000004
+std::cout << std::setprecision(17) << 0.3       << "\n";  // 0.29999999999999999
 ```
 
-The critical difference: **division in C++ depends on operand types**. When both operands are integers, `/` does integer division. This bites beginners constantly.
+`0.1`, `0.2`, and `0.3` cannot be represented exactly in binary floating point -- the same way `1/3` cannot be represented exactly in decimal. This is not a C++ bug; it is IEEE 754 floating point. The implication: **never compare floating-point numbers with `==`.**
+
+### `std::string`
 
 ```cpp
-double bad  = 1 / 2;       // 0.0! — integer division, then converted
-double good = 1.0 / 2;     // 0.5
-double also = static_cast<double>(1) / 2;  // 0.5
+#include <string>
+std::string name = "Alice";
+std::string greeting = "Hello, " + name + "!";   // concatenation with +
+std::cout << greeting.size() << "\n";             // 13
 ```
 
-### Compound Assignment
+Not a primitive type. `std::string` is a class from the standard library that manages heap-allocated character data. We cover it in depth in Chapter 10.
 
-These work identically to Python:
+---
+
+## Fixed-Width Integer Types
+
+The sizes of `short`, `int`, `long` depend on the platform and compiler. For code that must work correctly regardless of platform -- networking, file formats, hardware interfaces -- use exact-size types from `<cstdint>`:
 
 ```cpp
-int x = 10;
-x += 3;   // x = 13
-x -= 2;   // x = 11
-x *= 4;   // x = 44
-x /= 2;   // x = 22
-x %= 7;   // x = 1
+#include <cstdint>
+
+int8_t   a = -128;        // exactly  8 bits, signed (-128 to 127)
+uint8_t  b = 255;         // exactly  8 bits, unsigned (0 to 255)
+int16_t  c = 32767;       // exactly 16 bits, signed
+uint16_t d = 65535;       // exactly 16 bits, unsigned
+int32_t  e = -1;          // exactly 32 bits, signed
+uint32_t f = 4294967295u; // exactly 32 bits, unsigned
+int64_t  g = -1LL;        // exactly 64 bits, signed
+uint64_t h = 0xFFFFFFFFFFFFFFFFull; // exactly 64 bits, unsigned, all bits set
 ```
 
-### Increment and Decrement
+Use these whenever the exact bit width matters. Use `int` when it does not.
 
-C++ has `++` and `--` operators that Python lacks:
+---
+
+## Declaring and Initializing Variables
+
+### Never Leave a Variable Uninitialized
+
+This is the most important rule in this chapter:
+
+```cpp
+int sum;                           // BAD: sum contains whatever bytes were
+for (int i = 0; i < 10; ++i)     //      in that memory location before.
+    sum += i;                      //      Adding to garbage = garbage.
+std::cout << sum << "\n";         // Prints something unpredictable.
+
+int sum{0};                        // GOOD: explicitly initialized to zero.
+for (int i = 0; i < 10; ++i)
+    sum += i;
+std::cout << sum << "\n";         // 45, always.
+```
+
+On some runs, the garbage value might happen to be 0, making the bug invisible. On other runs, it will be -858993460 or similar. Undefined behavior is unpredictable.
+
+### The Four Initialization Forms
+
+C++ has four ways to initialize a variable. They have subtle differences.
+
+**Form 1: Default initialization (leaves value unset -- dangerous)**
+```cpp
+int x;       // x has garbage value
+double d;    // d has garbage value
+```
+Do not do this for primitive types.
+
+**Form 2: Copy initialization (C-style, from C)**
+```cpp
+int x = 5;
+double d = 3.14;
+std::string s = "hello";
+```
+Looks like assignment but is initialization (happens at construction, not after). Fine for simple cases.
+
+**Form 3: Direct initialization**
+```cpp
+int x(5);
+double d(3.14);
+std::string s("hello");
+```
+More verbose for primitives but is the natural form for class objects with constructors.
+
+**Form 4: Brace (uniform) initialization -- prefer this**
+```cpp
+int x{5};
+double d{3.14};
+std::string s{"hello"};
+```
+
+Why prefer brace initialization? It prevents **narrowing conversions** -- type truncations that silently discard data:
+
+```cpp
+// With = initialization, narrowing is SILENT:
+int a = 3.7;       // truncates to 3. No error. Potential bug hiding.
+int b = 300000;    // fits in int, fine
+int c = 300000LL;  // long long to int, may truncate on 16-bit systems, no warning
+
+// With {} initialization, narrowing is a COMPILE ERROR:
+int a{3.7};        // error: narrowing conversion of '3.7e+0' from 'double' to 'int'
+int b{300000};     // fine
+int c{300000LL};   // fine (value fits in int)
+```
+
+The compiler tells you about the truncation at compile time instead of letting it silently corrupt your data at runtime.
+
+You can value-initialize (set to zero/false/null) with empty braces:
+
+```cpp
+int    n{};    // 0
+double d{};    // 0.0
+bool   b{};    // false
+char   c{};    // '\0'
+```
+
+---
+
+## Memory Layout of Variables
+
+```cpp
+bool   a{true};    // 1 byte
+char   b{'X'};     // 1 byte
+int    c{42};      // 4 bytes
+double d{3.14};    // 8 bytes
+```
+
+```
+Stack memory (addresses are illustrative):
+
+Addr    Var       Size    Raw bytes (hex)
+0x1000  a (bool)  1 byte  [01]
+0x1001  b (char)  1 byte  [58]                      'X' = ASCII 88 = 0x58
+0x1004  c (int)   4 bytes [00][00][00][2A]           42 = 0x2A
+0x1008  d (double)8 bytes [40][09][1E][B8][51][EB][85][1F]
+```
+
+(The actual layout may differ due to alignment, but the sizes are as shown.)
+
+There is no type information stored at runtime. The CPU knows to treat `c` as a signed integer because the compiled instructions operating on it are integer instructions. The type system is entirely a compile-time construct.
+
+---
+
+## `auto` -- Type Deduction
+
+When the type is obvious from the right-hand side, `auto` lets the compiler deduce it:
+
+```cpp
+auto x   = 42;                  // int     (integer literals default to int)
+auto y   = 42L;                 // long    (L suffix)
+auto z   = 42LL;                // long long (LL suffix)
+auto d   = 3.14;                // double  (decimal literals default to double)
+auto f   = 3.14f;               // float   (f suffix)
+auto b   = true;                // bool
+auto s   = std::string{"hi"};   // std::string
+```
+
+`auto` does NOT make C++ dynamically typed. The type is deduced once at compile time and then fixed permanently:
+
+```cpp
+auto x = 42;      // x is int, fixed forever
+x = 3.14;         // fine: double 3.14 truncates to int 3 (with = init)
+x = "hello";      // COMPILE ERROR: cannot assign const char* to int
+```
+
+`auto` strips top-level `const` and references from the deduced type. Add them explicitly if you need them:
+
+```cpp
+int n = 5;
+auto  a = n;        // int   (copy)
+auto& b = n;        // int&  (reference to n)
+const auto& c = n;  // const int& (const reference, no copy, no modify)
+```
+
+Where `auto` really shines is avoiding verbose type names:
+
+```cpp
+// Without auto:
+std::vector<std::pair<std::string, int>>::iterator it = scores.begin();
+
+// With auto (same type, more readable):
+auto it = scores.begin();
+```
+
+---
+
+## `const` and `constexpr`
+
+### `const` -- Constant After Initialization
+
+```cpp
+const int MAX = 8;
+MAX = 10;             // COMPILE ERROR: assignment of read-only variable
+
+const int n = get_input();   // value known only at runtime -- still valid const
+```
+
+Use `const` for values that are initialized once and never change. The compiler enforces this -- it's not just a convention.
+
+### `constexpr` -- Must Be Computed at Compile Time
+
+```cpp
+constexpr int BOARD = 8;
+constexpr double PI = 3.14159265358979;
+
+int grid[BOARD][BOARD];   // OK -- array size must be a compile-time constant
+
+constexpr int square(int x) { return x * x; }
+constexpr int area = square(BOARD);   // 64, computed at compile time, zero runtime cost
+```
+
+`constexpr` is stronger than `const`. The value must be computable without running the program. If it isn't, you get a compile error -- which is what you want.
+
+Rule: use `constexpr` for mathematical constants, array sizes, and configuration values. Use `const` for values set at runtime that shouldn't change afterward.
+
+---
+
+## Type Conversion
+
+### Safe Widening (Automatic)
+
+```cpp
+int    i = 42;
+double d = i;    // int to double: no data loss, happens automatically
+long long l = i; // int to long long: always safe
+```
+
+### Narrowing (Dangerous Without Braces)
+
+```cpp
+double d = 3.99;
+int    i = d;    // silently truncates to 3 (with = initialization)
+int    j{d};     // COMPILE ERROR: narrowing (with {} initialization)
+```
+
+### Explicit Conversion with `static_cast`
+
+When you intend to convert, be explicit about it:
+
+```cpp
+double d = 3.99;
+int i = static_cast<int>(d);   // 3, explicit truncation, intent is documented
+
+int a = 5, b = 2;
+// Bug: division happens as int first, then converts to double
+double wrong = a / b;                        // 2.0
+
+// Fix: cast one operand to double before dividing
+double correct = static_cast<double>(a) / b; // 2.5
+```
+
+`static_cast<NewType>(expr)` is the C++ way to convert. It is checked at compile time. Do not use C-style casts like `(int)x` -- they bypass some safety checks and are harder to search for in code.
+
+---
+
+## Checking Sizes with `sizeof`
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "bool:      " << sizeof(bool)      << " byte(s)\n";  // 1
+    std::cout << "char:      " << sizeof(char)      << " byte(s)\n";  // 1
+    std::cout << "int:       " << sizeof(int)       << " byte(s)\n";  // 4
+    std::cout << "long long: " << sizeof(long long) << " byte(s)\n";  // 8
+    std::cout << "float:     " << sizeof(float)     << " byte(s)\n";  // 4
+    std::cout << "double:    " << sizeof(double)    << " byte(s)\n";  // 8
+    return 0;
+}
+```
+
+`sizeof` is evaluated at compile time -- zero runtime overhead. It works on both types (`sizeof(int)`) and variables (`sizeof(x)`).
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Uninitialized Variable
+
+**The bug:**
+```cpp
+int total;
+for (int i = 1; i <= 5; ++i)
+    total += i;   // total starts with garbage, not 0
+std::cout << total;
+```
+
+**The symptom:** Wrong or unpredictable output. Sometimes appears correct (when garbage happens to be 0).
+
+**The fix:** `int total{0};`
+
+**How to detect:** Compile with `-Wall` (warns about "total may be used uninitialized"). Run with `-fsanitize=undefined` for runtime detection.
+
+---
+
+### Mistake 2: Signed Integer Overflow
+
+**The bug:**
+```cpp
+int seconds_per_year = 365 * 24 * 60 * 60;       // 31,536,000 -- fits in int
+int seconds_per_century = seconds_per_year * 100; // 3,153,600,000 -- OVERFLOW!
+// int max is ~2.1 billion; 3.15 billion overflows
+```
+
+**The symptom:** Wrong answer (often a negative number). No compile error.
+
+**The fix:** `long long seconds_per_century = (long long)seconds_per_year * 100;`
+
+**How to detect:** `-fsanitize=undefined` reports "signed integer overflow."
+
+---
+
+### Mistake 3: Integer Division When Expecting Decimal
+
+**The bug:**
+```cpp
+double average = (100 + 75 + 90) / 3;   // 88 -- not 88.333...
+```
+All literals are `int`. The division is integer division before the result is stored in `double`.
+
+**The fix:** `double average = (100 + 75 + 90) / 3.0;` or use `static_cast<double>`.
+
+---
+
+### Mistake 4: Comparing Floats with `==`
+
+**The bug:**
+```cpp
+double x = 0.1 + 0.2;
+if (x == 0.3) {
+    std::cout << "equal\n";   // never prints
+}
+```
+
+**The fix:**
+```cpp
+#include <cmath>
+if (std::abs(x - 0.3) < 1e-9) {
+    std::cout << "equal\n";   // works
+}
+```
+
+---
+
+## Exercises
+
+**Exercise 2.1 -- Type sizes**
+
+Without looking anything up, predict the output of this program on a 64-bit Linux system, then verify:
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << sizeof(bool)      << "\n";
+    std::cout << sizeof(char)      << "\n";
+    std::cout << sizeof(short)     << "\n";
+    std::cout << sizeof(int)       << "\n";
+    std::cout << sizeof(long)      << "\n";
+    std::cout << sizeof(long long) << "\n";
+    std::cout << sizeof(float)     << "\n";
+    std::cout << sizeof(double)    << "\n";
+}
+```
+
+*Answer:* `1 1 2 4 8 8 4 8` on 64-bit Linux. Note that `long` is 8 bytes on 64-bit Linux but 4 bytes on 64-bit Windows -- another reason to use `long long` when you need 64 bits.
+
+---
+
+**Exercise 2.2 -- Brace initialization rejection**
+
+Which of these lines would brace initialization reject with a compile error?
+
+```cpp
+int a{3.0};      // (a)
+int b{3};        // (b)
+int c{3LL};      // (c)  LL = long long literal
+double d{3};     // (d)
+float e{3.14};   // (e)
+```
+
+*Answer:*
+- (a): double -> int narrows (loses the decimal). **ERROR.**
+- (b): int -> int, exact. Fine.
+- (c): long long -> int may narrow if value doesn't fit. **ERROR** (even though 3 fits, the types differ).
+- (d): int -> double widens (no data loss). Fine.
+- (e): double -> float narrows (loses precision). **ERROR.**
+
+---
+
+**Exercise 2.3 -- Fix the division**
+
+Fix this code so it prints `2.5` instead of `2`:
+
+```cpp
+#include <iostream>
+int main() {
+    int a = 5, b = 2;
+    std::cout << a / b << "\n";
+}
+```
+
+*Answer:*
+```cpp
+std::cout << static_cast<double>(a) / b << "\n";
+// or:
+std::cout << a / static_cast<double>(b) << "\n";
+// or:
+std::cout << a / 2.0 << "\n";
+```
+
+---
+
+**Exercise 2.4 -- Max value calculation**
+
+What is the maximum value of `uint32_t`? Show the calculation. Do the same for `int32_t`.
+
+*Answer:*
+- `uint32_t`: 32 bits, unsigned. Range = 0 to 2^32 - 1 = **4,294,967,295**.
+- `int32_t`: 32 bits, signed. Range = -2^31 to 2^31 - 1 = **-2,147,483,648 to 2,147,483,647**. One bit is used for the sign.
+
+---
+
+<a name="ch3"></a>
+# Chapter 3: Operators and Expressions
+
+## Arithmetic Operators
+
+Most arithmetic operators work the same as Python. Division is the exception that trips everyone up.
+
+```cpp
+int a = 17, b = 5;
+
+std::cout << a + b << "\n";   // 22  -- addition
+std::cout << a - b << "\n";   // 12  -- subtraction
+std::cout << a * b << "\n";   // 85  -- multiplication
+std::cout << a / b << "\n";   // 3   -- WATCH OUT: integer division
+std::cout << a % b << "\n";   // 2   -- remainder (modulo)
+```
+
+The division rule: **when both operands are integers, `/` discards the remainder.**
+
+```python
+# Python: / always returns a float
+print(17 / 5)    # 3.4
+print(17 // 5)   # 3   (floor division, rounds toward negative infinity)
+print(-17 // 5)  # -4  (floor: -3.4 rounds down to -4)
+```
+
+```cpp
+// C++: / on integers truncates toward zero (not floor)
+std::cout << 17 / 5   << "\n";   //  3  (truncated toward zero)
+std::cout << -17 / 5  << "\n";   // -3  (truncated toward zero, NOT -4)
+std::cout << 17.0 / 5 << "\n";   //  3.4 (float division: 17.0 is a double)
+```
+
+The key distinction: C++ truncates toward zero. Python's `//` floors toward negative infinity. For positive numbers they agree. For negative numbers they differ.
+
+### The Classic Division Trap
+
+```cpp
+int numerator   = 7;
+int denominator = 2;
+
+double result = numerator / denominator;   // 3.0, NOT 3.5
+```
+
+What happened? The division `numerator / denominator` is evaluated first -- both are `int`, so integer division gives `3`. Then `3` is converted to `3.0` for the `double` assignment.
+
+The fix: make at least one operand a `double` before the division:
+
+```cpp
+double result = static_cast<double>(numerator) / denominator;   // 3.5
+// or:
+double result = numerator / static_cast<double>(denominator);   // 3.5
+// or (if one is a literal):
+double result = numerator / 2.0;   // 3.5
+```
+
+### Modulo With Negative Numbers
+
+```cpp
+std::cout <<  7 % 3 << "\n";   //  1  (7 = 2*3 + 1)
+std::cout << -7 % 3 << "\n";   // -1  (sign follows dividend in C++)
+std::cout <<  7 % -3 << "\n";  //  1  (sign follows dividend)
+```
+
+Python's `%` always returns non-negative when the divisor is positive (e.g., `-7 % 3 = 2` in Python). C++'s `%` sign follows the dividend.
+
+This matters for "wrap around" patterns. To get Python-like non-negative modulo:
+
+```cpp
+int python_mod(int a, int b) {
+    return ((a % b) + b) % b;
+}
+// python_mod(-7, 3) = ((-1) + 3) % 3 = 2 % 3 = 2 -- same as Python
+```
+
+---
+
+## Increment and Decrement Operators
+
+C++ has `++` (add 1) and `--` (subtract 1) as standalone operators. Python does not.
 
 ```cpp
 int x = 5;
-x++;   // post-increment: returns x (5), then adds 1. x is now 6.
-++x;   // pre-increment:  adds 1 first, then returns x. x is now 7.
-x--;   // post-decrement: returns x (7), then subtracts 1. x is now 6.
---x;   // pre-decrement.  x is now 5.
+++x;        // pre-increment:  x becomes 6
+x++;        // post-increment: x becomes 7
+--x;        // pre-decrement:  x becomes 6
+x--;        // post-decrement: x becomes 5
 ```
 
-In a standalone statement `x++` and `++x` do the same thing. The difference matters in expressions:
+Used as standalone statements, `++x` and `x++` are identical in effect. The difference appears when used inside a larger expression:
 
 ```cpp
-int a = 5;
-int b = a++;  // b = 5, a = 6 (post: use then increment)
-int c = ++a;  // c = 7, a = 7 (pre: increment then use)
+int x = 5;
+int a = ++x;   // pre:  x becomes 6 FIRST, then a = 6 (new value)
+int b = x++;   // post: b = 6 (old value), then x becomes 7
 ```
 
-Prefer `++x` (pre-increment) as a habit — it's never slower and sometimes faster (matters for iterators).
+```
+Pre-increment (++x):
+  Step 1: increment x (x = 7)
+  Step 2: expression evaluates to new x (7)
 
-### Comparison Operators
+Post-increment (x++):
+  Step 1: save current x (6)
+  Step 2: increment x (x = 7)
+  Step 3: expression evaluates to saved old x (6)
+```
+
+**Always prefer `++x` (pre-increment)** as a habit. It is never slower than `x++`, and for iterator objects (Chapter 28) it can be significantly faster because post-increment must save a copy of the old value.
+
+---
+
+## Compound Assignment
+
+These modify a variable in place:
+
+```cpp
+int x = 20;
+x += 5;    // x = 25   (same as x = x + 5)
+x -= 3;    // x = 22
+x *= 2;    // x = 44
+x /= 4;    // x = 11   (integer division if x is int)
+x %= 3;    // x = 2    (remainder)
+x <<= 2;   // x = 8    (left shift by 2: same as x * 4)
+x >>= 1;   // x = 4    (right shift by 1: same as x / 2 for non-negative)
+```
+
+---
+
+## Comparison Operators
+
+All return `bool`:
 
 ```cpp
 int a = 5, b = 10;
-bool eq  = (a == b);  // false
-bool neq = (a != b);  // true
-bool lt  = (a < b);   // true
-bool gt  = (a > b);   // false
-bool lte = (a <= b);  // true
-bool gte = (a >= b);  // false
+bool r1 = (a == b);    // false  -- equal
+bool r2 = (a != b);    // true   -- not equal
+bool r3 = (a <  b);    // true   -- less than
+bool r4 = (a >  b);    // false  -- greater than
+bool r5 = (a <= b);    // true   -- less than or equal
+bool r6 = (a >= b);    // false  -- greater than or equal
 ```
 
-C++20 adds the three-way comparison operator `<=>` (the "spaceship operator") that returns an ordering value. We cover it when discussing operator overloading in Chapter 22.
+### The Floating-Point Comparison Problem
 
-### Logical Operators
+```cpp
+double x = 0.1 + 0.2;
+double y = 0.3;
+std::cout << (x == y) << "\n";   // 0 (false!)
+```
+
+`0.1` cannot be represented exactly in binary. Neither can `0.2` or `0.3`. The sum `0.1 + 0.2` comes out as `0.30000000000000004...`. Stored `0.3` is `0.29999999999999998...`. They are not equal, even though mathematically they should be.
+
+This is not a C++ problem -- the same thing happens in Python and every other language that uses IEEE 754 floating point (which is all of them).
+
+**Rule: Never compare floating-point numbers with `==`. Use a tolerance.**
+
+```cpp
+#include <cmath>   // for std::abs
+
+// Returns true if a and b are within tolerance of each other
+bool nearly_equal(double a, double b, double tolerance = 1e-9) {
+    return std::abs(a - b) < tolerance;
+}
+
+if (nearly_equal(0.1 + 0.2, 0.3)) {
+    std::cout << "equal (within tolerance)\n";  // this prints
+}
+```
+
+Choose tolerance based on the scale of your values:
+- For values around 1.0: `1e-9` is reasonable
+- For values around 1,000,000: `1e-3` may be needed
+- For values that went through many operations: use larger tolerances
+
+---
+
+## Logical Operators
 
 ```cpp
 bool x = true, y = false;
-bool a = x && y;   // AND: false  (Python: x and y)
-bool b = x || y;   // OR:  true   (Python: x or y)
-bool c = !x;       // NOT: false  (Python: not x)
+
+bool and_result = x && y;   // false  (both must be true)  -- Python: x and y
+bool or_result  = x || y;   // true   (either must be true) -- Python: x or y
+bool not_result = !x;       // false  (flip)               -- Python: not x
 ```
 
-Short-circuit evaluation works the same as Python: `&&` stops at the first `false`, `||` stops at the first `true`.
+### Short-Circuit Evaluation
 
-### Bitwise Operators
-
-These operate on individual bits of integers. Python has them too, but C++ programmers use them far more often (hardware, flags, graphics).
+`&&` stops evaluating as soon as it finds a `false`. `||` stops as soon as it finds a `true`. This is identical to Python and is critically important for safety:
 
 ```cpp
-int a = 0b1010;  // 10
-int b = 0b1100;  // 12
+int* p = nullptr;
 
-int and_  = a & b;   // 0b1000 = 8   (AND each bit)
-int or_   = a | b;   // 0b1110 = 14  (OR each bit)
-int xor_  = a ^ b;   // 0b0110 = 6   (XOR each bit)
-int not_  = ~a;      // flips all bits (result is -11 for signed int)
-int lsh   = a << 1;  // 0b10100 = 20 (shift left = multiply by 2)
-int rsh   = a >> 1;  // 0b0101  = 5  (shift right = divide by 2)
+// Safe: if p is null, the right side is NEVER evaluated
+if (p != nullptr && *p > 0) {
+    std::cout << "positive pointee\n";
+}
+// Without short-circuit: *p when p is null = crash
+
+// Common optimization: cheap check first, expensive check second
+if (is_in_cache(key) || compute_and_cache(key)) {
+    // compute_and_cache only called when not in cache
+}
 ```
 
-A common pattern: use bits as boolean flags.
+Short-circuit evaluation is relied upon for correctness, not just optimization.
+
+---
+
+## Bitwise Operators
+
+These operate on individual bits within integers. They appear constantly in systems programming, graphics, embedded code, and game engines.
+
+| Op | Name | Meaning |
+|----|------|---------|
+| `&` | AND | Output bit is 1 only if BOTH input bits are 1 |
+| `\|` | OR | Output bit is 1 if EITHER input bit is 1 |
+| `^` | XOR | Output bit is 1 if the two input bits are DIFFERENT |
+| `~` | NOT | Flips all bits |
+| `<<` | Left shift | Shifts bits left, filling with 0 on the right |
+| `>>` | Right shift | Shifts bits right (fills with 0 for unsigned, sign bit for signed) |
+
+```
+Example: a = 5 = 0101 in binary
+         b = 3 = 0011 in binary
+
+a & b:   0101
+         0011
+         ----
+         0001   = 1   (only bit 0 is set in both)
+
+a | b:   0101
+         0011
+         ----
+         0111   = 7   (any bit set in either)
+
+a ^ b:   0101
+         0011
+         ----
+         0110   = 6   (bits that differ)
+
+~a:      ~0101 = 1111...11111010 = -6 (for 32-bit signed int)
+```
+
+Left shift by 1 = multiply by 2. Left shift by n = multiply by 2^n:
 
 ```cpp
-const int FLAG_VISIBLE  = 1 << 0;  // 0001
-const int FLAG_COLLIDABLE = 1 << 1;  // 0010
-const int FLAG_ACTIVE   = 1 << 2;  // 0100
-
-int entity_flags = FLAG_VISIBLE | FLAG_ACTIVE;  // 0101
-
-bool is_visible = entity_flags & FLAG_VISIBLE;  // true
-entity_flags |= FLAG_COLLIDABLE;  // set a flag
-entity_flags &= ~FLAG_ACTIVE;     // clear a flag
+1 << 0  =   1
+1 << 1  =   2
+1 << 2  =   4
+1 << 3  =   8
+1 << 4  =  16
+1 << 10 = 1024
 ```
 
-### Operator Precedence
+### Practical Use: Boolean Flags Packed in an Integer
 
-Like Python, multiplication binds tighter than addition, etc. When in doubt, use parentheses — they cost nothing and prevent bugs.
+Instead of a separate `bool` for each property, pack them into one integer -- each bit represents one flag:
 
 ```cpp
-int x = 2 + 3 * 4;    // 14, not 20
-int y = (2 + 3) * 4;  // 20
+const uint32_t VISIBLE    = 1u << 0;   // bit 0: 00000001
+const uint32_t SOLID      = 1u << 1;   // bit 1: 00000010
+const uint32_t ACTIVE     = 1u << 2;   // bit 2: 00000100
+const uint32_t HAS_HEALTH = 1u << 3;   // bit 3: 00001000
+
+uint32_t entity_flags = 0;
+
+// Set a flag (turn bit ON):
+entity_flags |= VISIBLE;        // flags = 00000001
+entity_flags |= ACTIVE;         // flags = 00000101
+
+// Test a flag (check if bit is set):
+if (entity_flags & VISIBLE) {   // nonzero = true
+    render(entity);
+}
+if (entity_flags & ACTIVE) {
+    update(entity);
+}
+
+// Clear a flag (turn bit OFF):
+entity_flags &= ~ACTIVE;        // ~ACTIVE = 11111011; AND clears bit 2
+                                // flags = 00000001
+
+// Toggle a flag (flip):
+entity_flags ^= SOLID;          // XOR flips bit 1
 ```
 
-### Key Takeaways
+This pattern is everywhere: OpenGL uses `GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT`, Vulkan uses `VkImageUsageFlags`, Linux uses `O_RDONLY | O_CREAT` for file open flags.
 
-- `/` is integer division when both operands are integers. Cast one to `double` if you want a decimal result.
-- `++x` (pre-increment) and `x++` (post-increment) differ in expressions. Prefer `++x`.
-- Bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) are common in C++ for flags and low-level code.
-- When precedence is unclear, parenthesize.
+---
+
+## Operator Precedence
+
+When operators are mixed, precedence determines the order of evaluation:
+
+```
+Highest priority (evaluated first)
+--------------------------------------
+  ()  []  ->  .            grouping, subscript, member access
+  !  ~  ++x  --x  (unary)  unary operators (right-to-left)
+  *  /  %                  multiplicative
+  +  -                     additive
+  <<  >>                   bitwise shift
+  <  <=  >  >=             relational comparison
+  ==  !=                   equality comparison
+  &                        bitwise AND
+  ^                        bitwise XOR
+  |                        bitwise OR
+  &&                       logical AND
+  ||                       logical OR
+  ?:                       ternary (right-to-left)
+  =  +=  -=  ...           assignment (right-to-left)
+--------------------------------------
+Lowest priority (evaluated last)
+```
+
+Common traps:
+
+```cpp
+// Trap 1: bitwise AND vs equality
+if (flags & MASK == 1) { }    // parsed as: flags & (MASK == 1)  -- WRONG
+if ((flags & MASK) == 1) { }  // correct
+
+// Trap 2: shift and arithmetic
+int x = 2 + 3 << 1;   // parsed as: 2 + (3 << 1) = 2 + 6 = 8
+int y = (2 + 3) << 1;  // = 5 << 1 = 10
+
+// Rule: when in doubt, parenthesize
+```
+
+---
+
+## The Ternary Operator
+
+```python
+# Python
+label = "even" if n % 2 == 0 else "odd"
+```
+
+```cpp
+// C++
+std::string label = (n % 2 == 0) ? "even" : "odd";
+//                   condition     true      false
+```
+
+The ternary is an *expression* that produces a value. Good for simple one-liners. Do not nest them -- `a ? b ? c : d : e` is unreadable.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Assignment Instead of Comparison
+
+**The bug:**
+```cpp
+if (x = 5) { ... }   // assigns 5 to x, condition is always true (5 != 0)
+```
+**The symptom:** The `if` branch always runs; the else never runs; `x` silently changed.
+**The fix:** `if (x == 5)`. Compile with `-Wall` to get a warning about this.
+**Defensive coding:** Some people write `if (5 == x)` ("Yoda conditions"). Then a typo `if (5 = x)` is a compile error (can't assign to a literal).
+
+### Mistake 2: Integer Division Surprise
+
+**The bug:**
+```cpp
+double bmi = weight / (height * height);   // all ints -- integer division!
+```
+**The fix:** Cast one operand: `static_cast<double>(weight) / (height * height)`
+
+### Mistake 3: `==` on Floats
+
+**The bug:** `if (result == expected_value)` where both are doubles
+**The fix:** `if (std::abs(result - expected_value) < 1e-9)`
+
+### Mistake 4: Bitwise vs Logical Operators
+
+**The bug:**
+```cpp
+bool a = is_ready();
+bool b = can_proceed();
+if (a & b) { ... }    // bitwise AND -- works only if a and b are 0 or 1
+                      // breaks for general integers
+if (a && b) { ... }   // logical AND -- correct for boolean conditions
+```
+**The fix:** Use `&&` and `||` for boolean logic. Use `&` and `|` for bit manipulation.
+
+---
+
+## Exercises
+
+**Exercise 3.1 -- Predict the output**
+
+```cpp
+int a = 17, b = 5;
+std::cout << a / b   << "\n";
+std::cout << a % b   << "\n";
+std::cout << -a / b  << "\n";
+std::cout << -a % b  << "\n";
+```
+
+*Answer:* `3`, `2`, `-3`, `-2`. C++ truncates toward zero; the sign of `%` follows the dividend.
+
+---
+
+**Exercise 3.2 -- Bit flag operations**
+
+Starting from `uint8_t flags = 0b00000000`:
+1. Set bit 2 (value 4)
+2. Set bit 5 (value 32)
+3. Check if bit 2 is set (should be true)
+4. Clear bit 2
+
+Write the four operations and show the final value of `flags`.
+
+*Answer:*
+```cpp
+uint8_t flags = 0b00000000;
+
+flags |= (1u << 2);                        // 1. set bit 2: flags = 0b00000100
+flags |= (1u << 5);                        // 2. set bit 5: flags = 0b00100100
+
+bool bit2_set = (flags & (1u << 2)) != 0;  // 3. check bit 2: true
+
+flags &= ~(1u << 2);                       // 4. clear bit 2: flags = 0b00100000
+// ~(1u << 2) = ~0b00000100 = 0b11111011
+// 0b00100100 & 0b11111011 = 0b00100000 = 32
+```
+
+---
+
+**Exercise 3.3 -- Floating-point tolerance**
+
+Write a function `are_equal(double a, double b)` that returns true when `a` and `b` are within 0.0001 of each other. Test it with `0.1 + 0.2` vs `0.3`.
+
+*Answer:*
+```cpp
+#include <cmath>
+bool are_equal(double a, double b) {
+    return std::abs(a - b) < 0.0001;
+}
+// are_equal(0.1 + 0.2, 0.3) returns true
+// are_equal(0.1 + 0.2, 0.4) returns false
+```
 
 ---
 
 <a name="ch4"></a>
-## Chapter 4: Control Flow: Branching and Loops
+# Chapter 4: Control Flow: Branching and Loops
 
-### `if` / `else if` / `else`
-
-Syntax is similar to Python but uses braces instead of indentation, and conditions must be in parentheses:
+## `if` / `else if` / `else`
 
 ```python
 # Python
 score = 85
 if score >= 90:
-    print("A")
+    grade = "A"
 elif score >= 80:
-    print("B")
+    grade = "B"
 else:
-    print("C")
+    grade = "C"
 ```
 
 ```cpp
 // C++
 int score = 85;
+std::string grade;
+
 if (score >= 90) {
-    std::cout << "A\n";
+    grade = "A";
 } else if (score >= 80) {
-    std::cout << "B\n";
+    grade = "B";
 } else {
-    std::cout << "C\n";
+    grade = "C";
 }
 ```
 
-You can omit braces for single-statement bodies, but don't — it's a famous source of bugs (the Apple "goto fail" SSL vulnerability was caused by this exact mistake).
+Three syntax differences:
+1. The condition must be in **parentheses**: `if (score >= 90)` not `if score >= 90`
+2. The body uses **curly braces** `{}` instead of `:` and indentation
+3. **`else if`** (two words, with a space) not `elif`
+
+### Always Use Curly Braces -- A Real Cautionary Tale
+
+Braces are technically optional when the body is a single statement:
+
+```cpp
+if (error)
+    std::cout << "Error occurred\n";   // technically fine
+```
+
+But do not do this. The Apple "goto fail" bug (2014) used this pattern and allowed attackers to bypass SSL certificate verification on millions of Apple devices. The vulnerable code looked like:
+
+```cpp
+if ((err = SSLHashSHA1.update(&hashCtx, &signedParams)) != 0)
+    goto fail;
+    goto fail;   // This ALWAYS executes -- attacker bypasses verification
+```
+
+The second `goto fail` is not inside the `if`. The indentation lies. Always use braces.
 
 ### `if` with Initializer (C++17)
 
-C++17 lets you declare a variable inside the `if` condition, scoped to just that block:
+Declare a variable scoped only to the `if`/`else` block:
 
 ```cpp
-if (int result = compute(); result > 0) {
-    std::cout << "Positive: " << result << "\n";
-} else {
-    std::cout << "Non-positive: " << result << "\n";
+// C++ before 2017:
+int value = compute();
+if (value > 0) {
+    use(value);
 }
-// result is not accessible here
+// 'value' still exists here (wasted scope, potential confusion)
+
+// C++17 and later:
+if (int value = compute(); value > 0) {
+//  ^-- initializer         ^-- condition
+    use(value);
+} else {
+    handle_error(value);
+}
+// 'value' does not exist here -- scope is clean
 ```
 
-This is useful for functions that return status codes or optional values.
+Use this when the variable is only meaningful within the `if`/`else`.
 
-### `switch`
+---
 
-For branching on a single integer (or enum) value, `switch` is more efficient than a chain of `if/else`:
+## `switch`
+
+`switch` tests one integer or enum value against a list of constants:
 
 ```cpp
 int day = 3;
+
 switch (day) {
     case 1:
         std::cout << "Monday\n";
@@ -540,20 +1834,56 @@ switch (day) {
         std::cout << "Tuesday\n";
         break;
     case 3:
-    case 4:
-        std::cout << "Wednesday or Thursday\n";
+        std::cout << "Wednesday\n";
+        break;
+    case 6:
+    case 7:
+        std::cout << "Weekend\n";   // cases 6 and 7 share the same body
         break;
     default:
-        std::cout << "Other\n";
+        std::cout << "Weekday\n";
         break;
 }
 ```
 
-**Always include `break`** unless you intentionally want fallthrough. Accidental fallthrough is one of C's most notorious bugs. In C++17 you can annotate intentional fallthrough with `[[fallthrough]]` to silence compiler warnings.
+### Fallthrough: The `break` Requirement
 
-`switch` works only on integral types and enums — not on strings or arbitrary objects (unlike Python's structural pattern matching).
+Without `break`, execution falls through into the next case:
 
-### `while` Loop
+```cpp
+int x = 1;
+switch (x) {
+    case 1:
+        std::cout << "one\n";
+        // no break!
+    case 2:
+        std::cout << "two\n";
+        break;
+    case 3:
+        std::cout << "three\n";
+        break;
+}
+```
+
+Output when `x == 1`: `one` then `two`. The control falls through from case 1 into case 2.
+
+This is almost always a bug. Always add `break`. If fallthrough is intentional, use `[[fallthrough]]` (C++17) to document it and silence the warning:
+
+```cpp
+case 'A':
+    [[fallthrough]];   // intentional: A and a are treated the same
+case 'a':
+    process_letter_a();
+    break;
+```
+
+`switch` only works on integral types (int, char, enum). It does not work on strings or floating-point numbers.
+
+---
+
+## `while` Loop
+
+Checks the condition before each iteration. If the condition is false initially, the body never runs.
 
 ```python
 # Python
@@ -570,1706 +1900,4223 @@ while (x < 5) {
     std::cout << x << "\n";
     ++x;
 }
+// prints 0, 1, 2, 3, 4
 ```
 
-### `do-while` Loop
+---
 
-Executes the body at least once before checking the condition. Python has no equivalent.
+## `do-while` Loop
+
+The body runs at least once. The condition is checked after the body.
 
 ```cpp
-int x = 0;
+int x = 100;
 do {
-    std::cout << x << "\n";
+    std::cout << x << "\n";  // prints 100 even though 100 >= 5
     ++x;
 } while (x < 5);
+// body ran once; condition was false; loop ends
 ```
 
-Useful for input validation: ask for input, then check if it's valid.
+**When to use it:** Input validation -- you always want to ask once, then check.
 
-### `for` Loop — C-Style
+```cpp
+#include <iostream>
 
-The classic C-style `for` loop has three parts: initializer, condition, increment:
+int main() {
+    int age;
+    do {
+        std::cout << "Enter your age (1-120): ";
+        std::cin >> age;
+    } while (age < 1 || age > 120);
+    // Guaranteed: asked at least once; keeps asking until valid input
+
+    std::cout << "Age accepted: " << age << "\n";
+    return 0;
+}
+```
+
+Python has no `do-while`. The equivalent Python idiom:
+
+```python
+while True:
+    age = int(input("Enter your age (1-120): "))
+    if 1 <= age <= 120:
+        break
+```
+
+---
+
+## `for` Loop: C-Style
+
+```cpp
+for (initializer; condition; increment) {
+    body;
+}
+```
 
 ```cpp
 for (int i = 0; i < 10; ++i) {
-    std::cout << i << "\n";
+    std::cout << i << " ";   // 0 1 2 3 4 5 6 7 8 9
 }
+// 'i' does not exist after the loop -- scoped to the for
 ```
 
-This is the equivalent of Python's `for i in range(10)`. The variable `i` exists only inside the loop.
+Execution order:
 
-You can have multiple initializers and increments:
+```
+for (int i = 0;  i < 10;  ++i)
+
+  int i = 0       <-- runs ONCE before anything
+      |
+      v
+  [check: i < 10?]  ----NO----> exit loop
+      |
+     YES
+      |
+      v
+  [body: cout << i]
+      |
+      v
+  [++i]
+      |
+      +----------> [check: i < 10?]  (repeat)
+```
+
+Key point: the variable declared in the initializer (`int i`) exists only inside the `for` loop. This is better than Python, where loop variables leak out:
+
+```python
+# Python: loop variable persists after loop
+for i in range(5):
+    pass
+print(i)   # 4 -- still accessible
+```
 
 ```cpp
+// C++: loop variable is gone after loop
+for (int i = 0; i < 5; ++i) { }
+std::cout << i;   // COMPILE ERROR: 'i' was not declared in this scope
+```
+
+Useful patterns:
+
+```cpp
+// Count down:
+for (int i = 10; i >= 0; --i) {
+    std::cout << i << " ";   // 10 9 8 7 6 5 4 3 2 1 0
+}
+
+// Step by 3 (like range(0, 30, 3)):
+for (int i = 0; i < 30; i += 3) {
+    std::cout << i << " ";   // 0 3 6 9 12 15 18 21 24 27
+}
+
+// Multiple variables:
 for (int i = 0, j = 10; i < j; ++i, --j) {
     std::cout << i << " " << j << "\n";
 }
+// 0 10, 1 9, 2 8, 3 7, 4 6
 ```
 
-### Range-Based `for` Loop (C++11)
+---
 
-Equivalent to Python's `for x in iterable`:
+## Range-Based `for` Loop (C++11)
+
+The C++ equivalent of Python's `for x in collection`:
 
 ```python
-# Python
-numbers = [1, 2, 3, 4, 5]
+numbers = [10, 20, 30, 40, 50]
 for n in numbers:
     print(n)
 ```
 
 ```cpp
-// C++
 #include <vector>
-std::vector<int> numbers = {1, 2, 3, 4, 5};
+std::vector<int> numbers = {10, 20, 30, 40, 50};
 for (int n : numbers) {
     std::cout << n << "\n";
 }
 ```
 
-If you want to modify the elements, use a reference (Chapter 6):
+### The Reference vs Copy Decision
+
+This is the most important thing to understand about range-based `for` in C++.
+
+**By value (copy):** Each iteration creates a copy. Modifying the loop variable does NOT change the container.
 
 ```cpp
-for (int& n : numbers) {
-    n *= 2;  // doubles each element in place
+std::vector<int> v = {1, 2, 3};
+for (int n : v) {
+    n *= 10;   // modifies the copy, not the element in v
+}
+// v is still {1, 2, 3}
+```
+
+**By reference (`&`):** The loop variable IS the element. Modifying it DOES change the container.
+
+```cpp
+for (int& n : v) {
+    n *= 10;   // modifies the actual element in v
+}
+// v is now {10, 20, 30}
+```
+
+**By const reference (`const&`):** Read-only access to the element, no copy made. Use this for large objects you only need to read.
+
+```cpp
+for (const int& n : v) {
+    std::cout << n << "\n";   // read-only, no copy
+    // n = 0;  // COMPILE ERROR: n is const
 }
 ```
 
-If you don't want to copy large objects, use `const` reference:
+**When to use which:**
 
-```cpp
-for (const int& n : numbers) {
-    std::cout << n << "\n";  // no copy, no modification
-}
+```
+Type is small (int, double, bool, char, pointer):
+    for (T x : v)          -- copy is cheap, fine
+    for (const T& x : v)   -- also fine
+
+Type is large (string, struct, vector, custom class):
+    for (const T& x : v)   -- ALWAYS prefer: no copy, no modify
+    for (T& x : v)         -- when you need to modify in place
+
+You don't know the type or it's complex:
+    for (const auto& x : v) -- safe universal choice
 ```
 
-Or just `auto&`:
+---
 
-```cpp
-for (auto& n : numbers) {
-    n *= 2;
-}
-```
-
-### `break` and `continue`
-
-Work exactly like Python:
+## `break` and `continue`
 
 ```cpp
 for (int i = 0; i < 10; ++i) {
-    if (i == 5) break;     // exit the loop entirely
-    if (i % 2 == 0) continue;  // skip to next iteration
-    std::cout << i << "\n";  // prints 1, 3
+    if (i == 5) {
+        break;       // exit the loop immediately
+    }
+    if (i % 2 == 0) {
+        continue;    // skip to the next iteration
+    }
+    std::cout << i << " ";   // prints: 1 3
+}
+// loop ends because of break when i == 5
+```
+
+`break` and `continue` only affect the **innermost** enclosing loop. For nested loops, use a function return or a flag:
+
+```cpp
+// Method: refactor into a function, use return
+bool find_target(const std::vector<std::vector<int>>& grid, int target) {
+    for (int row = 0; row < (int)grid.size(); ++row) {
+        for (int col = 0; col < (int)grid[row].size(); ++col) {
+            if (grid[row][col] == target) {
+                return true;   // exits both loops
+            }
+        }
+    }
+    return false;
 }
 ```
 
-### Ternary Operator
+---
 
-C++ has a ternary operator Python lacks (Python has a different form):
+## Loop Execution Visualization
 
-```python
-# Python
-result = "yes" if condition else "no"
+For `for (int i = 0; i < 3; ++i) { body; }`:
+
 ```
+Start:
+  int i = 0   (initialization -- runs once)
+
+Iteration 1:
+  i < 3?  YES (0 < 3)
+  body executes
+  ++i  ->  i = 1
+
+Iteration 2:
+  i < 3?  YES (1 < 3)
+  body executes
+  ++i  ->  i = 2
+
+Iteration 3:
+  i < 3?  YES (2 < 3)
+  body executes
+  ++i  ->  i = 3
+
+Check:
+  i < 3?  NO (3 is not < 3)
+  Loop exits
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Off-By-One Error
+
+**The bug:**
+```cpp
+std::vector<int> v = {10, 20, 30};
+for (int i = 0; i <= v.size(); ++i) {   // <= instead of <
+    std::cout << v[i] << "\n";          // accesses v[3] -- does not exist!
+}
+```
+
+**The symptom:** Crash, garbage output, or silent memory corruption on the last iteration.
+
+**The fix:** Use `i < v.size()` (strictly less than). Or better: use range-based `for`, which cannot have this bug.
+
+---
+
+### Mistake 2: Forgetting `break` in `switch`
+
+**The bug:**
+```cpp
+switch (command) {
+    case 'q':
+        prepare_to_quit();
+        // forgot break -- falls through to 'h'!
+    case 'h':
+        show_help();
+        break;
+}
+// When command == 'q': prepare_to_quit() runs, THEN show_help() runs
+```
+
+**The fix:** Add `break` after every case.
+
+---
+
+### Mistake 3: Modifying a Container While Iterating Over It
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (int n : v) {
+    if (n == 3) v.erase(v.begin() + 2);  // modifies v while iterating!
+}
+// undefined behavior -- the range-based for's internal iterator is now invalid
+```
+
+**The fix:** Collect things to remove first, then remove them after the loop. Or use `std::remove_if` (Chapter 29).
+
+---
+
+### Mistake 4: Using `=` Instead of `==` in a Condition
+
+**The bug:**
+```cpp
+int x = 5;
+while (x = 10) {   // assigns 10 to x, condition is always true (infinite loop!)
+    std::cout << x << "\n";
+}
+```
+
+**The symptom:** Infinite loop.
+
+**The fix:** `while (x == 10)`. Compile with `-Wall` to get a warning.
+
+---
+
+## Exercises
+
+**Exercise 4.1 -- Predict the output**
 
 ```cpp
-// C++
-std::string result = condition ? "yes" : "no";
+for (int i = 1; i <= 10; ++i) {
+    if (i % 3 == 0) continue;
+    if (i > 7) break;
+    std::cout << i << " ";
+}
 ```
 
-They're equivalent. In C++, the ternary is an *expression* — it produces a value, so you can use it inline.
+*Answer:* `1 2 4 5 7` -- skips multiples of 3 (3, 6), breaks when i > 7 (stops before 8).
 
-### Key Takeaways
+---
 
-- Braces around loop/if bodies are technically optional but always required by good practice.
-- `switch` is fast for integral values; don't forget `break`.
-- Range-based `for` is the idiomatic way to iterate containers. Use `auto&` to avoid copies.
-- `do-while` runs the body at least once — useful for "try once, then check" patterns.
+**Exercise 4.2 -- FizzBuzz**
+
+Print numbers 1 to 20. Multiples of 3: print "Fizz". Multiples of 5: print "Buzz". Multiples of both 3 and 5: print "FizzBuzz".
+
+*Answer:*
+```cpp
+#include <iostream>
+int main() {
+    for (int i = 1; i <= 20; ++i) {
+        if      (i % 15 == 0) std::cout << "FizzBuzz\n";
+        else if (i % 3  == 0) std::cout << "Fizz\n";
+        else if (i % 5  == 0) std::cout << "Buzz\n";
+        else                  std::cout << i << "\n";
+    }
+}
+```
+
+Check `% 15` first. If you check `% 3` first, 15 would print "Fizz" instead of "FizzBuzz".
+
+---
+
+**Exercise 4.3 -- Sum with while**
+
+Use a `while` loop to compute the sum of integers from 1 to 100.
+
+*Answer:*
+```cpp
+int sum = 0, i = 1;
+while (i <= 100) {
+    sum += i;
+    ++i;
+}
+std::cout << sum << "\n";  // 5050
+```
+
+---
+
+**Exercise 4.4 -- Triangle**
+
+Print this triangle with nested loops:
+```
+*
+* *
+* * *
+* * * *
+* * * * *
+```
+
+*Answer:*
+```cpp
+for (int row = 1; row <= 5; ++row) {
+    for (int col = 1; col <= row; ++col) {
+        std::cout << "* ";
+    }
+    std::cout << "\n";
+}
+```
+
+---
+
+**Exercise 4.5 -- do-while validation**
+
+Write a program that asks the user to enter a password. Keep asking until they type "secret". (Use `std::cin >> password` to read.)
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string password;
+    do {
+        std::cout << "Enter password: ";
+        std::cin >> password;
+    } while (password != "secret");
+    std::cout << "Access granted.\n";
+    return 0;
+}
+```
 
 ---
 
 <a name="ch5"></a>
-## Chapter 5: Functions, Overloading, and Declarations vs Definitions
+# Chapter 5: Functions, Overloading, and Declarations vs Definitions
 
-### Functions in Python vs C++
+## What Happens When You Call a Function
+
+Before the syntax, understand what a function call does to memory. This mental model makes pass-by-value, scope, and the declaration/definition split all click at once.
+
+Your program uses a region of memory called the **call stack**. It operates like a stack of plates: each function call pushes a new **frame** (plate) on top; when the function returns, that frame is popped off and gone.
+
+Each frame holds:
+- The function's parameters (copies of the arguments)
+- The function's local variables
+- The return address (where to continue after returning)
+
+```cpp
+int multiply(int a, int b) {
+    int result = a * b;
+    return result;
+}
+
+int square(int x) {
+    int s = multiply(x, x);
+    return s;
+}
+
+int main() {
+    int answer = square(5);
+    std::cout << answer << "\n";  // 25
+}
+```
+
+When `square(5)` is called, then `multiply(5, 5)` is called inside square:
+
+```
+CALL STACK (top = currently executing function)
+
++---------------------------+
+| multiply's frame          |  <-- currently executing
+|   a = 5                   |  COPY of square's x
+|   b = 5                   |  COPY of square's x
+|   result = 25             |
++---------------------------+
+| square's frame            |
+|   x = 5                   |  COPY of main's argument 5
+|   s = ?                   |  not yet assigned
++---------------------------+
+| main's frame              |
+|   answer = ?              |  not yet assigned
++---------------------------+
+```
+
+When `multiply` finishes:
+1. It returns `25`
+2. Its entire frame is popped -- `a`, `b`, `result` are gone from memory
+3. Back in `square`, `s` receives the returned `25`
+4. `square` returns `25`, its frame is popped -- `x`, `s` are gone
+5. In `main`, `answer` receives `25`
+
+**Critical insight:** `a` and `b` inside `multiply` are COPIES of `x` from `square`. They live at different memory addresses. Changing `a` inside `multiply` has absolutely no effect on `x` in `square`. This is **pass by value**.
+
+---
+
+## Function Syntax
 
 ```python
-# Python
+# Python -- no return type, no parameter types
 def add(a, b):
     return a + b
 ```
 
 ```cpp
-// C++
+// C++ -- return type required, parameter types required
 int add(int a, int b) {
     return a + b;
 }
 ```
 
-The differences:
-1. You must declare the **return type** (`int`).
-2. Each parameter must have a **type** (`int a`).
-3. The compiler verifies at every call site that you're passing the right types.
-
-If a function returns nothing, its return type is `void`:
+What you must provide:
+1. **Return type** before the function name. `int` means the function returns an `int`.
+2. **Type for each parameter**. Each parameter is `type name`.
+3. A `return` statement if the return type is not `void`.
 
 ```cpp
-void greet(std::string name) {
-    std::cout << "Hello, " << name << "\n";
-    // no return statement needed
+// Returns nothing:
+void print_banner() {
+    std::cout << "===================\n";
+}   // no return needed for void
+
+// Returns bool:
+bool is_palindrome(std::string s) {
+    std::string rev = s;
+    std::reverse(rev.begin(), rev.end());
+    return s == rev;
+}
+
+// Multiple parameters:
+double distance(double x1, double y1, double x2, double y2) {
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+    return std::sqrt(dx*dx + dy*dy);
+}
+
+// No parameters:
+int get_screen_width() {
+    return 1920;
 }
 ```
 
-### Declarations vs Definitions
+---
 
-This is a concept Python doesn't have, and it trips up every beginner.
+## Declarations vs Definitions
 
-A **definition** is the actual function body — the code. There can only be one definition per function in a program.
+This is a concept Python does not have. It exists because C++ compiles each `.cpp` file independently, top-to-bottom.
 
-A **declaration** (also called a *prototype*) is just a statement telling the compiler "this function exists, here is its signature." No body. It ends in `;`.
+**The problem:** If you call a function before the compiler has seen it, the compiler does not know:
+- Does this function exist?
+- How many parameters does it take?
+- What types are the parameters?
+- What type does it return?
+
+Without this information, the compiler cannot type-check the call. It refuses.
+
+**A declaration** (also called a forward declaration or prototype) gives the compiler the function's signature without the body:
 
 ```cpp
-// Declaration (prototype) — just a promise to the compiler
+int add(int a, int b);   // declaration: signature only, ends with semicolon
+```
+
+**A definition** is the full function with its body:
+
+```cpp
+int add(int a, int b) {  // definition: has the body in braces
+    return a + b;
+}
+```
+
+Every definition is implicitly also a declaration. A declaration without a body is not a definition.
+
+### The Three Solutions
+
+**Problem: function used before it is defined**
+
+```cpp
+int main() {
+    int r = add(3, 4);   // ERROR: 'add' not declared yet
+}
+
+int add(int a, int b) { return a + b; }
+```
+
+**Solution 1: Move the definition above the call**
+
+```cpp
+int add(int a, int b) { return a + b; }   // defined first
+
+int main() {
+    int r = add(3, 4);   // OK -- compiler has seen add
+}
+```
+
+Works for simple, single-file programs. Becomes unmanageable with circular dependencies (function A calls B, B calls A).
+
+**Solution 2: Forward declaration**
+
+```cpp
+int add(int a, int b);   // declaration -- tells compiler the signature
+
+int main() {
+    int r = add(3, 4);   // OK -- compiler knows signature, trusts you to define it
+}
+
+int add(int a, int b) { return a + b; }   // definition can appear anywhere after
+```
+
+Works in a single file. For multi-file projects, use headers.
+
+**Solution 3: Header file (the real solution for multi-file projects)**
+
+```cpp
+// math.h -- declarations only
+#pragma once
 int add(int a, int b);
+int subtract(int a, int b);
 
+// math.cpp -- definitions
+#include "math.h"
+int add(int a, int b)      { return a + b; }
+int subtract(int a, int b) { return a - b; }
+
+// main.cpp -- uses the functions
+#include "math.h"   // gives main.cpp the declarations it needs
 int main() {
-    int result = add(3, 4);  // compiler knows the signature — OK
-    std::cout << result << "\n";
-    return 0;
-}
-
-// Definition — the actual code
-int add(int a, int b) {
-    return a + b;
+    int r = add(3, 4);      // compiler checks types via the declaration in math.h
+    int s = subtract(10, 3);
 }
 ```
 
-Why does this matter? Because C++ compiles files from top to bottom. Without a declaration, the compiler doesn't know `add` exists when it encounters the call in `main`. Declarations go in header files (`.h`), definitions go in source files (`.cpp`). Chapter 11 covers this in detail.
+We cover headers fully in Chapter 11.
 
-### Parameters and Arguments
+---
 
-**Pass by value** (the default) copies the argument. The function gets its own copy; changes don't affect the caller.
+## Pass by Value: What Is Copied and Why It Matters
+
+When you pass a variable to a function, C++ copies it by default. The function gets its own independent copy.
 
 ```cpp
-void double_it(int x) {
-    x *= 2;           // modifies the local copy
+void zero_it(int x) {
+    x = 0;   // modifies the local copy only
+    std::cout << "Inside: " << x << "\n";
 }
 
 int main() {
-    int n = 5;
-    double_it(n);
-    std::cout << n;   // still 5
+    int n = 42;
+    zero_it(n);
+    std::cout << "Outside: " << n << "\n";
 }
 ```
 
-This is the same as Python's behavior for immutable objects (ints, strings). To modify the caller's variable, use references (Chapter 6).
+Output:
+```
+Inside: 0
+Outside: 42   <-- n was NOT changed
+```
 
-### Default Parameters
+The stack during the call:
 
-Like Python, C++ supports default parameter values:
+```
+main's frame:                 zero_it's frame:
++------------------+          +------------------+
+| n = 42           |          | x = 42           |  <-- a COPY at a different address
+| (at 0x7fff1000)  |          | (at 0x7fff0ff0)  |
++------------------+          +------------------+
+                                     |
+                               x = 0 (modifies copy)
+                                     |
+                               zero_it returns, frame popped
+main's frame:
++------------------+
+| n = 42           |  <-- unchanged
++------------------+
+```
+
+This applies to every type: `int`, `double`, `std::string`, structs, classes. Passing a `std::string` with 10,000 characters by value copies all 10,000 characters. This is why Chapter 6 (References) and `const&` parameters matter.
+
+---
+
+## Default Parameters
 
 ```python
 # Python
-def connect(host, port=8080):
-    ...
+def connect(host, port=8080, timeout=30):
+    print(f"Connecting to {host}:{port} (timeout={timeout}s)")
 ```
 
 ```cpp
 // C++
-void connect(std::string host, int port = 8080) {
-    // ...
+void connect(std::string host, int port = 8080, int timeout = 30) {
+    std::cout << "Connecting to " << host << ":" << port
+              << " (timeout=" << timeout << "s)\n";
 }
 
-connect("localhost");        // port = 8080
-connect("localhost", 9000);  // port = 9000
+connect("localhost");              // port=8080, timeout=30
+connect("localhost", 9000);        // port=9000, timeout=30
+connect("localhost", 9000, 60);    // port=9000, timeout=60
 ```
 
-Default parameters must come at the *end* of the parameter list. You can't have `void f(int a = 0, int b)` — that would make calling ambiguous.
-
-### Function Overloading
-
-C++ lets you define multiple functions with the **same name** but **different parameter types**. The compiler picks the right one based on the arguments at the call site.
+Rules:
+1. Default parameters must be at the **end** of the parameter list.
+2. You cannot skip a middle argument: `connect("host", , 60)` is illegal.
+3. Specify defaults in the **declaration** (header file), not in the definition:
 
 ```cpp
-int    add(int a, int b)       { return a + b; }
-double add(double a, double b) { return a + b; }
-std::string add(std::string a, std::string b) { return a + b; }
+// math.h -- put defaults here
+void connect(std::string host, int port = 8080, int timeout = 30);
 
-int main() {
-    add(1, 2);           // calls int version
-    add(1.0, 2.0);       // calls double version
-    add("hi", "there");  // calls string version
+// math.cpp -- no defaults here (would be a redefinition error)
+void connect(std::string host, int port, int timeout) {
+    // implementation
 }
 ```
-
-Python doesn't have overloading — you'd use default parameters or `*args`. C++'s overloading is resolved entirely at compile time, producing no runtime cost.
-
-The compiler matches calls to overloads using a set of rules. Exact matches are preferred; then conversions. If two overloads are equally good matches, it's a compile error (ambiguous call).
-
-### `inline` Functions
-
-For very short functions, the overhead of a function call (push arguments, jump, return) can be significant. Declaring a function `inline` hints to the compiler that it should paste the function body directly at the call site:
-
-```cpp
-inline int square(int x) { return x * x; }
-```
-
-Modern compilers are good at deciding this themselves (even without `inline`), but `inline` is required when you define a function in a header file to avoid "multiple definition" linker errors. More on this in Chapter 11.
-
-### Returning Multiple Values
-
-Python can return a tuple. C++ can too, using `std::tuple` or a struct, but the cleaner C++17 way is structured bindings:
-
-```python
-# Python
-def minmax(lst):
-    return min(lst), max(lst)
-
-lo, hi = minmax([3, 1, 4, 1, 5])
-```
-
-```cpp
-// C++
-#include <algorithm>
-#include <vector>
-#include <tuple>
-
-std::pair<int, int> minmax(std::vector<int>& v) {
-    auto [lo, hi] = std::minmax_element(v.begin(), v.end());
-    return {*lo, *hi};
-}
-
-int main() {
-    std::vector<int> v = {3, 1, 4, 1, 5};
-    auto [lo, hi] = minmax(v);
-    std::cout << lo << " " << hi << "\n";
-}
-```
-
-We cover structured bindings fully in Chapter 33.
-
-### Key Takeaways
-
-- Every parameter and the return type must be explicitly typed.
-- A declaration is a signature with `;`. A definition has a body. You need a declaration before any call site.
-- Pass by value copies. The caller's variable is unaffected. Use references (Chapter 6) to modify the caller's data.
-- Overloading lets multiple functions share a name — the compiler picks based on argument types.
-- Default parameters must be at the end.
 
 ---
 
+## Function Overloading
+
+C++ lets you define multiple functions with the same name, as long as they have different parameter types. The compiler picks the right one at each call site.
+
+```cpp
+int    abs_val(int x)    { return x < 0 ? -x : x; }
+double abs_val(double x) { return x < 0.0 ? -x : x; }
+float  abs_val(float x)  { return x < 0.0f ? -x : x; }
+
+abs_val(5);      // calls int version
+abs_val(-3.14);  // calls double version
+abs_val(-2.0f);  // calls float version (f suffix = float literal)
+```
+
+The compiler resolves overloads at compile time using these rules (simplified):
+1. **Exact match** -- preferred
+2. **Trivial conversion** (e.g., non-const to const)
+3. **Promotion** (e.g., `float` to `double`, `short` to `int`)
+4. **Standard conversion** (e.g., `int` to `double`)
+5. **Ambiguous** (two overloads equally good) -- compile error
+
+```cpp
+void foo(int x)    { std::cout << "int\n"; }
+void foo(double x) { std::cout << "double\n"; }
+
+foo(5);      // "int"    -- exact match
+foo(5.0);    // "double" -- exact match
+foo(5.0f);   // "double" -- float promotes to double (closer than int)
+foo('A');    // "int"    -- char promotes to int
+// foo(true);  -- ambiguous: bool can promote to int OR double equally well
+```
+
+Python does not have overloading. You achieve similar behavior with type checks (`isinstance`) or default parameters. The C++ approach is resolved entirely at compile time with zero runtime cost.
+
+### What Overloading Is NOT
+
+Overloading is based on **parameter types only**. You cannot overload on return type:
+
+```cpp
+int    get() { return 5; }
+double get() { return 5.0; }  // ERROR: same parameters, only return type differs
+```
+
+The compiler uses the call arguments to pick the overload. If two functions take the same arguments, there is no way to distinguish them.
+
 ---
 
-# Part II — Core C++ (the part that isn't like Python)
+## Compiler Messages for Function Errors
+
+Understanding compiler error messages makes debugging much faster. Here are the most common function-related errors:
+
+### No Matching Function
+
+```cpp
+void greet(std::string name) { }
+
+int main() {
+    greet(42);   // passing int, but greet takes string
+}
+```
+
+```
+error: no matching function for call to 'greet(int)'
+  note: candidate: 'void greet(std::string)'
+  note:   no known conversion from 'int' to 'std::string'
+```
+
+The compiler tells you what it found and why it didn't match.
+
+### Ambiguous Overload
+
+```cpp
+void process(int x)   { }
+void process(long x)  { }
+
+process(42);   // 42 is int -- exact match for int version, fine
+process(42L);  // 42L is long -- exact match for long version, fine
+// process(true);  -- ambiguous: bool can convert to int OR long
+```
+
+```
+error: call to 'process' is ambiguous
+  note: candidate: 'void process(int)'
+  note: candidate: 'void process(long)'
+```
+
+### Wrong Number of Arguments
+
+```cpp
+void foo(int a, int b) { }
+
+foo(1, 2, 3);   // too many
+```
+
+```
+error: too many arguments to function 'void foo(int, int)'
+  note: declared here: void foo(int a, int b)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Expecting Pass-by-Value to Modify the Original
+
+**The bug:**
+```cpp
+void set_to_zero(int x) { x = 0; }
+
+int count = 100;
+set_to_zero(count);
+std::cout << count;   // 100 -- NOT 0
+```
+
+**Why it fails:** `x` is a copy. Setting `x = 0` changes only the copy.
+
+**The fix:** Use a reference (Chapter 6): `void set_to_zero(int& x) { x = 0; }`
+
+---
+
+### Mistake 2: Missing Return Statement
+
+**The bug:**
+```cpp
+int max(int a, int b) {
+    if (a > b) return a;
+    // forgot: return b;
+}
+```
+
+**The symptom:** Compiler warning "control may reach end of non-void function." Calling `max` when `a <= b` returns garbage.
+
+**The fix:** All code paths must return a value.
+
+---
+
+### Mistake 3: Defining a Function Twice
+
+**The bug:**
+```cpp
+int add(int a, int b) { return a + b; }
+int add(int a, int b) { return a + b; }  // second definition
+```
+
+```
+error: redefinition of 'int add(int, int)'
+```
+
+**The fix:** Declarations can appear multiple times (they're just type information). Definitions can appear exactly once.
+
+---
+
+### Mistake 4: Forgetting to Compile the File Containing the Definition
+
+**The bug:**
+```bash
+$ g++ -std=c++23 -o program main.cpp    # forgot greet.cpp
+```
+
+```
+undefined reference to `greet(std::string const&)'
+```
+
+**The fix:** Include all `.cpp` files that contain definitions you need:
+```bash
+$ g++ -std=c++23 -o program main.cpp greet.cpp
+```
+
+---
+
+## Exercises
+
+**Exercise 5.1 -- Declaration or definition?**
+
+For each, say whether it is a declaration, a definition, or both:
+
+```cpp
+double sqrt(double x);                   // (a)
+double square(double x) { return x*x; } // (b)
+void   print();                          // (c)
+void   print() { std::cout << "!\n"; }  // (d)
+```
+
+*Answer:*
+- (a): declaration only (no body)
+- (b): definition (has body) -- and also implicitly a declaration
+- (c): declaration only
+- (d): definition (and implicitly a declaration)
+
+---
+
+**Exercise 5.2 -- Stack trace**
+
+Draw the call stack when `inner` is executing:
+
+```cpp
+int inner(int x)      { return x * 2; }
+int middle(int x)     { return inner(x + 1); }
+int outer(int x)      { return middle(x + 1); }
+int main()            { int r = outer(5); }
+```
+
+*Answer:*
+```
+inner's frame:   x = 7   (outer 5 -> middle 6 -> inner 7)
+middle's frame:  x = 6
+outer's frame:   x = 5
+main's frame:    r = ?
+```
+
+`inner` returns `7 * 2 = 14`. Pops. `middle` returns `14`. Pops. `outer` returns `14`. Pops. `main`'s `r` = 14.
+
+---
+
+**Exercise 5.3 -- Overloaded describe**
+
+Write three overloaded functions named `describe` that:
+- Take `int` and print `"Integer: N"`
+- Take `double` and print `"Double: N.NN"`
+- Take `std::string` and print `"String: S (length L)"`
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <string>
+#include <iomanip>
+
+void describe(int n) {
+    std::cout << "Integer: " << n << "\n";
+}
+
+void describe(double d) {
+    std::cout << "Double: " << std::fixed << std::setprecision(2) << d << "\n";
+}
+
+void describe(std::string s) {
+    std::cout << "String: " << s << " (length " << s.size() << ")\n";
+}
+
+int main() {
+    describe(42);
+    describe(3.14159);
+    describe(std::string{"hello"});
+}
+```
+
+Output:
+```
+Integer: 42
+Double: 3.14
+String: hello (length 5)
+```
+
+---
+
+**Exercise 5.4 -- power with default**
+
+Write `power(base, exponent=2)` that computes `base^exponent` using a loop. It should work for non-negative integer exponents. Verify: `power(3)` returns `9`, `power(2, 10)` returns `1024`.
+
+*Answer:*
+```cpp
+double power(double base, int exponent = 2) {
+    double result = 1.0;
+    for (int i = 0; i < exponent; ++i) {
+        result *= base;
+    }
+    return result;
+}
+```
+
+---
+
+*Part I is complete. You now have the foundations: the compilation model, types and memory, operators, control flow, and functions.*
+
+*Part II begins with the concepts that most distinguish C++ from Python: references, pointers, the stack vs the heap, and const correctness. These are where C++ becomes its own language. Ask to continue.*
+
+---
+
+# Part II -- Core C++ (the part that is not like Python)
+
+The next six chapters cover the concepts that have no real equivalent in Python. Python hides all of this behind its object model and garbage collector. C++ exposes it -- and once you understand it, you understand why both languages make the choices they do.
 
 ---
 
 <a name="ch6"></a>
-## Chapter 6: References — Aliases for Variables
+# Chapter 6: References -- Aliases for Variables
 
-### The Problem References Solve
+## The Problem References Solve
 
-In Python, when you pass an object to a function, you're passing a reference automatically. The function can mutate mutable objects:
+At the end of Chapter 5 you saw that passing a variable to a function copies it. That is usually fine for `int` and `double`. It is expensive for large objects and sometimes flat-out wrong when you need the function to modify the original.
 
-```python
-def append_zero(lst):
-    lst.append(0)  # modifies the original list
+```cpp
+// Costs nothing to copy:
+void print_count(int n) { std::cout << n << "\n"; }
 
-nums = [1, 2, 3]
-append_zero(nums)
-print(nums)  # [1, 2, 3, 0]
+// Copying a 50,000-byte buffer is painful:
+void compress(HugeBuffer data) { ... }    // copies 50,000 bytes on every call
+
+// Needs to modify the original -- copy is useless:
+void swap(int a, int b) {
+    int tmp = a;
+    a = b;          // modifies the copy, not main's variables
+    b = tmp;
+}
+int x = 10, y = 20;
+swap(x, y);
+// x is still 10, y is still 20 -- nothing swapped
 ```
 
-In C++, by default everything is copied. If you want a function to modify the caller's variable, you need an explicit reference.
+References solve all three problems.
 
-### What Is a Reference?
+---
 
-A reference is an alias — another name for an existing variable. It doesn't create a copy; it refers to the same memory location.
+## What Is a Reference?
+
+A reference is an **alias** -- another name for an existing variable. It is not a copy. It is not a pointer (though it is implemented as one). It is a second name that refers to the exact same memory location.
 
 ```cpp
 int x = 42;
-int& r = x;   // r is a reference to x — same memory, different name
+int& ref = x;    // ref is a reference to x. & after the type = reference.
 
-r = 100;      // modifying r modifies x
-std::cout << x;  // 100
+std::cout << x   << "\n";   // 42
+std::cout << ref << "\n";   // 42 -- same memory, same value
+
+ref = 100;       // modifying ref modifies x (they ARE the same thing)
+std::cout << x   << "\n";   // 100
+std::cout << ref << "\n";   // 100
 ```
 
-The `&` in the type declaration means "reference to." This is different from the `&` address-of operator (Chapter 7).
+Memory picture:
 
-**References must be initialized.** Unlike pointers, you can't have a reference that refers to nothing. And once bound, a reference cannot be rebound to a different variable.
+```
+Before: ref = x declared
 
-```cpp
-int x = 1, y = 2;
-int& r = x;   // r refers to x
-r = y;        // this ASSIGNS y's value to x — r still refers to x!
-              // you cannot make r refer to y after initialization
+  Address   Name     Value
+  0x1000    x        42
+             \
+              +-- ref is another name for this same location
+              |   No new memory is allocated for ref itself.
+              |   (The compiler may use a pointer internally,
+              |    but you never see it.)
 ```
 
-### Pass by Reference
-
-This is the main use of references: letting functions modify the caller's variables.
+Rules for references:
+1. A reference **must** be initialized when declared. `int& r;` is a compile error.
+2. A reference **cannot be reseated** -- once bound to a variable, it refers to that variable for its entire life.
+3. After initialization, using `ref` is exactly like using the original variable.
 
 ```cpp
-void double_it(int& x) {  // x is a reference to the caller's variable
-    x *= 2;
+int a = 1, b = 2;
+int& r = a;     // r refers to a
+r = b;          // this does NOT make r refer to b
+                // it assigns b's value (2) TO a via r
+std::cout << a; // 2
+// r still refers to a, not b
+```
+
+---
+
+## Pass by Reference
+
+To let a function modify its argument, pass it by reference:
+
+```cpp
+void swap(int& a, int& b) {    // & in parameter = reference parameter
+    int tmp = a;
+    a = b;
+    b = tmp;
 }
 
-int main() {
-    int n = 5;
-    double_it(n);          // passes n by reference
-    std::cout << n;        // 10
-}
+int x = 10, y = 20;
+swap(x, y);
+std::cout << x << " " << y;   // 20 10 -- actually swapped
 ```
 
-Compare with pass by value from Chapter 5 — the parameter type is `int&` instead of `int`.
+Inside `swap`, `a` IS `x` and `b` IS `y`. They share the same memory.
 
-### Const References
+```
+main's frame:           swap's frame:
++---------------+       +------------------+
+| x = 10        | <---> | a (reference)    |  a and x ARE the same memory
+| y = 20        | <---> | b (reference)    |  b and y ARE the same memory
++---------------+       +------------------+
+                              |
+                        a = 20, b = 10 executed
+                              |
++---------------+
+| x = 20        |   x changed through a
+| y = 10        |   y changed through b
++---------------+
+```
 
-Passing large objects by value is expensive (it copies every byte). Passing by reference lets the function modify the caller's data, which may not be desired. The solution: `const` reference. It's efficient (no copy) and safe (no modification).
+Contrast with pass-by-value from Chapter 5:
 
 ```cpp
-// Bad: copies the entire string on every call
+void swap_broken(int a, int b) {  // no &, copies made
+    int tmp = a; a = b; b = tmp;  // swaps the copies only
+}
+swap_broken(x, y);   // x and y unchanged
+```
+
+---
+
+## Pass by `const` Reference
+
+When you want to avoid copying a large object but do NOT need to modify it, use `const&`:
+
+```cpp
+// BAD: copies the entire string (potentially many bytes)
 void print_name(std::string name) {
     std::cout << name << "\n";
 }
 
-// Good: no copy, no modification
+// GOOD: no copy, but cannot modify (const ensures this)
 void print_name(const std::string& name) {
     std::cout << name << "\n";
+    // name = "Bob";  // COMPILE ERROR -- const reference, cannot assign
 }
 ```
 
-Rule of thumb: **pass by `const&` for anything larger than a word-sized type** (anything bigger than a pointer/`int`). Pass by value for small types like `int`, `double`, `bool`.
+`const std::string& name` means:
+- `&` -- reference (no copy)
+- `const` -- cannot be modified through this reference
 
-### References as Return Values
+The caller's string is not copied. The function gets direct read-only access to the original. This is the most common parameter style for anything larger than a few bytes.
 
-Functions can return references, giving the caller direct access to a variable:
+### The Decision Table for Parameter Style
+
+```
+Parameter type          When to use
+---------------------   -----------------------------------------
+int x                   Small types (int, double, bool, char, pointer)
+                        that are cheap to copy and you don't need to modify.
+
+int& x                  Small or large type that the function MUST modify.
+                        (signals to the caller: "I will change your variable")
+
+const std::string& x    Large type (string, vector, struct) that you only
+                        need to read, not modify. No copy. Fastest.
+
+std::string& x          Large type that the function must modify.
+                        (rare -- usually return a new value instead)
+```
+
+---
+
+## References Cannot Be Null
+
+Unlike pointers (next chapter), a reference is guaranteed to refer to a valid object. You cannot have a "null reference" in well-formed C++.
 
 ```cpp
-int& get_element(std::vector<int>& v, int i) {
-    return v[i];  // returns a reference to the element
+int& bad_ref = *nullptr;   // undefined behavior -- DO NOT DO THIS
+                           // dereferencing null pointer gives "reference to nothing"
+```
+
+If validity is uncertain at the time of binding, use a pointer instead. References are for when you know the object exists.
+
+---
+
+## Returning References
+
+A function can return a reference to give the caller direct access to something inside the function... but only if that thing outlives the function call.
+
+```cpp
+// CORRECT: returning a reference to a member of an object that outlives the call
+int& get_element(std::vector<int>& v, int index) {
+    return v[index];   // v exists outside this function; safe
+}
+
+std::vector<int> nums = {10, 20, 30};
+get_element(nums, 1) = 99;    // assigns through the returned reference
+// nums is now {10, 99, 30}
+```
+
+```cpp
+// WRONG: returning a reference to a local variable
+int& bad() {
+    int x = 5;
+    return x;    // x is destroyed when bad() returns -- dangling reference!
+}
+int& r = bad();   // r refers to memory that no longer exists
+r = 10;           // undefined behavior -- corrupts memory
+```
+
+The compiler often warns about this:
+
+```
+warning: reference to local variable 'x' returned [-Wreturn-local-addr]
+    7 |     return x;
+      |            ^
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Expecting pass-by-reference from a non-reference parameter
+
+**The bug:**
+```cpp
+void double_it(int n) { n *= 2; }   // n is a copy
+int x = 5;
+double_it(x);
+std::cout << x;   // 5, not 10
+```
+**The fix:** `void double_it(int& n) { n *= 2; }`
+
+### Mistake 2: Forgetting `const` on read-only reference parameters
+
+**The bug:**
+```cpp
+void print_sum(std::string& s) {   // non-const reference
+    std::cout << s << "\n";
+}
+print_sum("hello");   // COMPILE ERROR: cannot bind non-const reference to rvalue
+```
+**Why it fails:** Temporary values (like string literals) cannot bind to non-const references because the compiler cannot take their address in a meaningful way.
+**The fix:** `void print_sum(const std::string& s)`
+
+### Mistake 3: Returning a reference to a local variable
+
+**The bug:** As shown above -- the local variable is destroyed on return, leaving a dangling reference.
+**The fix:** Only return references to objects that outlive the function (parameters, class members, statics).
+
+---
+
+## Exercises
+
+**Exercise 6.1 -- Trace the output**
+
+```cpp
+void increment(int& x) { ++x; }
+
+int a = 5;
+int& b = a;
+increment(b);
+std::cout << a << " " << b;
+```
+
+*Answer:* `6 6`. `b` is a reference to `a`, so they are the same variable. `increment(b)` increments `a` (via `b` via the parameter `x`). Both names show the new value.
+
+---
+
+**Exercise 6.2 -- Fix the swap**
+
+```cpp
+void swap(double a, double b) {
+    double tmp = a;
+    a = b;
+    b = tmp;
+}
+double x = 1.5, y = 2.5;
+swap(x, y);
+// x and y are unchanged -- fix swap so they actually swap
+```
+
+*Answer:*
+```cpp
+void swap(double& a, double& b) {
+    double tmp = a;
+    a = b;
+    b = tmp;
+}
+```
+
+---
+
+**Exercise 6.3 -- const& parameter**
+
+Write a function `print_stats(const std::vector<int>& v)` that prints the size, first element, and last element of a vector. It should not copy the vector.
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <vector>
+
+void print_stats(const std::vector<int>& v) {
+    std::cout << "Size:  " << v.size()        << "\n";
+    std::cout << "First: " << v.front()       << "\n";
+    std::cout << "Last:  " << v.back()        << "\n";
 }
 
 int main() {
-    std::vector<int> v = {10, 20, 30};
-    get_element(v, 1) = 99;   // assigns directly to v[1]
-    std::cout << v[1];         // 99
+    std::vector<int> nums = {10, 20, 30, 40, 50};
+    print_stats(nums);   // no copy of nums made
 }
 ```
-
-**Never return a reference to a local variable.** The local variable dies when the function returns, leaving a dangling reference — undefined behavior.
-
-```cpp
-int& bad_function() {
-    int local = 42;
-    return local;  // UNDEFINED BEHAVIOR — local dies here
-}
-```
-
-### References vs Pointers
-
-You'll learn about pointers in Chapter 7. The quick comparison:
-
-| Feature              | Reference          | Pointer                |
-|----------------------|--------------------|------------------------|
-| Can be null          | No                 | Yes                    |
-| Can be rebound       | No                 | Yes                    |
-| Syntax               | Feels like a value | Requires `*` and `&`   |
-| Use for              | Aliases, parameters | Optional/nullable things, arrays |
-
-When you have a choice, prefer references. They're safer because they can't be null or dangling (as long as you don't return them from functions with local variables).
-
-### Key Takeaways
-
-- A reference is an alias to an existing variable — same memory, different name.
-- Use `int& param` to pass by reference so a function can modify the caller's variable.
-- Use `const int& param` to pass large objects cheaply without allowing modification.
-- References cannot be null and cannot be rebound. These constraints make them safer than pointers.
-- Never return a reference to a local variable.
 
 ---
 
 <a name="ch7"></a>
-## Chapter 7: Pointers and Memory Addresses
+# Chapter 7: Pointers and Memory Addresses
 
-### Every Variable Has an Address
+## The Address of a Variable
 
-Every byte of memory has a numeric address. When you declare `int x = 42`, the value 42 is stored somewhere in RAM at some address. In Python this is hidden from you. In C++ you can see and use it.
-
-The **address-of operator** `&` gives you the address of a variable:
+Every variable lives at a specific location in memory -- a numbered address. On a 64-bit system, addresses are 64-bit numbers, usually displayed in hexadecimal.
 
 ```cpp
 int x = 42;
-std::cout << &x << "\n";  // prints something like 0x7ffee4bc3a4c
+std::cout << &x << "\n";   // prints something like: 0x7ffee4b3c5ac
 ```
 
-That hexadecimal number is the memory address — the location in RAM where `x` lives.
+The `&` operator (when used in an expression, not a declaration) is the **address-of** operator. It gives you the memory address where a variable lives.
 
-### What Is a Pointer?
+```
+Variable x:
 
-A pointer is a variable that stores a memory address. If `x` is an `int`, then `int*` is "pointer to int" — a variable that holds the address of an `int`.
+Address    Value
+0x7fff10   [00][00][00][2A]   <- &x is 0x7fff10; *(&x) is 42
+```
+
+A **pointer** is a variable that stores an address. The `*` in the type means "pointer to":
 
 ```cpp
-int  x = 42;
-int* p = &x;   // p stores the address of x
+int  x   = 42;      // x is an int
+int* p   = &x;      // p is a pointer to int, stores x's address
+
+std::cout << p    << "\n";   // 0x7fff10  -- the address (the pointer value)
+std::cout << *p   << "\n";   // 42        -- the value at that address (dereference)
+std::cout << &p   << "\n";   // 0x7fff08  -- address of the pointer itself
 ```
 
+The `*` when used with an existing pointer is the **dereference** operator -- it follows the address to get the value stored there.
+
 ```
-Memory:
-Address:  0x1000   0x1008
-Value:    42       0x1000
-Variable: x        p
+Memory picture:
+
+Address    Variable    Value
+0x7fff10   x (int)     42
+0x7fff08   p (int*)    0x7fff10   <- p stores x's address
+
+p is the address 0x7fff10.
+*p follows that address and gives 42.
 ```
 
-`p` contains the number `0x1000` (the address of `x`). When you look at `p`, you see an address. When you *follow* the pointer, you see the value at that address.
+---
 
-### Dereferencing
-
-The **dereference operator** `*` follows a pointer to get the value it points to:
+## Modifying Through a Pointer
 
 ```cpp
-int  x = 42;
+int x = 42;
 int* p = &x;
 
-std::cout << p;   // prints the address (e.g. 0x1000)
-std::cout << *p;  // prints 42 — the value at that address
+*p = 100;   // write 100 to the memory location p points to
+            // same as: x = 100
+
+std::cout << x;    // 100
+std::cout << *p;   // 100
 ```
 
-You can also write through a pointer:
+This is the lower-level version of references. Pointers and references both allow indirect modification, but:
+
+| | Reference | Pointer |
+|--|-----------|---------|
+| Syntax | `int& r = x` | `int* p = &x` |
+| Must be initialized | Yes | No (but you should) |
+| Can be null | No | Yes (`nullptr`) |
+| Can be reseated | No | Yes |
+| Dereference syntax | just use `r` | `*p` |
+| When to use | Aliases, function parameters | Optional relationships, arrays, dynamic memory |
+
+---
+
+## `nullptr`: The Null Pointer
+
+A pointer that points to nothing is called a null pointer. Always use `nullptr` (C++11), never `NULL` (old C macro) or `0`:
 
 ```cpp
-*p = 100;         // sets x to 100 via the pointer
-std::cout << x;   // 100
-```
+int* p = nullptr;   // p points to nothing
 
-This is what Python does automatically for mutable objects. C++ makes it explicit.
-
-### `nullptr`
-
-A pointer that doesn't point to anything should be set to `nullptr` (C++11). Never leave a pointer uninitialized.
-
-```cpp
-int* p = nullptr;   // safe: p points to nothing
-
-if (p != nullptr) { // always check before dereferencing
-    std::cout << *p;
+if (p != nullptr) {
+    std::cout << *p;    // safe -- only dereference if not null
 }
-// or equivalently:
-if (p) {
-    std::cout << *p;
+
+// Dereferencing a null pointer is undefined behavior (usually a crash):
+int* q = nullptr;
+std::cout << *q;   // CRASH -- segmentation fault
+```
+
+```
+Null pointer:
+
+Address    Variable    Value
+0x7fff08   p (int*)    0x0000000000000000   <- nullptr (address zero)
+
+Dereferencing: *p means "go to address 0 and read from there"
+OS protects address 0 -- your program gets SIGSEGV (segfault)
+```
+
+Always check pointers before dereferencing if they might be null.
+
+---
+
+## Pointer Arithmetic
+
+Pointers support arithmetic that advances by the size of the pointed-to type:
+
+```cpp
+int arr[5] = {10, 20, 30, 40, 50};
+int* p = arr;     // p points to arr[0]
+
+std::cout << *p       << "\n";   // 10
+std::cout << *(p + 1) << "\n";   // 20  (moves 4 bytes forward, one int)
+std::cout << *(p + 2) << "\n";   // 30
+
+p++;              // p now points to arr[1]
+std::cout << *p   << "\n";       // 20
+```
+
+```
+Memory (each int is 4 bytes):
+
+Address    Value
+0x1000     10   <- arr[0], p points here initially
+0x1004     20   <- arr[1], p+1 points here
+0x1008     30   <- arr[2]
+0x100C     40   <- arr[3]
+0x1010     50   <- arr[4]
+```
+
+`p + 1` moves by `sizeof(int) = 4` bytes, landing on the next integer. This is why arrays are contiguous in memory -- pointer arithmetic only works correctly because of that contiguity.
+
+---
+
+## Pointers vs Python References
+
+In Python, every variable is a reference (pointer) to an object. Python programmers are already using pointers -- they just don't see the mechanics.
+
+```python
+# Python: all "variables" are pointers
+a = [1, 2, 3]
+b = a          # b and a point to the SAME list
+b.append(4)
+print(a)       # [1, 2, 3, 4] -- a was affected through b
+
+# Python explicitly shows this with id():
+print(id(a) == id(b))   # True -- same memory address
+```
+
+```cpp
+// C++: copying by default, pointer explicitly
+std::vector<int> a = {1, 2, 3};
+std::vector<int> b = a;          // b is a COPY -- different memory
+b.push_back(4);
+std::cout << a.size();            // 3 -- a is unaffected
+
+std::vector<int>* p = &a;        // p points to a
+p->push_back(4);                 // modifies a through the pointer
+std::cout << a.size();            // 4
+```
+
+In Python, `b = a` for a list makes two labels for one object. In C++, `b = a` copies everything. To share, you explicitly use a pointer or reference.
+
+---
+
+## The `->` Operator
+
+When you have a pointer to an object and want to access its members, `->` is shorthand for `(*p).member`:
+
+```cpp
+struct Point {
+    double x, y;
+};
+
+Point pt{3.0, 4.0};
+Point* p = &pt;
+
+std::cout << (*p).x << "\n";   // 3.0  -- dereference then member access
+std::cout << p->x   << "\n";   // 3.0  -- same thing, cleaner syntax
+p->x = 10.0;                   // modifies pt.x through the pointer
+```
+
+`->` is the idiomatic way to access members through a pointer. You will see it constantly in C++ code.
+
+---
+
+## `const` and Pointers
+
+There are two things that can be `const` with a pointer: the pointer itself (where it points) and the value it points to.
+
+```cpp
+int a = 1, b = 2;
+
+// Pointer to const int: cannot change the pointed-to value
+const int* p1 = &a;
+*p1 = 10;    // ERROR: *p1 is const
+p1  = &b;    // OK: p1 itself can be changed (points to b now)
+
+// Const pointer to int: cannot change where it points
+int* const p2 = &a;
+*p2  = 10;   // OK: the int it points to can be changed
+p2   = &b;   // ERROR: p2 is const (cannot reseat)
+
+// Const pointer to const int: cannot change either
+const int* const p3 = &a;
+*p3  = 10;   // ERROR
+p3   = &b;   // ERROR
+
+// Memory trick: read the type right-to-left
+// const int*       --> pointer to const int
+// int* const       --> const pointer to int
+// const int* const --> const pointer to const int
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Dereferencing a Null or Uninitialized Pointer
+
+**The bug:**
+```cpp
+int* p;        // uninitialized -- contains garbage address
+*p = 5;        // writes to garbage address -- undefined behavior
+```
+
+**The symptom:** Immediate crash (segfault), or silent memory corruption that crashes later.
+
+**The fix:** Always initialize pointers: `int* p = nullptr;` or `int* p = &some_variable;`
+
+---
+
+### Mistake 2: Using a Pointer After the Pointed-To Variable is Destroyed
+
+**The bug:**
+```cpp
+int* get_ptr() {
+    int local = 42;
+    return &local;   // local is destroyed when function returns
 }
+int* p = get_ptr();  // p now points to freed stack memory
+std::cout << *p;     // undefined behavior -- dangling pointer
 ```
 
-Dereferencing a null pointer is undefined behavior — usually a crash (segmentation fault). Always check.
+**The fix:** Never return a pointer to a local variable. Return the value, or make the variable `static`, or allocate on the heap (Chapter 8).
 
-### Pointer Arithmetic
+---
 
-Pointers can be incremented, and they advance by the size of the pointed-to type:
+### Mistake 3: Confusing `&` as Address-Of vs `&` as Reference Type
+
+**The confusion:**
+```cpp
+int x = 5;
+int& r = x;      // & in declaration = reference type
+int* p = &x;     // & in expression  = address-of operator
+```
+
+The position matters: `&` after a type in a declaration means "reference." `&` before a variable in an expression means "take the address of."
+
+---
+
+## Exercises
+
+**Exercise 7.1 -- Trace the pointer**
 
 ```cpp
-int arr[3] = {10, 20, 30};
-int* p = arr;    // points to arr[0]
-
-std::cout << *p;      // 10
-++p;
-std::cout << *p;      // 20
-++p;
-std::cout << *p;      // 30
+int a = 10, b = 20;
+int* p = &a;
+*p = 30;
+p = &b;
+*p += 5;
+std::cout << a << " " << b;
 ```
 
-When `p` is an `int*` and you do `p + 1`, the address advances by 4 bytes (the size of `int`), not by 1 byte. This is how C arrays work — the array name decays to a pointer to its first element.
+*Answer:* `30 25`. Step by step: `*p = 30` sets `a` to 30. `p = &b` makes `p` point to `b`. `*p += 5` adds 5 to `b` (20 + 5 = 25).
 
-### Pointers to Pointers
+---
 
-A pointer can point to another pointer:
+**Exercise 7.2 -- Pointer parameter**
+
+Rewrite `double_it` to take a pointer parameter instead of a reference:
 
 ```cpp
-int   x = 42;
-int*  p  = &x;   // pointer to int
-int** pp = &p;   // pointer to pointer to int
-
-std::cout << **pp;  // 42
+void double_it(int* p) {
+    *p *= 2;
+}
+int x = 7;
+double_it(&x);    // must pass address explicitly
+std::cout << x;   // 14
 ```
 
-This appears in C-style APIs, especially for passing pointers by reference to functions that need to update them.
+Which style (reference or pointer) is more idiomatic in modern C++ for this use case? Why?
 
-### `const` and Pointers
+*Answer:* Reference is more idiomatic. It is simpler (`double_it(x)` vs `double_it(&x)`), cannot be null, and cannot be reseated. Pointers are used when nullability or reseating is needed.
 
-There are two separate things you can `const`: the pointer itself, or the data it points to.
+---
 
+**Exercise 7.3 -- const correctness with pointers**
+
+Declare a pointer `p` to `double` such that:
+- The value at `p` cannot be changed through `p`
+- `p` itself can be pointed at a different `double`
+
+Then declare `q` such that:
+- `q` is fixed to always point to the same `double`
+- The value at `q` CAN be changed through `q`
+
+*Answer:*
 ```cpp
-int x = 10, y = 20;
+double a = 1.0, b = 2.0;
+const double* p = &a;   // ptr to const double
+p = &b;                 // OK -- p can be reseated
+// *p = 5.0;           // ERROR -- cannot modify through p
 
-const int* p1 = &x;   // pointer to const int — data is read-only, pointer can change
-p1 = &y;              // OK — pointer can be rebound
-// *p1 = 99;          // ERROR — data is read-only
-
-int* const p2 = &x;   // const pointer to int — pointer is fixed, data can change
-*p2 = 99;             // OK — can modify data
-// p2 = &y;           // ERROR — pointer cannot be rebound
-
-const int* const p3 = &x;  // both const
+double* const q = &a;   // const pointer to double
+*q = 5.0;               // OK -- can modify value
+// q = &b;             // ERROR -- cannot reseat q
 ```
-
-Read the declaration right-to-left: "p3 is a const pointer to a const int."
-
-### When to Use Pointers vs References
-
-This confuses most beginners. The short rule:
-
-- **Use references** when you always have a valid object and don't need to rebind.
-- **Use pointers** when the thing might be absent (`nullptr`), when you need to rebind, or when you're working with arrays.
-
-Modern C++ has `std::optional` (Chapter 32) for the "might not exist" case. Smart pointers (Chapter 14) replace raw pointer ownership. After Part III, you'll rarely use raw pointers for ownership.
-
-### Key Takeaways
-
-- A pointer is a variable that stores a memory address.
-- `&x` gives the address of `x`. `*p` dereferences pointer `p` to get the value.
-- Initialize pointers to `nullptr` if they don't point to anything.
-- Always check a pointer before dereferencing it.
-- Pointer arithmetic advances by the size of the pointed-to type.
-- `const int*` = data is const. `int* const` = pointer is const.
 
 ---
 
 <a name="ch8"></a>
-## Chapter 8: The Stack and the Heap
+# Chapter 8: The Stack and the Heap
 
-### Python Hides Memory from You
+## Two Regions of Memory
 
-In Python, you never decide where an object lives in memory. The interpreter allocates objects on the heap, and the garbage collector frees them when they're no longer referenced. This is simple, but it comes with costs: allocation overhead, garbage collection pauses, and no control over memory layout.
+Every running program has two main regions where variables can live:
 
-### Two Kinds of Memory
+```
++------------------------------------------+
+|  Stack                                   |
+|  - Fast (just moves a pointer)           |
+|  - Automatic (compiler manages lifetime) |
+|  - Limited size (~1-8 MB)               |
+|  - Local variables, function parameters  |
++------------------------------------------+
+|  (other memory: code, globals...)        |
++------------------------------------------+
+|  Heap                                    |
+|  - Slower (OS/allocator involved)        |
+|  - Manual (YOU manage lifetime in C++)   |
+|  - Huge (limited by RAM)                |
+|  - Dynamic allocation: new, malloc       |
++------------------------------------------+
+```
 
-C++ programs use two main regions of memory:
+Python hides this entirely -- all objects live on the heap, managed by the garbage collector. C++ exposes both regions and lets you choose where memory comes from.
 
-**The Stack:** Fast, automatic, limited in size (typically 1–8 MB). Variables declared inside functions live here. The stack grows and shrinks automatically as functions are called and return.
+---
 
-**The Heap:** Slow(er), manually managed, limited only by available RAM. Objects allocated with `new` live here. You control when they're created and destroyed.
+## The Stack in Detail
 
-### Stack Memory
-
-Every local variable you've used so far has lived on the stack:
+The stack is a LIFO (Last In, First Out) structure. Local variables and function parameters live here.
 
 ```cpp
+void bar() {
+    int z = 30;
+    // z lives on the stack while bar() is running
+}
+
 void foo() {
-    int x = 42;       // allocated on the stack
-    double y = 3.14;  // also on the stack
-    // x and y are destroyed automatically when foo() returns
+    int y = 20;
+    bar();     // bar's frame pushed on top of foo's
+    // z is gone (bar's frame popped); y is back on top
+}
+
+int main() {
+    int x = 10;
+    foo();
+    // y is gone; x is still here
 }
 ```
 
-The stack works like a stack of plates: when you call a function, a *stack frame* is pushed with space for all its local variables. When the function returns, that frame is popped and the memory is instantly reclaimed.
+```
+Call stack during bar():
 
-Stack allocation is extremely fast — it's just moving a pointer. But the size is fixed at program start, and you can't allocate more than a few megabytes without a stack overflow.
+High addresses  +-------------------+
+                | main's frame      |
+                |   x = 10          |
+                +-------------------+
+                | foo's frame       |
+                |   y = 20          |
+                +-------------------+
+                | bar's frame       |
+                |   z = 30          |
+Low addresses   +-------------------+   <- stack pointer (SP) is here
+
+After bar() returns:
+                +-------------------+
+                | main's frame      |
+                |   x = 10          |
+                +-------------------+
+                | foo's frame       |
+                |   y = 20          |
+                +-------------------+
+                (bar's memory freed -- SP moved up)
+```
+
+Allocating stack memory is nearly free: the CPU just decrements the stack pointer register by the number of bytes needed. Freeing stack memory is also free: the CPU increments the stack pointer back.
+
+**Stack overflow:** If you allocate too much on the stack (e.g., declaring a 10MB array locally, or infinitely deep recursion), the stack runs into other memory and the OS kills your program.
 
 ```cpp
-void explode() {
-    int huge_array[10'000'000];  // ~40 MB on the stack — stack overflow!
+// Stack overflow example:
+void recurse() { recurse(); }   // infinite recursion
+recurse();   // segfault when stack space exhausted
+
+// Stack overflow with large local array:
+void dangerous() {
+    int huge[2000000];   // ~8 MB on the stack -- likely crashes
 }
 ```
 
-### Heap Memory
+---
 
-The heap is a large pool of memory managed by the allocator (`malloc`/`free` at the C level, `new`/`delete` in C++). You request a block, use it, and return it when done.
+## The Heap in Detail
+
+The heap is a large pool of memory managed by the OS and your allocator. You request chunks with `new` and release them with `delete`.
 
 ```cpp
-int* p = new int(42);     // allocate an int on the heap, initialized to 42
-std::cout << *p << "\n";  // 42
-delete p;                 // return the memory to the heap
-p = nullptr;              // good practice: null the pointer after deleting
+int* p = new int{42};      // allocates 4 bytes on the heap; p stores the address
+std::cout << *p << "\n";   // 42
+delete p;                  // releases the 4 bytes back to the allocator
+p = nullptr;               // good practice: prevents accidental reuse
 ```
 
-`new` returns a pointer to the allocated memory. `delete` frees it. If you forget to `delete`, you have a **memory leak** — the memory is never returned until the program exits. In long-running programs this causes ever-growing memory usage.
+```
+After `int* p = new int{42}`:
+
+Stack:                         Heap:
++-------------------+          +-------------------+
+| p = 0x555f2a1b10  | -------> | 42                | (4 bytes)
++-------------------+          +-------------------+
+
+After `delete p`:
+
+Stack:                         Heap:
++-------------------+          (memory returned to heap pool)
+| p = 0x555f2a1b10  | ---X-->  (no longer valid to access)
++-------------------+
+
+After `p = nullptr`:
++-------------------+
+| p = 0x0           |          (safe -- cannot accidentally dereference)
++-------------------+
+```
 
 ### Heap Arrays
 
-To allocate an array on the heap:
-
 ```cpp
 int n = 1000;
-int* arr = new int[n];   // heap array of 1000 ints
-arr[0] = 1;
-arr[1] = 2;
-// ...
-delete[] arr;            // MUST use delete[], not delete
+int* arr = new int[n]{};      // allocate n ints on the heap, zero-initialized
+arr[0] = 10;
+arr[n-1] = 99;
+
+delete[] arr;   // MUST use delete[] for arrays (not delete)
 arr = nullptr;
 ```
 
-Notice `delete[]` — it calls the destructor on each element and frees the whole array. Using `delete` (without `[]`) on an array is undefined behavior.
+The size does not need to be a compile-time constant -- you can compute it at runtime. This is the main use case for heap allocation.
 
-### Visualizing the Difference
+---
 
+## Why Python Uses the Heap for Everything
+
+Python allocates every object on the heap and uses reference counting to track when objects can be freed. This is why Python is flexible but slower:
+
+```python
+x = [1, 2, 3]   # list allocated on heap
+y = x            # y is another reference to the same heap object
+                 # reference count goes from 1 to 2
+del x            # reference count goes from 2 to 1 -- NOT freed
+del y            # reference count goes from 1 to 0 -- freed!
 ```
-Stack                       Heap
-─────────────────────       ──────────────────────────────
-[ main frame          ]     [ ... free ... ]
-  int x = 5           ──►  (nothing — x is ON the stack)
-  int* p ─────────────────► [ int: 42      ] ← allocated with new
-[ foo frame           ]
-  local vars           
-```
 
-### Why Does This Matter?
-
-Python puts almost everything on the heap automatically. C++ makes you choose:
-
-- **Stack**: Use for small, short-lived values. Variables, local structs, small arrays. Fast, automatic cleanup.
-- **Heap**: Use for large data, data that outlives a function, data whose size isn't known at compile time.
-
-But here's the secret: **in modern C++, you almost never call `new` and `delete` directly.** `std::vector`, `std::string`, and smart pointers manage heap memory for you, giving heap flexibility with stack-like safety. Chapters 10 and 14 cover this.
-
-### Stack Overflow
-
-When functions call functions recursively too deep, the stack runs out of space:
+C++ gives you the choice:
+- Stack: fast, automatic, size known at compile time
+- Heap: flexible, manual (or smart pointers), any size
 
 ```cpp
-void infinite() {
-    infinite();  // calls itself forever — stack overflow → crash
+// Stack -- automatic lifetime, fast
+std::vector<int> v = {1, 2, 3};   // v is on the stack
+// vector's CONTENTS are on the heap (internally), but you don't manage that
+// v is automatically destroyed when it goes out of scope
+
+// Heap -- manual lifetime (rare in modern C++ -- use smart pointers instead)
+std::vector<int>* vp = new std::vector<int>{1, 2, 3};
+delete vp;   // you must remember to do this
+```
+
+---
+
+## Memory Leaks
+
+A memory leak is heap memory that was allocated but never freed. In C++, the OS reclaims all memory when the process exits, so short-lived programs don't suffer from leaks permanently. But long-running programs (servers, games) slowly consume more and more memory until they crash or the machine runs out.
+
+```cpp
+void leaky() {
+    int* p = new int{42};   // allocates heap memory
+    // forgot: delete p;
+    // function returns -- p (the pointer) is gone
+    // the heap memory at p's address is still allocated, now unreachable
+}
+
+for (int i = 0; i < 1000000; ++i)
+    leaky();   // leaks 4 bytes per call = 4 MB leaked
+```
+
+**Detection:** Run with `valgrind ./program` or compile with `-fsanitize=address`:
+
+```
+==12345== LEAK SUMMARY:
+==12345==    definitely lost: 4 bytes in 1 blocks
+==12345==    at 0x4C2FB0F: operator new(unsigned long) (vg_replace_malloc.c:334)
+==12345==    by 0x10868B: leaky() (example.cpp:2)
+```
+
+The real fix is to never use raw `new`/`delete`. Use `std::vector`, `std::string`, and smart pointers (Chapter 14), which manage heap memory automatically through RAII.
+
+---
+
+## Stack vs Heap: Which to Use
+
+```
+Use the stack (local variables) when:
+  - Size is known at compile time
+  - Lifetime matches the current scope
+  - Performance is critical (tight loops, small structures)
+  Examples: int, double, small structs, std::array<int, 10>
+
+Use the heap (via containers or smart pointers) when:
+  - Size is determined at runtime (user input, file content)
+  - Lifetime must extend beyond the creating function
+  - Data is very large (millions of elements)
+  Examples: std::vector, std::string, objects stored in maps
+
+In modern C++:
+  - You almost never write new/delete directly
+  - std::vector and std::string manage their heap memory internally
+  - smart pointers (unique_ptr, shared_ptr) handle ownership automatically
+  - Raw new/delete is a code smell in modern C++
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `delete` Instead of `delete[]` for Arrays
+
+**The bug:**
+```cpp
+int* arr = new int[100];
+delete arr;    // undefined behavior! Should be delete[]
+```
+**The symptom:** Memory corruption or crash -- the allocator uses the wrong size to free.
+**The fix:** `delete[] arr;`
+
+### Mistake 2: Double Delete
+
+**The bug:**
+```cpp
+int* p = new int{5};
+delete p;
+delete p;   // undefined behavior -- freeing already-freed memory
+```
+**The symptom:** Crash or silent heap corruption.
+**The fix:** Set pointer to `nullptr` after deleting. Deleting `nullptr` is a no-op.
+
+### Mistake 3: Using After Delete (Use-After-Free)
+
+**The bug:**
+```cpp
+int* p = new int{5};
+delete p;
+std::cout << *p;   // reads freed memory -- undefined behavior
+```
+**Detection:** `-fsanitize=address` reports "heap-use-after-free" with a stack trace.
+
+---
+
+## Exercises
+
+**Exercise 8.1 -- Where does it live?**
+
+For each variable, say whether it lives on the stack or heap:
+
+```cpp
+int a = 5;
+int* b = new int{10};
+std::string s = "hello";
+std::vector<int> v = {1, 2, 3};
+```
+
+*Answer:*
+- `a`: stack
+- `b`: stack (the pointer). The `int` it points to: heap.
+- `s`: stack (the `std::string` object itself). The character data it manages: heap (internally).
+- `v`: stack (the `std::vector` object). The `int` elements it manages: heap (internally).
+
+---
+
+**Exercise 8.2 -- Spot the leak**
+
+How many memory leaks does this code have?
+
+```cpp
+void process() {
+    int* a = new int{1};
+    int* b = new int{2};
+    if (*a > 0) return;   // early return!
+    delete a;
+    delete b;
 }
 ```
 
-Each call pushes a frame; you exhaust the stack in seconds.
+*Answer:* Two leaks when `*a > 0` (which is always true here, since `a = 1`). The early `return` bypasses both `delete` calls. This is exactly why RAII (Chapter 12) and smart pointers (Chapter 14) exist -- they clean up even when exceptions or early returns happen.
 
-### Key Takeaways
+---
 
-- Stack: automatic, fast, limited (~1-8MB). Local variables live here. Freed when the function returns.
-- Heap: manual, large, flexible. Allocated with `new`, freed with `delete`.
-- Memory leaks occur when heap memory is never freed. They grow silently.
-- `delete[]` for arrays, `delete` for single objects.
-- Modern C++ wraps heap allocation in containers and smart pointers — you rarely call `new` raw.
+**Exercise 8.3 -- Heap array**
+
+Allocate an array of 5 doubles on the heap, set them to `1.1, 2.2, 3.3, 4.4, 5.5`, print them, then free the memory correctly.
+
+*Answer:*
+```cpp
+double* arr = new double[5]{1.1, 2.2, 3.3, 4.4, 5.5};
+for (int i = 0; i < 5; ++i)
+    std::cout << arr[i] << "\n";
+delete[] arr;
+arr = nullptr;
+```
 
 ---
 
 <a name="ch9"></a>
-## Chapter 9: `const` Correctness
+# Chapter 9: `const` Correctness
 
-### The Concept
+## Why `const` Matters
 
-`const` means "this value will not change." In Python you signal immutability by convention (all-caps names) or by using immutable types. C++ enforces immutability at the compiler level.
+`const` is not just a safety net for your own mistakes. It is a contract: you tell the compiler "this value will not change," and the compiler enforces that contract everywhere the value is used. This contract propagates through the codebase, letting the compiler catch bugs at compile time that would otherwise be silent data corruption at runtime.
+
+In Python, there is no `const`. You use naming conventions (ALL_CAPS) to signal "don't change this," but nothing enforces it. C++'s `const` is enforced.
+
+---
+
+## `const` Variables
 
 ```cpp
 const int MAX_PLAYERS = 8;
-MAX_PLAYERS = 10;  // COMPILE ERROR
+MAX_PLAYERS = 10;   // COMPILE ERROR: assignment of read-only variable
 ```
 
-This is more than a convenience — it's a design tool. When you mark something `const`, you're communicating intent to readers of the code and enabling the compiler to catch accidental modifications.
-
-### `const` Variables
+The compiler rejects any assignment to `MAX_PLAYERS` after initialization. Every future reader of the code knows with certainty: this value never changes.
 
 ```cpp
 const double PI = 3.14159265358979;
 const std::string GREETING = "Hello";
 ```
 
-Always initialize `const` variables at declaration — you can't assign them later.
+Prefer `const` for anything that does not need to change. It is documentation that is enforced.
 
-### `const` References (recap)
+---
 
-From Chapter 6: passing by `const` reference is the idiomatic way to pass large objects cheaply without allowing modification:
+## `const` Function Parameters
+
+A `const` parameter promises not to modify the argument:
 
 ```cpp
-void print(const std::string& s) {
-    std::cout << s << "\n";
-    // s = "modified";  // COMPILE ERROR
+void print_length(const std::string& s) {
+    std::cout << s.size() << "\n";
+    s = "modified";   // COMPILE ERROR -- s is const reference
 }
 ```
 
-### `const` Member Functions
+This is important for `const&` parameters: you can pass temporaries (rvalues) to them:
 
-In a class (Chapter 17), a member function can be marked `const`, promising it won't modify the object:
+```cpp
+void print_length(const std::string& s) { ... }
 
+print_length("hello");            // OK: string literal binds to const&
+print_length(std::string{"hi"});  // OK: temporary binds to const&
+
+void modify(std::string& s) { ... }
+modify("hello");            // ERROR: non-const reference cannot bind to temporary
+```
+
+---
+
+## `const` Member Functions
+
+When you write a class, member functions that do not modify the object's state should be marked `const`. This is the `const` at the end of the function signature:
+
+```cpp
+class Rectangle {
+public:
+    Rectangle(double w, double h) : width{w}, height{h} {}
+
+    double area() const {        // const: does not modify this object
+        return width * height;
+    }
+
+    void scale(double factor) {  // non-const: modifies this object
+        width  *= factor;
+        height *= factor;
+    }
+
+private:
+    double width, height;
+};
+
+const Rectangle r{3.0, 4.0};
+std::cout << r.area();    // OK -- area() is const, usable on const objects
+r.scale(2.0);             // ERROR -- scale() is non-const, not usable on const objects
+```
+
+The `const` after the parameter list means: "this function can be called on `const` objects, and it promises not to modify the object."
+
+Rules:
+- On a `const` object, only `const` member functions can be called
+- A non-`const` object can call both `const` and non-`const` member functions
+- Inside a `const` member function, you cannot assign to member variables
+
+```cpp
+double area() const {
+    width = 0;    // COMPILE ERROR -- modifying member in const function
+    return width * height;
+}
+```
+
+---
+
+## `constexpr` -- Compile-Time Constants
+
+`constexpr` goes further than `const` -- the value must be computable at compile time:
+
+```cpp
+constexpr int BOARD_SIZE = 8;
+constexpr double TAX_RATE = 0.085;
+constexpr int CELLS = BOARD_SIZE * BOARD_SIZE;   // 64, computed at compile time
+
+// constexpr functions:
+constexpr int factorial(int n) {
+    return n <= 1 ? 1 : n * factorial(n - 1);
+}
+
+constexpr int FACT_10 = factorial(10);   // 3628800, computed at compile time
+// The result is embedded in the binary as a constant -- zero runtime cost
+```
+
+```cpp
+// Cannot be constexpr if value comes from runtime:
+int n;
+std::cin >> n;
+constexpr int x = n;   // ERROR: n is not a compile-time constant
+const int y = n;       // OK: const, but runtime value
+```
+
+`constexpr` is useful for:
+- Mathematical constants (`PI`, `E`, conversion factors)
+- Array sizes (`int grid[BOARD_SIZE][BOARD_SIZE];` -- array size must be compile-time)
+- Lookup tables computed at compile time
+- Performance: zero-cost named constants
+
+---
+
+## Cascading `const`
+
+`const` propagates: once you have a `const` object, everything you do with it must also be `const`.
+
+```cpp
+std::vector<int> v1 = {1, 2, 3};
+const std::vector<int> v2 = {4, 5, 6};
+
+v1.push_back(4);     // OK -- v1 is not const
+v2.push_back(7);     // ERROR -- v2 is const; push_back is non-const
+
+int x = v1[0];       // OK
+int y = v2[0];       // OK -- operator[] has a const overload (returns const ref)
+v2[0] = 99;          // ERROR -- v2[0] returns const int&, cannot assign
+```
+
+When you pass by `const&`, you can only call `const` member functions on the object. The compiler checks the entire call chain.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Omitting `const` on Member Functions That Should Be `const`
+
+**The bug:**
 ```cpp
 class Circle {
     double radius;
 public:
-    Circle(double r) : radius(r) {}
-    
-    double area() const {           // this function won't modify the Circle
+    double area() {   // forgot const
         return 3.14159 * radius * radius;
     }
-    
-    void set_radius(double r) {     // non-const: modifies the object
-        radius = r;
-    }
 };
+
+const Circle c{5.0};
+c.area();   // ERROR: 'this' argument discards qualifiers (area is non-const)
 ```
+**The fix:** `double area() const { ... }` -- add `const` after the parameter list.
 
-If you have a `const Circle`, you can only call `const` member functions on it:
+### Mistake 2: Trying to Modify Through a `const` Reference
 
+**The bug:**
 ```cpp
-const Circle c(5.0);
-c.area();       // OK — const function
-// c.set_radius(3.0);  // ERROR — would modify a const object
-```
-
-This is *const correctness*: the compiler propagates `const` through your code, and you must explicitly opt in to modifications. It sounds tedious but prevents entire classes of bugs — especially in large codebases where functions are called from many places.
-
-### `constexpr` vs `const`
-
-`const` means "doesn't change after initialization." The value might not be known until runtime.
-
-`constexpr` means "computed at compile time." The value is embedded directly into the machine code.
-
-```cpp
-int n = get_user_input();  // runtime value
-const int x = n;           // const, but not constexpr — value known at runtime
-
-constexpr int ARRAY_SIZE = 100;  // known at compile time
-int arr[ARRAY_SIZE];             // valid — array size must be a compile-time constant
-```
-
-```cpp
-constexpr int square(int x) { return x * x; }
-constexpr int s = square(5);  // computed at compile time: s = 25
-```
-
-When a function is `constexpr`, it can be evaluated at compile time when given compile-time arguments, and at runtime otherwise. This is a core C++ performance tool — Chapter 34 covers it deeply.
-
-### Mutable Members
-
-Sometimes you need one member of a `const` object to be modifiable — for example, a cache or a mutex. The `mutable` keyword overrides `const` for that member:
-
-```cpp
-class ExpensiveComputation {
-    mutable int cache = -1;  // OK to modify even in const functions
-public:
-    int result() const {
-        if (cache == -1) {
-            cache = compute();  // populates cache on first call
-        }
-        return cache;
-    }
-};
-```
-
-Use `mutable` sparingly — it's a hole in const correctness.
-
-### `const` Propagation
-
-When you have a `const` reference or pointer, calling a non-const method on the object through it is an error. This forces you to be explicit about what can change:
-
-```cpp
-void display(const std::vector<int>& v) {
-    for (const int& x : v) {  // also const — good habit
-        std::cout << x << " ";
-    }
-    // v.push_back(99);  // ERROR — v is const
+void process(const std::string& s) {
+    s += " world";   // ERROR: s is const, cannot modify
 }
 ```
+**The fix:** Take by value (`std::string s`) if you need a modifiable copy, or by non-const reference (`std::string& s`) if you intend to modify the original.
 
-### Key Takeaways
+---
 
-- `const` is enforced by the compiler, not just a convention.
-- Pass large objects as `const T&` to avoid copies while preventing modification.
-- Mark member functions `const` when they don't modify the object. This enables calling them on `const` objects.
-- `constexpr` goes further: the value must be computable at compile time, enabling use in array sizes and template arguments.
-- Build `const` correctness from the start. Retrofitting it into an existing codebase is painful.
+## Exercises
+
+**Exercise 9.1 -- Mark const correctly**
+
+Which of these should be `const` members?
+
+```cpp
+class Counter {
+    int count = 0;
+public:
+    void increment()       { ++count; }
+    int  get_count()       { return count; }
+    void reset()           { count = 0; }
+    bool is_zero()         { return count == 0; }
+};
+```
+
+*Answer:* `get_count()` and `is_zero()` should be `const` -- they read but do not modify `count`. `increment()` and `reset()` modify `count`, so they cannot be `const`.
+
+```cpp
+void increment()        { ++count; }
+int  get_count() const  { return count; }
+void reset()            { count = 0; }
+bool is_zero()   const  { return count == 0; }
+```
+
+---
+
+**Exercise 9.2 -- constexpr table**
+
+Write a `constexpr` function `celsius_to_fahrenheit(double c)` and use it to create a compile-time constant for the boiling point of water (100°C).
+
+*Answer:*
+```cpp
+constexpr double celsius_to_fahrenheit(double c) {
+    return c * 9.0 / 5.0 + 32.0;
+}
+constexpr double WATER_BOILING_F = celsius_to_fahrenheit(100.0);   // 212.0
+```
 
 ---
 
 <a name="ch10"></a>
-## Chapter 10: Arrays, `std::vector`, and `std::string`
+# Chapter 10: Arrays, `std::vector`, and `std::string`
 
-### C-Style Arrays (and Why to Avoid Them)
+## C-Style Arrays (Understand, then Avoid)
 
-C++ inherits raw arrays from C. They're fast but treacherous:
+The C language had arrays built in. C++ inherited them. They are the underlying model behind everything else, so understand them, then use `std::vector` instead.
+
+```cpp
+int scores[5];                    // array of 5 ints (uninitialized -- garbage!)
+int primes[5] = {2, 3, 5, 7, 11}; // initialized
+int zeros[100] = {};              // all zeros (zero-initialized with {})
+
+std::cout << primes[0] << "\n";   // 2   -- zero-indexed
+std::cout << primes[4] << "\n";   // 11
+```
+
+```
+Memory layout of primes[5]:
+
+Address    Value
+0x1000     2     <- primes[0]
+0x1004     3     <- primes[1]
+0x1008     5     <- primes[2]
+0x100C     7     <- primes[3]
+0x1010     11    <- primes[4]
+
+The name 'primes' in expressions decays to a pointer to primes[0].
+```
+
+### Critical Weakness: No Bounds Checking
+
+C++ does not check if your index is valid at runtime:
+
+```cpp
+int arr[3] = {1, 2, 3};
+std::cout << arr[5];   // reads memory past the array -- undefined behavior
+arr[5] = 99;           // writes past the array -- corrupts other data!
+```
+
+This is one of the leading causes of security vulnerabilities. The compiler doesn't catch it and there is no runtime exception -- it just reads or writes whatever is at that address.
+
+### Size Is Not Carried With the Array
 
 ```cpp
 int arr[5] = {1, 2, 3, 4, 5};
-arr[0] = 10;
-std::cout << arr[2];  // 3
+sizeof(arr);    // 20 -- size in bytes (only works if arr is in scope as an array)
 
-// Danger: no bounds checking
-arr[10] = 99;  // undefined behavior — writes past the array
-```
-
-The biggest problem: raw arrays decay to pointers and lose their size information. `sizeof(arr)` gives the total bytes, not the element count. You have to track the size yourself.
-
-```cpp
-void print_array(int* arr, int size) {  // must pass size separately
-    for (int i = 0; i < size; ++i) std::cout << arr[i] << " ";
+void bad_print(int arr[]) {   // array decays to pointer when passed to function
+    sizeof(arr);              // 8 -- size of pointer, NOT the array!
 }
 ```
 
-Use raw arrays only when you need compile-time fixed-size arrays with no overhead (SIMD, hardware buffers, embedded systems). For everything else, use `std::array` or `std::vector`.
+You must pass the size separately, which is error-prone. `std::vector` solves this.
 
-### `std::array` — Fixed-Size with Safety
+---
 
-`std::array<T, N>` is a zero-overhead wrapper around a C array that knows its size and works with standard algorithms:
+## `std::vector` -- The Right Way to Do Dynamic Arrays
+
+`std::vector` is C++'s resizable array. It is what Python's `list` most closely corresponds to:
+
+```python
+# Python list
+numbers = [10, 20, 30]
+numbers.append(40)
+print(len(numbers))   # 4
+print(numbers[1])     # 20
+```
+
+```cpp
+// C++ vector
+#include <vector>
+std::vector<int> numbers = {10, 20, 30};
+numbers.push_back(40);
+std::cout << numbers.size() << "\n";   // 4
+std::cout << numbers[1]     << "\n";   // 20
+```
+
+### What's Inside `std::vector`
+
+A `std::vector` is a small object (24 bytes typically) that internally manages a heap-allocated array:
+
+```
+std::vector<int> numbers = {10, 20, 30, 40}:
+
+Stack:                          Heap:
++-------------------+           +----+----+----+----+
+| data ptr -------> | ------->  | 10 | 20 | 30 | 40 |   <- actual elements
+| size: 4           |           +----+----+----+----+
+| capacity: 4       |
++-------------------+
+```
+
+- `size`: number of elements currently in the vector
+- `capacity`: how many elements fit in the currently allocated heap space
+- When size == capacity and you `push_back`, the vector allocates a bigger heap array (typically doubles), copies all elements, and frees the old array.
+
+You never see any of this. The vector manages it transparently.
+
+### Key Operations
+
+```cpp
+std::vector<int> v;            // empty vector
+v.push_back(10);               // append 10: v = {10}
+v.push_back(20);               // append 20: v = {10, 20}
+v.push_back(30);               // append 30: v = {10, 20, 30}
+
+v.size();                      // 3   -- number of elements
+v.empty();                     // false -- is it empty?
+v.front();                     // 10  -- first element
+v.back();                      // 30  -- last element
+v.pop_back();                  // removes last: v = {10, 20}
+
+v[0];                          // 10  -- no bounds check (unsafe, fast)
+v.at(0);                       // 10  -- bounds-checked (throws if out of range)
+
+v.insert(v.begin() + 1, 99);  // insert 99 at index 1: v = {10, 99, 20}
+v.erase(v.begin() + 1);       // remove element at index 1: v = {10, 20}
+
+v.clear();                     // remove all elements (size = 0, capacity kept)
+v.resize(5, 0);                // resize to 5 elements, new ones initialized to 0
+
+std::vector<int> w(10, 42);   // 10 elements all set to 42
+```
+
+### Iterating Over a Vector
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// Range-based for (preferred):
+for (int n : v)        std::cout << n << " ";   // copies each element
+for (int& n : v)       n *= 2;                  // modifies in place
+for (const int& n : v) std::cout << n << " ";   // read-only, no copy
+
+// Index-based (when you need the index):
+for (int i = 0; i < (int)v.size(); ++i) {
+    std::cout << i << ": " << v[i] << "\n";
+}
+
+// Note: v.size() returns size_t (unsigned). Comparing int i < size_t is
+// technically a warning. Cast to (int)v.size() or use size_t i.
+```
+
+### 2D Vectors
+
+```cpp
+// 3 rows, 4 columns, all initialized to 0:
+std::vector<std::vector<int>> grid(3, std::vector<int>(4, 0));
+
+grid[1][2] = 99;
+std::cout << grid[1][2];  // 99
+```
+
+---
+
+## `std::string` -- The Right Way to Handle Text
+
+```python
+# Python strings
+s = "hello"
+s += " world"
+print(len(s))       # 11
+print(s.upper())    # HELLO WORLD
+print(s[1:5])       # ello
+```
+
+```cpp
+// C++ strings
+#include <string>
+std::string s = "hello";
+s += " world";
+std::cout << s.size() << "\n";         // 11
+// (no built-in upper() -- use a loop or std::transform)
+
+std::string sub = s.substr(1, 4);      // "ello" (start=1, length=4)
+```
+
+`std::string` internally manages a heap-allocated buffer of characters, similar to `std::vector<char>`.
+
+### Key Operations
+
+```cpp
+std::string s = "Hello, World!";
+
+s.size();                         // 13 -- number of characters
+s.empty();                        // false
+s[0];                             // 'H' -- no bounds check
+s.at(0);                          // 'H' -- bounds-checked
+s.front();                        // 'H'
+s.back();                         // '!'
+
+s.find("World");                  // 7  -- index where found
+s.find("xyz");                    // std::string::npos -- not found
+
+s.substr(7, 5);                   // "World" (start=7, length=5)
+
+s.replace(7, 5, "C++");           // "Hello, C++!"
+
+std::string t = "hello";
+s.compare(t);                     // negative (s < t lexicographically)
+
+// Concatenation:
+std::string a = "foo", b = "bar";
+std::string c = a + b;            // "foobar"
+a += "!";                         // "foo!"
+
+// Convert to/from numbers:
+#include <string>
+std::string num_str = std::to_string(42);        // "42"
+int n = std::stoi("123");                         // 123
+double d = std::stod("3.14");                     // 3.14
+```
+
+### String Comparison
+
+Unlike Python where `==` compares value, C++ `std::string` also uses `==` for value comparison:
+
+```cpp
+std::string a = "hello", b = "hello";
+if (a == b) std::cout << "equal\n";     // equal -- compares content
+```
+
+### Raw C-Style Strings
+
+You will see C-style strings (`const char*`) in older code and C interfaces:
+
+```cpp
+const char* cs = "hello";    // points to read-only character array
+std::string s = cs;          // convert: C-string to std::string (fine)
+
+// std::string to C-string (for C library functions):
+const char* c = s.c_str();   // null-terminated char array
+// valid only as long as s is alive and unmodified
+```
+
+Always use `std::string` for your own code. Use `const char*` only when a C API requires it, and immediately pass it through -- do not store it.
+
+---
+
+## `std::array` -- Fixed-Size Array With Safety
+
+When the size is known at compile time, use `std::array` instead of a C-style array:
 
 ```cpp
 #include <array>
+std::array<int, 5> primes = {2, 3, 5, 7, 11};
 
-std::array<int, 5> arr = {1, 2, 3, 4, 5};
-std::cout << arr.size();  // 5
-arr.at(10);               // throws std::out_of_range (unlike raw arr[10])
+primes.size();       // 5 -- size is always available
+primes[2];           // 5
+primes.at(10);       // throws std::out_of_range -- bounds checked
+primes.front();      // 2
+primes.back();       // 11
 ```
 
-Use `std::array` when the size is known at compile time. It lives on the stack, has no heap allocation, and is just as fast as a C array.
+`std::array` knows its own size, can be passed to functions without separately passing the size, and supports all the standard iteration patterns.
 
-### `std::vector` — Python's `list`
+---
 
-`std::vector<T>` is C++'s closest equivalent to Python's list. It's a dynamic array that lives on the heap and resizes automatically.
+## Common Mistakes in This Chapter
 
-```python
-# Python
-nums = [1, 2, 3]
-nums.append(4)
-nums.pop()
-print(len(nums))
-```
+### Mistake 1: Off-By-One / Out-of-Bounds Access
 
+**The bug:**
 ```cpp
-// C++
+std::vector<int> v = {1, 2, 3};
+for (int i = 0; i <= (int)v.size(); ++i)   // <= instead of <
+    std::cout << v[i] << "\n";             // v[3] is past the end
+```
+**Detection:** `-fsanitize=address` reports "heap-buffer-overflow."
+**The fix:** Use `<` not `<=`. Better: use range-based for.
+
+### Mistake 2: Modifying a Vector While Iterating With Indices
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (int i = 0; i < (int)v.size(); ++i) {
+    if (v[i] % 2 == 0) v.erase(v.begin() + i);
+    // After erasing index 1 (value 2), index 1 now holds 3 (shifted)
+    // The loop increments i to 2, skipping 3
+}
+```
+**The fix:** Iterate backward, or use the erase-remove idiom (Chapter 29).
+
+### Mistake 3: Using `+` to Concatenate Non-String Literals
+
+**The bug:**
+```cpp
+std::string result = "Count: " + 42;   // ERROR: no + between const char* and int
+```
+**The fix:**
+```cpp
+std::string result = "Count: " + std::to_string(42);
+// or better (C++23):
+std::string result = std::format("Count: {}", 42);
+```
+
+### Mistake 4: Accessing `.c_str()` Pointer After Modifying the String
+
+**The bug:**
+```cpp
+std::string s = "hello";
+const char* p = s.c_str();
+s += " world";          // may reallocate the internal buffer
+printf("%s\n", p);      // p may now be dangling
+```
+**The fix:** Call `.c_str()` immediately before passing it to the C function, never store it.
+
+---
+
+## Exercises
+
+**Exercise 10.1 -- Vector operations**
+
+Starting from an empty `std::vector<int>`:
+1. Push back 5, 10, 15, 20, 25
+2. Print the size (should be 5)
+3. Remove the last element
+4. Insert the value 99 at index 2
+5. Print all elements
+
+*Answer:*
+```cpp
+#include <iostream>
 #include <vector>
 
-std::vector<int> nums = {1, 2, 3};
-nums.push_back(4);   // append
-nums.pop_back();     // remove last
-std::cout << nums.size();  // 3
-```
+int main() {
+    std::vector<int> v;
+    v.push_back(5);
+    v.push_back(10);
+    v.push_back(15);
+    v.push_back(20);
+    v.push_back(25);
 
-Common operations:
+    std::cout << v.size() << "\n";   // 5
 
-```cpp
-std::vector<int> v = {10, 20, 30, 40, 50};
+    v.pop_back();                    // removes 25; v = {5,10,15,20}
 
-v[2]          // 30 — no bounds check (fast)
-v.at(2)       // 30 — bounds-checked (throws on out-of-range)
-v.front()     // 10 — first element
-v.back()      // 50 — last element
-v.size()      // 5  — number of elements
-v.empty()     // false
-v.clear()     // remove all elements
-v.push_back(60)  // append
-v.pop_back()     // remove last
+    v.insert(v.begin() + 2, 99);    // v = {5,10,99,15,20}
 
-// insert at position 2
-v.insert(v.begin() + 2, 99);
-
-// erase element at position 2
-v.erase(v.begin() + 2);
-
-// resize to 10 elements (new ones value-initialized)
-v.resize(10);
-```
-
-### How `std::vector` Manages Memory
-
-A vector has three quantities: **size** (elements in use), **capacity** (elements allocated), and the data pointer.
-
-When `push_back` fills the capacity, the vector allocates a new, larger block (typically 2× capacity), copies all elements, and frees the old block. This is O(1) amortized but occasionally causes a big copy.
-
-```cpp
-std::vector<int> v;
-v.reserve(1000);   // pre-allocate for 1000 elements — prevents reallocations
-```
-
-Use `reserve()` when you know in advance how many elements you'll have. It's one of the most impactful performance micro-optimizations for vectors.
-
-### `std::string`
-
-`std::string` is `std::vector<char>` with string-specific operations.
-
-```python
-# Python
-s = "Hello"
-s += ", world"
-print(len(s))
-print(s.upper())
-print(s[0])
-```
-
-```cpp
-// C++
-#include <string>
-
-std::string s = "Hello";
-s += ", world";
-std::cout << s.size() << "\n";     // 12
-std::cout << s[0] << "\n";          // 'H'
-std::cout << s.substr(0, 5) << "\n"; // "Hello"
-
-// Find and replace
-size_t pos = s.find("world");       // returns position or std::string::npos
-if (pos != std::string::npos) {
-    s.replace(pos, 5, "C++");
+    for (int n : v)
+        std::cout << n << " ";      // 5 10 99 15 20
+    std::cout << "\n";
 }
 ```
 
-Converting between `std::string` and numbers:
+---
 
+**Exercise 10.2 -- String manipulation**
+
+Given `std::string sentence = "the quick brown fox"`:
+1. Print its length
+2. Extract and print the substring "quick" (starts at index 4, length 5)
+3. Find where "brown" appears
+4. Replace "fox" with "cat"
+5. Print the final string
+
+*Answer:*
 ```cpp
-int n = std::stoi("42");           // string to int
-double d = std::stod("3.14");      // string to double
-std::string s = std::to_string(42); // int to string
+std::string sentence = "the quick brown fox";
+std::cout << sentence.size() << "\n";          // 19
+std::cout << sentence.substr(4, 5) << "\n";    // quick
+std::cout << sentence.find("brown") << "\n";   // 10
+
+size_t pos = sentence.find("fox");
+sentence.replace(pos, 3, "cat");
+std::cout << sentence << "\n";                 // the quick brown cat
 ```
 
-### String Literals and `std::string_view`
+---
 
-A string literal like `"hello"` is actually a `const char*` — a C-style string. Converting it to `std::string` copies the data.
+**Exercise 10.3 -- 2D grid**
 
-C++17 introduced `std::string_view`: a non-owning view into any string-like data (a `std::string`, a string literal, a buffer). Use it for read-only string parameters to avoid copies:
+Create a 4x4 grid (vector of vectors), fill position [row][col] with the value `row * 4 + col`, then print it as a square.
 
+*Answer:*
 ```cpp
-#include <string_view>
+std::vector<std::vector<int>> grid(4, std::vector<int>(4));
+for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c)
+        grid[r][c] = r * 4 + c;
 
-void print(std::string_view s) {   // works with std::string AND string literals
-    std::cout << s << "\n";
+for (const auto& row : grid) {
+    for (int n : row)
+        std::cout << std::setw(3) << n;
+    std::cout << "\n";
 }
-
-print("hello");         // no copy — string_view points to the literal
-print(my_std_string);   // no copy — string_view points into the std::string
 ```
 
-### Key Takeaways
-
-- Raw C arrays lose size information and don't bounds-check. Avoid except in low-level code.
-- `std::array<T, N>` is a safe, zero-overhead fixed-size array.
-- `std::vector<T>` is the dynamic array. Use it as your default container.
-- `reserve()` vectors when you know the final size to avoid reallocations.
-- Use `std::string_view` for read-only string parameters — it avoids copies and works with all string types.
+Output:
+```
+  0  1  2  3
+  4  5  6  7
+  8  9 10 11
+ 12 13 14 15
+```
 
 ---
 
 <a name="ch11"></a>
-## Chapter 11: Scope, Lifetime, and Organizing Code into Files
+# Chapter 11: Scope, Lifetime, and Organizing Code into Files
 
-### Scope
+## Scope
 
-Scope is the region of code where a name is visible. In Python, scope is determined by function/class/module boundaries (LEGB rule). In C++, scope is determined by curly braces `{}`.
-
-```cpp
-int x = 10;          // file scope (global)
-
-void foo() {
-    int x = 20;      // function scope — shadows global x
-    {
-        int x = 30;  // block scope — shadows function x
-        std::cout << x;  // 30
-    }
-    std::cout << x;  // 20 — inner x is gone
-}
-
-std::cout << x;      // 10 — global x
-```
-
-A variable's scope ends at the closing `}` of the block it was declared in. This is fundamentally different from Python where variables declared in `if` blocks persist after the block ends.
-
-### Lifetime
-
-Scope is about visibility. Lifetime is about when memory is allocated and freed.
-
-- **Automatic** (local variables): lifetime = scope. Created when entering the block, destroyed when leaving. Stack-allocated.
-- **Static** (global variables, `static` locals): lifetime = program duration. Created once, destroyed when the program exits.
-- **Dynamic** (heap-allocated): lifetime is manual. Created with `new`, destroyed with `delete`. You control when.
+Scope is the region of code where a name is visible. In C++, every pair of `{}` creates a new scope.
 
 ```cpp
-void counter() {
-    static int count = 0;   // static local: initialized once, persists across calls
-    ++count;
-    std::cout << count << "\n";
+int x = 1;              // x in outer scope
+
+{
+    int x = 2;          // x in inner scope -- SHADOWS the outer x
+    std::cout << x;     // 2 -- inner x
+}                       // inner x destroyed here
+
+std::cout << x;         // 1 -- outer x, back in scope
+```
+
+Shadowing (declaring an inner variable with the same name as an outer one) is legal but confusing. Avoid it. Compile with `-Wshadow` to get warnings.
+
+### Scope in Loops and Conditionals
+
+```cpp
+for (int i = 0; i < 10; ++i) {
+    // i only visible inside the loop body
 }
+// i does NOT exist here
 
-counter();  // 1
-counter();  // 2
-counter();  // 3
+if (int n = get_value(); n > 0) {  // C++17 initializer
+    // n only visible inside the if/else
+} else {
+    // n also visible here
+}
+// n does NOT exist here
 ```
 
-### Header Files and Source Files
+---
 
-In Python, each file is a module. You import it and all its functions become available. C++ is more explicit.
+## Lifetime
 
-**Header file** (`.h` or `.hpp`): Contains *declarations* — function signatures, class definitions, type aliases. Tells the compiler what exists.
+Lifetime is the period during which a variable's storage is valid. For stack variables, it matches scope. For heap variables, it starts at `new` and ends at `delete`.
 
-**Source file** (`.cpp`): Contains *definitions* — the actual implementations. Compiled to an object file.
+```cpp
+{
+    std::string s = "hello";   // s constructed, storage allocated
+    // ... use s ...
+}                              // s destructed, storage freed
+// using s here is undefined behavior (it no longer exists)
+```
 
-Every `.cpp` that uses a function or class includes the header that declares it.
+The key insight: in C++, when a variable goes out of scope, its **destructor** is called automatically. For `std::string`, the destructor frees the heap-allocated character buffer. For `std::vector`, it frees the element array. This automatic cleanup is called **RAII** (Chapter 12) and is C++'s answer to garbage collection.
+
+---
+
+## Organizing Code: The Header/Source Split
+
+As programs grow, you split code into multiple files. The organization:
 
 ```
-// math.h  — declarations
-#pragma once          // modern include guard: prevents double-inclusion
+projectname/
+  include/
+    math_utils.h      <- declarations (the public interface)
+  src/
+    math_utils.cpp    <- definitions (the implementation)
+    main.cpp          <- uses the functions
+```
+
+### Why Headers Exist
+
+C++ compiles each `.cpp` file separately. When `main.cpp` calls `multiply(3, 4)`, the compiler must know (at compile time) what `multiply` looks like -- its parameter types and return type -- to type-check the call.
+
+The linker resolves where `multiply`'s actual code is. But the compiler must see the declaration.
+
+The solution: put declarations in a header file. Every `.cpp` that needs to call `multiply` includes the header.
+
+```cpp
+// math_utils.h -- declarations only
+#pragma once
 
 int add(int a, int b);
+int subtract(int a, int b);
 int multiply(int a, int b);
+double divide(double a, double b);
+```
+
+`#pragma once` tells the preprocessor: include this file at most once per compilation unit, even if it is `#include`d multiple times. It prevents duplicate declaration errors from diamond-shaped include chains.
+
+```cpp
+// math_utils.cpp -- definitions
+#include "math_utils.h"   // include own header to verify declarations match
+
+int add(int a, int b)          { return a + b; }
+int subtract(int a, int b)     { return a - b; }
+int multiply(int a, int b)     { return a * b; }
+double divide(double a, double b) { return a / b; }
 ```
 
 ```cpp
-// math.cpp — definitions
-#include "math.h"
-
-int add(int a, int b) {
-    return a + b;
-}
-
-int multiply(int a, int b) {
-    return a * b;
-}
-```
-
-```cpp
-// main.cpp — uses math functions
+// main.cpp -- uses the functions
 #include <iostream>
-#include "math.h"    // quotes = look in local directory; <> = system path
+#include "math_utils.h"   // gets the declarations; tells compiler the signatures
 
 int main() {
-    std::cout << add(3, 4) << "\n";
+    std::cout << add(3, 4)         << "\n";   // 7
+    std::cout << multiply(6, 7)    << "\n";   // 42
+    std::cout << divide(10.0, 4.0) << "\n";   // 2.5
 }
 ```
 
-Compile and link:
+Build:
 
 ```bash
-g++ -std=c++23 -c math.cpp    # produces math.o
-g++ -std=c++23 -c main.cpp    # produces main.o
-g++ -o program main.o math.o  # links both
-# or all at once:
-g++ -std=c++23 -o program main.cpp math.cpp
+$ g++ -std=c++23 -Wall -o program src/main.cpp src/math_utils.cpp -I include/
 ```
 
-### Include Guards
+The `-I include/` tells the compiler to look in the `include/` directory for headers.
 
-If a header is included from multiple files, the preprocessor pastes it multiple times. Without a guard, class definitions get duplicated → compile error.
+### The Compilation Model With Multiple Files
+
+```
+math_utils.cpp --> [compiler] --> math_utils.o  --+
+main.cpp       --> [compiler] --> main.o         --+--> [linker] --> program
+```
+
+Each `.cpp` is compiled independently. The compiler only needs to see the header (declarations) to compile `main.cpp`. It trusts that `math_utils.cpp` will provide the actual definitions. The linker connects everything.
+
+### What Goes In Headers vs Source Files
+
+```
+Headers (.h):
+  - Function declarations
+  - Class declarations (but not the bodies of non-inline methods)
+  - Type definitions (structs, enums, using aliases)
+  - #include directives needed by the declarations
+  - inline functions (small utility functions that are called often)
+  - constexpr and const variable definitions
+
+Source (.cpp):
+  - Function definitions (the actual code)
+  - Class method definitions
+  - Global variable definitions
+  - #include of their own header + other headers needed for the implementation
+  - Implementation details not exposed to users
+```
+
+**Do NOT put in headers:**
+- `using namespace std;` -- it pollutes every file that includes your header
+- Non-inline function definitions -- causes "multiple definition" linker errors if included in multiple `.cpp` files
+- Definitions of non-`const` global variables -- also causes linker errors
+
+### Include Guards (Alternative to `#pragma once`)
+
+Older code uses include guards instead of `#pragma once`:
 
 ```cpp
-// old style
-#ifndef MATH_H
-#define MATH_H
-// ... declarations ...
-#endif
+#ifndef MATH_UTILS_H
+#define MATH_UTILS_H
 
-// modern style (preferred)
-#pragma once
 // ... declarations ...
+
+#endif   // MATH_UTILS_H
 ```
 
-`#pragma once` is supported by all major compilers and is simpler.
+If `math_utils.h` is included twice in the same compilation unit, the second inclusion sees that `MATH_UTILS_H` is already defined and skips everything inside. `#pragma once` does the same thing more concisely and is supported by all modern compilers.
 
-### What Goes in Headers vs Source Files
+---
 
-**In headers:** class definitions, function declarations, `inline` function bodies, templates (must be in headers — the compiler needs the full definition to instantiate), `constexpr` values, type aliases.
+## Namespaces
 
-**In source files:** function definitions, global variable definitions, `static` variable definitions, `main`.
-
-**Never** put `using namespace std;` in a header — it pollutes the namespace of every file that includes that header.
-
-### Namespaces
-
-Namespaces group related names to prevent collisions:
+Namespaces prevent name collisions between libraries. When two libraries both define `Matrix`, they can put it in different namespaces.
 
 ```cpp
 namespace geometry {
-    double area(double radius);
-    double circumference(double radius);
+    struct Point { double x, y; };
+    double distance(Point a, Point b);
 }
 
-namespace statistics {
-    double area(/* ... */);  // different function, same name — no conflict
+namespace graphics {
+    struct Point { float x, y, z; };   // different Point, no conflict
+    void draw(Point p);
 }
 
-// Usage:
-geometry::area(5.0);
-statistics::area(/* ... */);
+// Use with ::
+geometry::Point p1{1.0, 2.0};
+graphics::Point p2{3.0f, 4.0f, 5.0f};
 ```
 
-`std::` is the namespace for the standard library. You can avoid typing it with `using`:
+The standard library lives in `std`. That is why everything is `std::cout`, `std::vector`, `std::string`.
+
+You can pull specific names into scope:
 
 ```cpp
-using std::cout;      // only bring in cout
-using std::string;    // only bring in string
-// now you can write cout instead of std::cout
+using std::cout;      // just cout, not everything
+using std::vector;
 
-// OR (in .cpp files only — never in headers):
-using namespace std;  // bring in everything from std
+cout << "hello\n";    // OK
+vector<int> v;        // OK
 ```
 
-### Key Takeaways
+Do this inside functions, not at file scope (it affects the rest of the file, which may cause surprises in headers).
 
-- Scope is defined by `{}`. Variables are destroyed when their scope ends.
-- `static` local variables persist across function calls, initialized only once.
-- Headers contain declarations; source files contain definitions. Headers are included by any file that needs the declarations.
-- `#pragma once` prevents double-inclusion.
-- Namespaces prevent name collisions. Never `using namespace std;` in headers.
+### Writing Your Own Namespace
+
+```cpp
+// mylib.h
+#pragma once
+
+namespace mylib {
+
+int clamp(int value, int lo, int hi);
+double lerp(double a, double b, double t);
+
+}   // namespace mylib
+
+// mylib.cpp
+#include "mylib.h"
+
+namespace mylib {
+
+int clamp(int value, int lo, int hi) {
+    if (value < lo) return lo;
+    if (value > hi) return hi;
+    return value;
+}
+
+double lerp(double a, double b, double t) {
+    return a + t * (b - a);
+}
+
+}   // namespace mylib
+```
 
 ---
 
+## Static Local Variables
+
+A `static` local variable is initialized once and persists across calls:
+
+```cpp
+int counter() {
+    static int count = 0;   // initialized only once (first call)
+    ++count;
+    return count;
+}
+
+std::cout << counter() << "\n";   // 1
+std::cout << counter() << "\n";   // 2
+std::cout << counter() << "\n";   // 3
+```
+
+The variable `count` lives for the entire program duration (like a global), but is only accessible inside `counter`. This is useful for functions that need to remember state between calls without using a class.
+
 ---
 
-# Part III — Ownership and Memory Management
+## Common Mistakes in This Chapter
+
+### Mistake 1: Defining a Non-Inline Function in a Header
+
+**The bug:**
+```cpp
+// utils.h
+int add(int a, int b) { return a + b; }   // DEFINITION in header
+
+// main.cpp includes utils.h
+// utils.cpp also includes utils.h
+// Both .cpp files define add() -- linker error!
+```
+
+```
+linker error: multiple definition of `add(int, int)'
+```
+
+**The fix:** Declarations in headers, definitions in `.cpp` files. Or mark the function `inline` (which tells the linker to allow multiple identical definitions).
+
+---
+
+### Mistake 2: Missing `#pragma once` (or Include Guard)
+
+**The bug:**
+```cpp
+// a.h includes b.h and c.h
+// b.h includes c.h
+// c.h has no include guard
+
+// When a.h is processed: c.h is included twice, all declarations in c.h appear twice
+error: redefinition of 'class Foo'
+```
+
+**The fix:** Start every header with `#pragma once`.
+
+---
+
+### Mistake 3: `using namespace std;` in a Header
+
+**The bug:**
+```cpp
+// utils.h
+#include <string>
+using namespace std;    // pollutes every file that includes utils.h
+
+// Now every file including utils.h gets all of std:: imported
+// Causes conflicts with user-defined names like 'vector', 'string', 'max', 'min'
+```
+
+**The fix:** Never put `using namespace X;` in a header. In `.cpp` files it is acceptable (though `using std::cout;` for specific names is better style).
+
+---
+
+## Exercises
+
+**Exercise 11.1 -- Trace scope**
+
+Predict the output:
+
+```cpp
+int x = 10;
+{
+    int x = 20;
+    {
+        int x = 30;
+        std::cout << x << "\n";
+    }
+    std::cout << x << "\n";
+}
+std::cout << x << "\n";
+```
+
+*Answer:* `30`, `20`, `10`. Each inner `x` shadows the outer one. When the inner scope ends, the outer `x` becomes visible again.
+
+---
+
+**Exercise 11.2 -- Split into files**
+
+Split this single-file program into `main.cpp`, `greeting.h`, and `greeting.cpp`:
+
+```cpp
+#include <iostream>
+#include <string>
+
+std::string make_greeting(const std::string& name) {
+    return "Hello, " + name + "!";
+}
+
+int main() {
+    std::cout << make_greeting("Alice") << "\n";
+    std::cout << make_greeting("Bob")   << "\n";
+}
+```
+
+*Answer:*
+
+```cpp
+// greeting.h
+#pragma once
+#include <string>
+
+std::string make_greeting(const std::string& name);
+```
+
+```cpp
+// greeting.cpp
+#include "greeting.h"
+
+std::string make_greeting(const std::string& name) {
+    return "Hello, " + name + "!";
+}
+```
+
+```cpp
+// main.cpp
+#include <iostream>
+#include "greeting.h"
+
+int main() {
+    std::cout << make_greeting("Alice") << "\n";
+    std::cout << make_greeting("Bob")   << "\n";
+}
+```
+
+Build: `g++ -std=c++23 -o program main.cpp greeting.cpp`
+
+---
+
+**Exercise 11.3 -- Static local counter**
+
+Write a function `next_id()` that returns 1 on the first call, 2 on the second, and so on, without using any global variable.
+
+*Answer:*
+```cpp
+int next_id() {
+    static int id = 0;
+    return ++id;
+}
+// next_id() == 1, next_id() == 2, next_id() == 3 ...
+```
+
+---
+
+**Exercise 11.4 -- Namespace**
+
+Write a namespace `convert` with two functions: `km_to_miles(double km)` and `miles_to_km(double miles)`. 1 km = 0.621371 miles.
+
+*Answer:*
+```cpp
+// convert.h
+#pragma once
+
+namespace convert {
+    double km_to_miles(double km);
+    double miles_to_km(double miles);
+}
+```
+
+```cpp
+// convert.cpp
+#include "convert.h"
+
+namespace convert {
+    double km_to_miles(double km)    { return km * 0.621371; }
+    double miles_to_km(double miles) { return miles / 0.621371; }
+}
+```
+
+Usage:
+```cpp
+std::cout << convert::km_to_miles(100.0) << "\n";   // 62.1371
+std::cout << convert::miles_to_km(62.0)  << "\n";   // 99.79...
+```
+
+---
+
+*Part II is complete. You now understand the concepts that have no Python equivalent: references as aliases, pointers and memory addresses, the stack vs heap memory model, const correctness enforced by the compiler, the standard library containers, and how C++ organizes multi-file projects.*
+
+*Part III covers ownership and memory management -- the RAII pattern, smart pointers, and move semantics. These are what make modern C++ safe while staying fast. Ask to continue.*
+
+---
+
+# Part III -- Ownership and Memory Management
+
+This part covers what separates experienced C++ programmers from beginners: understanding *who owns a resource* and *when it gets cleaned up*. Python's garbage collector answers both questions automatically. C++ makes you -- or your types -- answer them explicitly.
+
+The central pattern is RAII. Everything in this part flows from it.
 
 ---
 
 <a name="ch12"></a>
-## Chapter 12: RAII — The Core Idea That Replaces Garbage Collection
+# Chapter 12: RAII -- The Core Idea That Replaces Garbage Collection
 
-### The Problem
+## The Problem: Resources Need Cleanup
 
-Python has a garbage collector. When objects have no more references, the GC frees their memory. You don't think about it.
+Some things you acquire must eventually be released:
 
-C++ has no garbage collector. If you allocate memory (or a file handle, or a network socket, or a mutex lock), *you* are responsible for releasing it. Failing to do so leaks resources.
+| Resource | Acquire | Release |
+|----------|---------|---------|
+| Heap memory | `new` | `delete` |
+| File | `fopen` / open | `fclose` / close |
+| Mutex lock | `lock()` | `unlock()` |
+| Network socket | `socket()` / `connect()` | `close()` |
+| Database connection | `connect()` | `disconnect()` |
+
+If you forget to release, you get leaks, deadlocks, or corruption. If an exception or early `return` happens between acquire and release, the release never runs.
 
 ```cpp
-void leak() {
-    int* p = new int(42);
-    if (some_condition) return;  // returns without deleting p — LEAK
-    delete p;
+void risky() {
+    int* data = new int[1000];
+
+    if (something_failed()) {
+        return;        // LEAK: data never deleted
+    }
+
+    if (something_else_failed()) {
+        throw std::runtime_error("oops");  // LEAK: data never deleted
+    }
+
+    delete[] data;   // only reached on the happy path
 }
 ```
 
-Real programs have error paths, exceptions, and early returns. Manually tracking "did I release this?" in every code path is error-prone.
+This is the problem RAII solves.
 
-### RAII: Resource Acquisition Is Initialization
+---
 
-The solution is a C++ idiom called **RAII** (Resource Acquisition Is Initialization). The idea:
+## What RAII Is
 
-- **Acquire** the resource in a constructor.
-- **Release** the resource in a destructor.
-- The compiler guarantees the destructor runs when the object goes out of scope — even if an exception occurs.
+**RAII** stands for **Resource Acquisition Is Initialization**. The name is cryptic; the idea is simple:
 
+> Tie a resource's lifetime to the lifetime of an object.
+> Acquire the resource in the constructor.
+> Release the resource in the destructor.
+
+When the object goes out of scope, C++ automatically calls its destructor. The destructor releases the resource. This happens even if an exception is thrown, even if there is an early `return`. The cleanup is guaranteed.
+
+```cpp
+class IntArray {
+    int* data;
+    int  size;
+public:
+    IntArray(int n) : data{new int[n]{}}, size{n} {
+        // constructor: acquires the resource (heap memory)
+    }
+
+    ~IntArray() {             // destructor: ~ prefix, no return type
+        delete[] data;        // releases the resource
+    }
+
+    int& operator[](int i) { return data[i]; }
+    int  get_size() const  { return size; }
+};
+
+void safe() {
+    IntArray arr{1000};       // constructor runs: allocates 1000 ints
+
+    if (something_failed()) {
+        return;               // destructor runs: delete[] data -- NO LEAK
+    }
+
+    if (something_else_failed()) {
+        throw std::runtime_error("oops");   // destructor runs -- NO LEAK
+    }
+
+    // destructor runs at end of scope -- NO LEAK
+}
+```
+
+The destructor runs at scope exit **no matter how the scope exits**. Return, exception, fall-through -- the destructor always runs.
+
+---
+
+## The Destructor
+
+A destructor is a special member function:
+
+```cpp
+class Foo {
+public:
+    Foo()  { std::cout << "constructed\n"; }   // constructor
+    ~Foo() { std::cout << "destructed\n"; }    // destructor (~ prefix)
+};
+
+{
+    Foo a;
+    Foo b;
+    std::cout << "inside block\n";
+}   // b destructs first (LIFO), then a
+```
+
+Output:
+```
+constructed
+constructed
+inside block
+destructed    <- b (last in, first out)
+destructed    <- a
+```
+
+Destructors run in **reverse order of construction** (last in, first out -- like the stack). This matters when objects depend on each other.
+
+---
+
+## RAII for File Handling
+
+Without RAII:
+
+```cpp
+void write_data_bad(const std::string& filename) {
+    FILE* f = fopen(filename.c_str(), "w");
+    if (!f) return;          // ok, no file to close
+
+    // ... write stuff ...
+
+    if (error_condition) {
+        return;              // LEAK: file never closed!
+    }
+
+    fclose(f);               // only reached on happy path
+}
+```
+
+With RAII (using `std::fstream` from the standard library):
+
+```cpp
+#include <fstream>
+
+void write_data_good(const std::string& filename) {
+    std::ofstream f{filename};   // constructor opens the file
+    if (!f) return;
+
+    // ... write stuff ...
+
+    if (error_condition) {
+        return;              // destructor closes the file -- always
+    }
+
+}   // destructor closes the file -- always
+```
+
+`std::ofstream`'s destructor closes the file handle. You never call `fclose`. The file is always closed, regardless of how the function exits.
+
+---
+
+## RAII for Mutex Locks
+
+```cpp
+#include <mutex>
+
+std::mutex mtx;
+
+void bad_worker() {
+    mtx.lock();
+    if (error) {
+        return;        // DEADLOCK: mutex never unlocked!
+    }
+    mtx.unlock();
+}
+
+void good_worker() {
+    std::lock_guard<std::mutex> guard{mtx};  // constructor: locks mtx
+    if (error) {
+        return;        // destructor: unlocks mtx -- always
+    }
+}   // destructor: unlocks mtx -- always
+```
+
+`std::lock_guard` is a tiny RAII wrapper. It locks on construction and unlocks on destruction. The mutex is always released, even if an exception is thrown.
+
+---
+
+## Python's Equivalent: Context Managers
+
+Python's `with` statement provides similar guarantees:
+
+```python
+# Python RAII equivalent: context manager
+with open("file.txt", "w") as f:
+    f.write("hello")
+# f.__exit__() called here -- file closed even on exception
+```
+
+C++'s RAII is more general and automatic: it applies to every object with a destructor, with no special syntax at the call site. In Python you must explicitly write `with`.
+
+---
+
+## The Lifetime Guarantee Visualized
+
+```
+Scope:
+    {
+        IntArray arr{1000};    <- constructor: allocates memory
+        process(arr);
+        if (fail) return;      <- early return?  destructor still runs!
+        if (err) throw ...;    <- exception?      destructor still runs!
+    }                          <- normal exit:   destructor runs
+    
+Stack unwind on exception:
+    When an exception propagates, C++ calls the destructor of every
+    local object as it unwinds each stack frame. No resource is leaked.
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Not Writing a Destructor for Resource-Owning Classes
+
+**The bug:**
+```cpp
+class Buffer {
+    int* data;
+public:
+    Buffer(int n) { data = new int[n]; }
+    // forgot: ~Buffer() { delete[] data; }
+};
+// Every Buffer that goes out of scope leaks its allocation.
+```
+**The fix:** If a class owns a raw pointer acquired with `new`, it needs a destructor with `delete`.
+
+### Mistake 2: Destructors That Throw
+
+**The bug:**
+```cpp
+~MyClass() {
+    if (!cleanup()) throw std::runtime_error("cleanup failed");  // DANGEROUS
+}
+```
+**Why it's dangerous:** If a destructor throws while the stack is already unwinding from another exception, `std::terminate` is called and the program crashes with no recovery.
+**The fix:** Never let destructors throw. Swallow or log errors inside destructors.
+
+---
+
+## Exercises
+
+**Exercise 12.1 -- Trace the destructor order**
+
+```cpp
+struct Log {
+    std::string name;
+    Log(std::string n) : name{n} { std::cout << "create " << name << "\n"; }
+    ~Log()                       { std::cout << "destroy " << name << "\n"; }
+};
+
+int main() {
+    Log a{"A"};
+    {
+        Log b{"B"};
+        Log c{"C"};
+    }
+    Log d{"D"};
+}
+```
+
+What is the output?
+
+*Answer:*
+```
+create A
+create B
+create C
+destroy C
+destroy B
+create D
+destroy D
+destroy A
+```
+C and B are destroyed in reverse order when the inner block ends. D is created after the block. Then A and D are destroyed in reverse order when main ends.
+
+---
+
+**Exercise 12.2 -- Design a RAII wrapper**
+
+Design (declarations only, no need to implement) an RAII class `FileHandle` that wraps `FILE*`. What members does it need? What should the constructor and destructor do?
+
+*Answer:*
 ```cpp
 class FileHandle {
     FILE* file;
 public:
-    FileHandle(const char* path) {
-        file = fopen(path, "r");  // acquire in constructor
-    }
-    ~FileHandle() {               // destructor: name is ~ClassName
-        if (file) fclose(file);   // release in destructor
-    }
-    // ... methods to read, etc.
+    FileHandle(const char* path, const char* mode);  // opens: file = fopen(path, mode)
+    ~FileHandle();                                    // closes: if (file) fclose(file)
+    bool is_open() const;                             // returns file != nullptr
+    FILE* get() const;                                // returns the raw FILE* for C API use
+
+    // Disable copy (two wrappers closing the same file = double-close bug):
+    FileHandle(const FileHandle&) = delete;
+    FileHandle& operator=(const FileHandle&) = delete;
 };
-
-void process() {
-    FileHandle f("data.txt");  // file opened here
-    // ... do work ...
-    // even if an exception is thrown, f's destructor runs
-    // and closes the file
-}  // f goes out of scope — ~FileHandle() called automatically
 ```
-
-The destructor (`~FileHandle()`) is called automatically when `f` goes out of scope. It doesn't matter how the function exits — normal return, exception, early return — the destructor always runs.
-
-### RAII Is Everywhere in the Standard Library
-
-`std::vector`, `std::string`, file streams, smart pointers — all use RAII. When they go out of scope, they release their resources.
-
-```cpp
-{
-    std::vector<int> v = {1, 2, 3, 4, 5};
-    // vector allocates heap memory in constructor
-}   // vector destroyed here — heap memory freed automatically
-```
-
-This is why modern C++ rarely calls `delete` explicitly. The containers and smart pointers do it for you via RAII.
-
-### Destructors
-
-A destructor is a special member function:
-- Named `~ClassName()`
-- No parameters, no return type
-- Called automatically when the object is destroyed (goes out of scope, is deleted, etc.)
-
-```cpp
-class Timer {
-    std::chrono::time_point<std::chrono::high_resolution_clock> start;
-public:
-    Timer() : start(std::chrono::high_resolution_clock::now()) {}
-    
-    ~Timer() {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Elapsed: " << ms.count() << "ms\n";
-    }
-};
-
-void timed_operation() {
-    Timer t;         // starts timing
-    do_work();
-}   // prints elapsed time automatically when t goes out of scope
-```
-
-### RAII and Exceptions
-
-One of RAII's biggest benefits: it makes exception safety automatic. Without RAII:
-
-```cpp
-void bad() {
-    int* p = new int(42);
-    might_throw();       // if this throws, p is never deleted
-    delete p;
-}
-```
-
-With RAII (or smart pointers):
-
-```cpp
-void good() {
-    auto p = std::make_unique<int>(42);
-    might_throw();  // if this throws, p's destructor still runs → no leak
-}
-```
-
-The destructor is called during *stack unwinding* — the process of cleaning up stack frames as an exception propagates.
-
-### Key Takeaways
-
-- RAII: tie resource lifetime to object lifetime. Acquire in constructor, release in destructor.
-- The destructor is guaranteed to run when the object goes out of scope, regardless of how (exception, return, end of scope).
-- The entire standard library is built on RAII. `vector`, `string`, streams, smart pointers — all manage resources this way.
-- RAII makes exception safety free — you don't need `try/finally` blocks (though C++ has them too).
-- Understanding RAII is the single most important mental shift when moving from Python to C++.
 
 ---
 
 <a name="ch13"></a>
-## Chapter 13: Dynamic Allocation: `new`, `delete`, and Why You Avoid Them
+# Chapter 13: Dynamic Allocation: `new`, `delete`, and Why You Avoid Them
 
-### What `new` and `delete` Do
+## `new` and `delete` Revisited
 
-`new` allocates memory on the heap and calls the constructor. `delete` calls the destructor and frees the memory.
+We introduced `new` and `delete` in Chapter 8. Here is the complete picture.
 
 ```cpp
-// Allocate a single object
-int* p = new int(42);
-std::cout << *p;   // 42
-delete p;
-p = nullptr;
+// Single object:
+int*  p  = new int{42};     // allocate one int on heap, initialize to 42
+delete p;                   // free it
+p = nullptr;                // prevent accidental reuse
 
-// Allocate an array
-int* arr = new int[10];
-arr[0] = 1;
-delete[] arr;   // MUST use delete[] for arrays
+// Array:
+int*  arr = new int[100]{};  // allocate 100 ints, zero-initialized
+delete[] arr;                // MUST use delete[] for arrays
 arr = nullptr;
 
-// Allocate a class object
-MyClass* obj = new MyClass(args);
-obj->method();
-delete obj;
+// Default-initialized (no value specified):
+int*  q  = new int;          // value is garbage (same as uninitialized local)
+delete q;
+
+// Value-initialized (zero):
+int*  r  = new int{};        // value is 0
+delete r;
 ```
 
-### The Rules You Must Follow
+### What `new` Actually Does
 
-1. Every `new` must have exactly one matching `delete`.
-2. Every `new[]` must have exactly one matching `delete[]`.
-3. Never `delete` something you didn't `new`.
-4. Never `delete` a null pointer (safe, but meaningless).
-5. Never use a pointer after deleting it (*use after free* — undefined behavior).
-6. Never `delete` the same pointer twice (*double free* — undefined behavior).
+1. Calls `operator new` to ask the allocator for N bytes of heap memory
+2. Constructs the object in that memory (runs the constructor)
+3. Returns a typed pointer to the constructed object
 
-Getting these right manually across thousands of lines of code, with exceptions and early returns, is nearly impossible. Hence:
+### What `delete` Actually Does
 
-### Why You Avoid Raw `new`/`delete` in Modern C++
+1. Calls the destructor of the object
+2. Calls `operator delete` to return the memory to the allocator
 
-The C++ Core Guidelines (the canonical modern C++ style guide) say: **"Never use raw `new`/`delete`."** Instead:
+If you use `delete` on an array (allocated with `new[]`), the destructor for each element is called, and then the memory is freed. If you use `delete` instead of `delete[]`, only one destructor is called and the allocator is given the wrong size -- undefined behavior.
 
-- For a single heap object with one owner: `std::unique_ptr`
-- For shared ownership: `std::shared_ptr`
-- For large collections: `std::vector` (manages its own heap memory via RAII)
-- For strings: `std::string`
+---
+
+## The Problems With Raw `new`/`delete`
+
+### Problem 1: Exception Safety
 
 ```cpp
-// Old C++ (don't write this)
-void old_way() {
-    MyClass* obj = new MyClass();
-    obj->do_work();
-    delete obj;  // easy to forget, skip on exceptions, double-delete
+int* a = new int{1};
+int* b = new int{2};    // if this throws (out of memory), a leaks
+process(a, b);          // if this throws, a and b leak
+delete a;
+delete b;
+```
+
+### Problem 2: Ownership Ambiguity
+
+```cpp
+int* create() { return new int{42}; }   // who must call delete?
+
+void use(int* p) {
+    // Am I supposed to delete p? Is it heap-allocated? Who owns it?
 }
-
-// Modern C++ (do this instead)
-void modern_way() {
-    auto obj = std::make_unique<MyClass>();
-    obj->do_work();
-}   // unique_ptr's destructor calls delete automatically
 ```
 
-### When You Actually See `new`/`delete`
+When raw pointers are passed around, ownership becomes unclear. This leads to either leaks (nobody deletes) or double-frees (two places both delete).
 
-You'll encounter raw `new`/`delete` in:
-- Legacy C++ code (pre-C++11)
-- Low-level allocators and memory pool implementations
-- Interoperability with C APIs
-- Custom placement new (advanced)
+### Problem 3: Paired Delete is Fragile
 
-You must be able to read and debug such code, but don't write it in new code.
+Every `new` must be matched by exactly one `delete`. This is an invariant you must maintain manually across hundreds or thousands of lines of code, through exceptions and early returns. One mistake = leak or crash.
 
-### Stack vs Heap Decision
+---
+
+## When Raw `new`/`delete` Is Acceptable
+
+Almost never in modern C++. The standard library provides better alternatives:
+
+| Old pattern | Modern replacement |
+|-------------|-------------------|
+| `new int[n]` | `std::vector<int>` |
+| `new SomeClass(...)` | `std::make_unique<SomeClass>(...)` |
+| Shared ownership | `std::make_shared<SomeClass>(...)` |
+| Fixed-size array | `std::array<T, N>` |
+
+The only legitimate uses of raw `new`/`delete` are:
+- Writing a custom allocator or container
+- Interfacing with a C API that expects you to `free()` memory it returned
+- Writing `operator new` / `operator delete` for a class
+
+If you find yourself writing `new` in application code, stop and use a smart pointer or container.
+
+---
+
+## `std::bad_alloc` -- Out of Memory
+
+When `new` cannot get memory (system is out of RAM), it throws `std::bad_alloc`. Most programs do not handle this because there is little useful you can do, but for critical systems:
 
 ```cpp
-// Stack — prefer this
-void stack_example() {
-    MyClass obj;           // on the stack — automatic lifetime
-    obj.do_work();
-}   // obj destroyed automatically
-
-// Heap — only when necessary
-void heap_example() {
-    auto obj = std::make_unique<MyClass>();  // on the heap
-    obj->do_work();
-}   // unique_ptr destroys obj automatically
+#include <new>
+try {
+    int* p = new int[1'000'000'000'000];  // 1 trillion ints ~ 4TB
+} catch (const std::bad_alloc& e) {
+    std::cerr << "Out of memory: " << e.what() << "\n";
+}
 ```
 
-When do you actually need the heap?
-- Object must outlive the function that created it
-- Object size not known at compile time
-- You want to return the object from a factory function
-- Object is very large (beyond stack limit)
+If you want `new` to return `nullptr` instead of throwing:
 
-### Key Takeaways
+```cpp
+int* p = new(std::nothrow) int[1'000'000'000'000];
+if (p == nullptr) {
+    // handle out of memory
+}
+```
 
-- `new` allocates on the heap and calls the constructor. `delete` destructs and frees.
-- The rules (match `new`/`delete`, `new[]`/`delete[]`, no double-free, no use-after-free) are hard to follow manually.
-- **Modern C++: avoid raw `new`/`delete`.** Use smart pointers and containers instead.
-- You still need to understand raw allocation to read existing code and understand what smart pointers do under the hood.
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `delete` on Stack Memory
+
+**The bug:**
+```cpp
+int x = 5;
+int* p = &x;
+delete p;   // undefined behavior -- x is on the stack, not heap
+```
+**The symptom:** Crash or heap corruption.
+**The rule:** Only `delete` memory that came from `new`.
+
+### Mistake 2: Accessing Memory After `delete`
+
+```cpp
+int* p = new int{10};
+delete p;
+std::cout << *p;   // use-after-free: undefined behavior
+```
+**Detection:** `-fsanitize=address` reports "heap-use-after-free."
+**The fix:** Set `p = nullptr` immediately after `delete`.
+
+---
+
+## Exercises
+
+**Exercise 13.1 -- Manual heap string**
+
+Without using `std::string`, allocate a char array on the heap large enough to hold "Hello, C++!" (including the null terminator), fill it using `strcpy`, print it, then free it correctly.
+
+*Answer:*
+```cpp
+#include <cstring>
+const char* src = "Hello, C++!";
+int len = strlen(src) + 1;        // +1 for null terminator
+char* buf = new char[len];
+strcpy(buf, src);
+std::cout << buf << "\n";
+delete[] buf;
+buf = nullptr;
+```
+
+---
+
+**Exercise 13.2 -- Identify the errors**
+
+How many bugs does this code have? Classify each as leak, double-free, or use-after-free:
+
+```cpp
+int* p = new int{5};
+int* q = p;
+delete p;
+delete q;        // (a)
+std::cout << *p; // (b)
+int x = 10;
+delete &x;       // (c)
+```
+
+*Answer:*
+- (a): double-free -- `p` and `q` point to the same memory; freeing both is double-free.
+- (b): use-after-free -- `p` was deleted; reading `*p` is undefined behavior.
+- (c): delete on stack memory -- `x` is a local variable, not heap-allocated.
 
 ---
 
 <a name="ch14"></a>
-## Chapter 14: Smart Pointers: `unique_ptr`, `shared_ptr`, `weak_ptr`
+# Chapter 14: Smart Pointers: `unique_ptr`, `shared_ptr`, `weak_ptr`
 
-### What Is a Smart Pointer?
+## The Core Idea
 
-A smart pointer is a class that wraps a raw pointer and manages its lifetime via RAII. When the smart pointer goes out of scope, it automatically calls `delete`.
-
-Three smart pointers in `<memory>`:
-
-- `std::unique_ptr<T>` — sole ownership. One pointer owns the resource. When it dies, the resource is freed.
-- `std::shared_ptr<T>` — shared ownership. Multiple pointers share a resource. Freed when the last one dies.
-- `std::weak_ptr<T>` — non-owning observer of a `shared_ptr`. Used to break cycles.
-
-### `unique_ptr` — Exclusive Ownership
+Smart pointers are RAII wrappers around raw pointers. They manage ownership: when the smart pointer is destroyed, it automatically deletes the object it owns.
 
 ```cpp
 #include <memory>
 
-auto p = std::make_unique<int>(42);  // preferred creation method
-std::cout << *p << "\n";              // 42 — dereference like a raw pointer
-// no delete needed — p's destructor calls it
+// Instead of:
+int* raw = new int{42};
+// ... possibly forget to delete ...
+delete raw;
+
+// Use:
+auto smart = std::make_unique<int>(42);
+// ... no delete needed -- automatically freed when smart goes out of scope ...
 ```
 
-`unique_ptr` **cannot be copied** — only *moved*. This enforces the "one owner" invariant.
+There are three kinds, each for a different ownership pattern.
 
-```cpp
-auto p1 = std::make_unique<int>(10);
-auto p2 = p1;            // COMPILE ERROR — can't copy unique_ptr
-auto p2 = std::move(p1); // OK — transfers ownership. p1 is now null.
-```
+---
 
-This is perfect for factory functions:
+## `std::unique_ptr` -- Exclusive Ownership
 
-```cpp
-std::unique_ptr<Shape> make_shape(std::string type) {
-    if (type == "circle")    return std::make_unique<Circle>(5.0);
-    if (type == "rectangle") return std::make_unique<Rectangle>(3.0, 4.0);
-    return nullptr;
-}
-
-auto shape = make_shape("circle");  // caller owns the Shape
-shape->draw();
-// automatically deleted when shape goes out of scope
-```
-
-### `shared_ptr` — Shared Ownership
-
-`shared_ptr` uses reference counting. Each copy increments the count. When the count reaches zero, the resource is freed.
+`unique_ptr` represents **sole ownership**: exactly one `unique_ptr` owns the object at any time. When the `unique_ptr` is destroyed, it deletes the owned object.
 
 ```cpp
 #include <memory>
 
-auto p1 = std::make_shared<int>(99);  // count = 1
-{
-    auto p2 = p1;     // count = 2
-    auto p3 = p1;     // count = 3
-    std::cout << *p2; // 99
-}   // p2, p3 destroyed — count back to 1
-// resource still alive (p1 holds it)
-// when p1 goes out of scope: count = 0 → deleted
+auto p = std::make_unique<int>(42);   // allocates int{42} on heap
+                                      // p is the sole owner
+
+std::cout << *p << "\n";              // 42   -- dereference like a raw pointer
+std::cout << p.get() << "\n";        // raw address (for C API use)
+
+// p is automatically deleted when it goes out of scope
+// No manual delete. No leaks.
 ```
 
-Use `shared_ptr` when:
-- Multiple owners need to keep an object alive
-- Ownership is unclear or shared across subsystems
+`make_unique<T>(args...)` is the right way to create a `unique_ptr`. It:
+1. Allocates the object on the heap
+2. Constructs it with the given arguments
+3. Returns a `unique_ptr` owning it
 
-Avoid using `shared_ptr` by default "just in case." It has overhead (atomic reference count increment/decrement) and can cause memory leaks via cyclic references.
-
-### Cyclic References and `weak_ptr`
-
-If two `shared_ptr`s point to objects that point back to each other, neither reference count reaches zero — memory leak:
-
-```cpp
-struct Node {
-    std::shared_ptr<Node> next;
-    std::shared_ptr<Node> prev;  // back-pointer — CREATES A CYCLE
-};
-```
-
-Solution: make back-pointers `weak_ptr`. A `weak_ptr` doesn't own the resource and doesn't increment the reference count:
-
-```cpp
-struct Node {
-    std::shared_ptr<Node> next;
-    std::weak_ptr<Node> prev;    // non-owning back-pointer — no cycle
-};
-
-// To use a weak_ptr, lock it first (get a temporary shared_ptr):
-if (auto locked = node->prev.lock()) {
-    // locked is a valid shared_ptr — the Node still exists
-    locked->do_something();
-} else {
-    // the Node has been destroyed
-}
-```
-
-### Accessing the Raw Pointer
-
-Sometimes (e.g., passing to C APIs) you need the raw pointer:
+### Unique Ownership Enforced at Compile Time
 
 ```cpp
 auto p = std::make_unique<int>(42);
-int* raw = p.get();    // get the raw pointer — p still owns it
-some_c_api(raw);       // pass to C function that doesn't take ownership
-// DO NOT delete raw — p still owns the memory
+auto q = p;   // COMPILE ERROR: unique_ptr cannot be copied
 ```
 
-### `unique_ptr` with Arrays
+You cannot copy a `unique_ptr` -- that would create two owners for one object (a contradiction of unique ownership). The compiler enforces this.
+
+You CAN move it (transfer ownership):
 
 ```cpp
-auto arr = std::make_unique<int[]>(10);  // unique_ptr for arrays
-arr[0] = 1;
-arr[1] = 2;
-// no delete[] needed — handled automatically
+auto p = std::make_unique<int>(42);
+auto q = std::move(p);   // ownership transferred from p to q
+// p is now empty (nullptr); q owns the int
+std::cout << *q << "\n";   // 42
+// *p would be undefined behavior -- p is now empty
 ```
 
-For runtime-sized arrays you actually want `std::vector` 99% of the time. `unique_ptr<T[]>` is for interoperating with C APIs that return arrays.
+`std::move` is covered in Chapter 15. For now, understand that `std::move(p)` says "I am done with `p`; transfer what it owns to `q`."
 
-### Choosing the Right Smart Pointer
+### Unique Pointer to a Custom Class
+
+```cpp
+struct Player {
+    std::string name;
+    int health;
+    Player(std::string n, int h) : name{n}, health{h} {}
+    ~Player() { std::cout << name << " destroyed\n"; }
+};
+
+{
+    auto hero = std::make_unique<Player>("Alice", 100);
+    hero->health -= 20;          // -> accesses members (same as raw pointer)
+    std::cout << hero->name << " has " << hero->health << " HP\n";
+}   // hero goes out of scope -- Player destructor called, memory freed
+// prints: "Alice has 80 HP" then "Alice destroyed"
+```
+
+### `unique_ptr` as a Function Parameter
+
+```cpp
+// Takes ownership (caller cannot use the pointer after this):
+void consume(std::unique_ptr<Player> p) {
+    std::cout << "consuming " << p->name << "\n";
+}   // p destroyed here
+
+// Borrows (caller keeps ownership, function just uses the object):
+void use(const Player& p) {                   // prefer this
+    std::cout << "using " << p.name << "\n";
+}
+void use_ptr(const Player* p) {               // raw ptr = borrow, no ownership
+    if (p) std::cout << "using " << p->name << "\n";
+}
+
+auto hero = std::make_unique<Player>("Bob", 80);
+use(*hero);               // dereference to get Player&
+use_ptr(hero.get());      // .get() returns raw pointer, no ownership transfer
+consume(std::move(hero)); // hero is empty after this
+```
+
+The guideline: pass `unique_ptr` only when you intend to transfer ownership. For "just using" the object, pass a reference or raw pointer (raw pointer = borrow, no ownership implied).
+
+---
+
+## `std::shared_ptr` -- Shared Ownership
+
+`shared_ptr` uses **reference counting**: multiple `shared_ptr`s can all own the same object. The object is deleted when the last `shared_ptr` to it is destroyed.
+
+```python
+# Python reference counting -- the same idea Python uses for all objects
+a = [1, 2, 3]   # ref count = 1
+b = a            # ref count = 2
+del a            # ref count = 1
+del b            # ref count = 0 --> freed
+```
+
+```cpp
+auto sp1 = std::make_shared<int>(42);   // ref count = 1
+{
+    auto sp2 = sp1;    // ref count = 2 (COPY IS ALLOWED for shared_ptr)
+    std::cout << *sp2 << "\n";   // 42
+    std::cout << sp1.use_count() << "\n";   // 2
+}   // sp2 destroyed, ref count = 1
+// int still alive (sp1 holds it)
+std::cout << sp1.use_count() << "\n";   // 1
+// sp1 goes out of scope, ref count = 0, int deleted
+```
 
 ```
-Is ownership unique (one owner)?
-  → std::unique_ptr<T>
+Memory layout of shared_ptr:
 
-Is ownership shared (multiple owners)?
-  → std::shared_ptr<T>
-
-Do you need to observe a shared_ptr without owning it (e.g., back-pointers)?
-  → std::weak_ptr<T>
-
-Is the object small, short-lived, and clearly scoped?
-  → Skip pointers entirely — just use a value (no pointer)
++------------------+         +-------------------+
+| sp1              |         | control block      |
+|   ptr  --------> | ------> | ref count: 2       |
+|   ctrl --------> | ---+    | weak count: 0      |
++------------------+    |    +-------------------+
+                         |                        
++------------------+    +--> +-------------------+
+| sp2 (copy)       |         | managed object     |
+|   ptr  --------> | ------> | int: 42            |
+|   ctrl --------> | ------> | (same ctrl block)  |
++------------------+         +-------------------+
 ```
 
-### Key Takeaways
+### When to Use `shared_ptr`
 
-- `unique_ptr`: sole ownership, no copy, only move. Zero overhead over raw pointer.
-- `shared_ptr`: shared ownership via reference count. Slight overhead. Use when needed, not by default.
-- `weak_ptr`: non-owning observer, prevents cyclic reference leaks.
-- Create with `make_unique` and `make_shared` — never `new`.
-- `get()` gives the raw pointer without transferring ownership.
+Use `shared_ptr` when multiple objects genuinely need to share ownership and you cannot determine statically which one will outlive the others:
+
+- Scene graph nodes that can be referenced from multiple places
+- Cache entries referenced by many users
+- Callbacks registered with multiple event systems
+
+**Do NOT use `shared_ptr` by default**. It has overhead (atomic ref-count increment/decrement on every copy and destroy). If one owner makes sense, use `unique_ptr`. If no ownership is needed (just borrowing), use a reference or raw pointer.
+
+---
+
+## `std::weak_ptr` -- Non-Owning Observer
+
+A `weak_ptr` holds a non-owning reference to an object managed by `shared_ptr`. It does not affect the ref count. You must convert it to a `shared_ptr` to actually use the object, and that conversion can fail if the object was already deleted.
+
+The main use: breaking reference cycles.
+
+```cpp
+// Without weak_ptr: a cycle keeps both objects alive forever (memory leak)
+struct Node {
+    std::shared_ptr<Node> next;   // strong reference
+};
+auto a = std::make_shared<Node>();
+auto b = std::make_shared<Node>();
+a->next = b;
+b->next = a;   // cycle: a holds b, b holds a -- neither ever freed
+
+// With weak_ptr: the cycle is broken
+struct Node {
+    std::weak_ptr<Node> next;    // weak reference (non-owning)
+};
+// Now b->next does not keep a alive. When a goes out of scope, it is freed.
+```
+
+Using a `weak_ptr`:
+
+```cpp
+auto sp = std::make_shared<int>(99);
+std::weak_ptr<int> wp = sp;
+
+if (auto locked = wp.lock()) {   // lock() returns shared_ptr if alive, empty if dead
+    std::cout << *locked << "\n";  // 99
+} else {
+    std::cout << "object was deleted\n";
+}
+
+sp.reset();   // delete the object
+
+if (auto locked = wp.lock()) {
+    std::cout << *locked << "\n";
+} else {
+    std::cout << "object was deleted\n";   // this prints
+}
+```
+
+---
+
+## Choosing the Right Smart Pointer
+
+```
+Is there exactly one owner that will definitely outlive all users?
+  --> std::unique_ptr (default choice)
+
+Do multiple owners genuinely need to share the object's lifetime?
+  --> std::shared_ptr
+
+Do you need to observe a shared_ptr-managed object without affecting its lifetime?
+  --> std::weak_ptr
+
+Are you just borrowing -- the object's owner is clear and nearby?
+  --> T& (reference) or const T& (const reference)
+  --> T* (raw pointer) if nullability is needed
+```
+
+90% of cases: use `unique_ptr`. 9%: `shared_ptr`. 1%: `weak_ptr`.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Creating a `shared_ptr` From a Raw Pointer Twice
+
+**The bug:**
+```cpp
+int* raw = new int{42};
+auto sp1 = std::shared_ptr<int>(raw);
+auto sp2 = std::shared_ptr<int>(raw);  // two independent shared_ptrs own raw!
+// When both are destroyed: double-free
+```
+**The fix:** Always use `std::make_shared`. If you must wrap an existing pointer, do it once and copy the `shared_ptr`.
+
+### Mistake 2: Calling `.get()` and Storing the Result
+
+**The bug:**
+```cpp
+auto sp = std::make_shared<int>(5);
+int* raw = sp.get();   // raw is a non-owning pointer -- fine so far
+sp.reset();            // sp destroys the int
+std::cout << *raw;     // use-after-free
+```
+**The fix:** Never store the result of `.get()` beyond the lifetime of the smart pointer.
+
+### Mistake 3: Passing `unique_ptr` by Value When Borrowing
+
+**The bug:**
+```cpp
+void display(std::unique_ptr<Player> p) { ... }  // takes ownership!
+auto hero = std::make_unique<Player>("Alice", 100);
+display(hero);         // ERROR: cannot copy unique_ptr
+display(std::move(hero));  // compiles, but hero is now empty -- likely a bug
+```
+**The fix:** For borrowing, pass `const Player&` or `Player*` (via `.get()`).
+
+---
+
+## Exercises
+
+**Exercise 14.1 -- unique_ptr basics**
+
+Rewrite this raw-pointer code using `unique_ptr`:
+
+```cpp
+double* compute() {
+    double* result = new double{3.14};
+    return result;    // caller must delete
+}
+
+int main() {
+    double* r = compute();
+    std::cout << *r << "\n";
+    delete r;
+}
+```
+
+*Answer:*
+```cpp
+#include <memory>
+#include <iostream>
+
+std::unique_ptr<double> compute() {
+    return std::make_unique<double>(3.14);
+}
+
+int main() {
+    auto r = compute();      // unique_ptr takes ownership
+    std::cout << *r << "\n"; // 3.14
+    // r automatically deleted at end of main
+}
+```
+
+---
+
+**Exercise 14.2 -- shared_ptr ref count**
+
+Predict the ref count at each comment:
+
+```cpp
+auto a = std::make_shared<int>(10);  // (1)
+{
+    auto b = a;                       // (2)
+    auto c = a;                       // (3)
+    c.reset();                        // (4)
+}                                     // (5)
+// (6)
+```
+
+*Answer:*
+- (1): 1
+- (2): 2
+- (3): 3
+- (4): 2 (`c.reset()` releases `c`'s ownership)
+- (5): 1 (`b` goes out of scope)
+- (6): 1 (`a` is still alive outside the block)
+
+---
+
+**Exercise 14.3 -- Choose the smart pointer**
+
+For each scenario, say whether to use `unique_ptr`, `shared_ptr`, `weak_ptr`, or a raw reference:
+
+a. A game entity that owns a weapon (weapon lives exactly as long as the entity)
+b. A texture loaded into a cache, referenced by hundreds of sprites
+c. A parent node in a tree that wants to observe its own child (child is managed by parent via `shared_ptr`)
+d. A function that needs to read-only access an object whose lifetime is certain to outlast the function
+
+*Answer:*
+- a: `unique_ptr<Weapon>` -- one owner, no sharing.
+- b: `shared_ptr<Texture>` -- many owners, object lives until last sprite is done.
+- c: `weak_ptr<Node>` -- parent already holds a `shared_ptr` to child; back-reference via `weak_ptr` avoids cycle.
+- d: `const T&` (reference) -- just borrowing, no ownership needed.
 
 ---
 
 <a name="ch15"></a>
-## Chapter 15: Move Semantics, lvalues and rvalues
+# Chapter 15: Move Semantics, lvalues, and rvalues
 
-### The Problem: Unnecessary Copies
+## The Performance Problem With Copies
 
-Imagine returning a large vector from a function:
+Consider what happens when you return a `std::vector` from a function:
 
 ```cpp
-std::vector<int> make_big_vector() {
-    std::vector<int> v(1'000'000);
-    // fill v...
+std::vector<int> make_million() {
+    std::vector<int> v(1'000'000, 0);   // 1 million ints on heap: ~4 MB
     return v;
 }
 
-auto result = make_big_vector();  // does this copy 1 million ints?
+std::vector<int> result = make_million();
 ```
 
-In old C++ (pre-C++11), this could copy all million elements. Modern C++ makes it free via *move semantics*.
+Naively, this would copy 4 MB from `v` into `result`. That is a lot of work. But modern C++ avoids this copy entirely. To understand how, you need lvalues and rvalues.
 
-### lvalues and rvalues
+---
 
-An **lvalue** is an expression that refers to a persistent, named memory location. You can take its address. Variables are lvalues.
+## lvalues and rvalues
 
-An **rvalue** is a temporary value that doesn't persist. The result of `a + b`, a function return value, a literal — these are rvalues. They're about to be thrown away.
+An **lvalue** is an expression that has a stable memory address -- you can take its address with `&`, and it persists beyond the current expression. Named variables are lvalues.
+
+An **rvalue** is a temporary -- it has no persistent address. Literals, arithmetic results, and return values are rvalues.
 
 ```cpp
-int x = 5;    // x is an lvalue; 5 is an rvalue
-int y = x + 3;  // (x + 3) is an rvalue — computed, used, gone
+int x = 5;
+int y = x + 3;
+
+// x is an lvalue: it has an address, it persists
+// 5 is an rvalue: it is a temporary value with no address of its own
+// x + 3 is an rvalue: the result is a temporary
+
+int* p = &x;         // OK: x is an lvalue, can take its address
+int* q = &(x + 3);   // ERROR: x+3 is an rvalue, no persistent address
 ```
 
-### Moving Instead of Copying
-
-For an rvalue, you don't need to *copy* its data — you can *steal* it. If a `vector` temporary is about to be destroyed, why copy its heap buffer? Just take the buffer pointer.
-
-A **move constructor** does exactly this: it transfers ownership of resources from the source (which is being destroyed) to the new object, leaving the source in a valid but empty state.
+The shorthand: if you can put it on the left side of an assignment, it is an lvalue. Rvalues cannot be assigned to.
 
 ```cpp
-std::vector<int> a = {1, 2, 3, 4, 5};
-std::vector<int> b = std::move(a);  // b TAKES a's buffer — no copy
-
-// a is now in a valid but unspecified state (typically empty)
-// b owns the data
-std::cout << b.size();  // 5
-std::cout << a.size();  // 0
+x = 42;        // OK: x is an lvalue
+x + 3 = 42;   // ERROR: x+3 is an rvalue, you cannot assign to it
 ```
 
-`std::move(a)` is a cast that says "treat `a` as an rvalue — it's OK to steal from it." After the move, `a` is valid but empty. Don't use `a`'s value after moving from it.
+---
 
-### Why Returning Vectors Is Free (NRVO)
+## The Move Operation
 
-When a function returns a local variable, the compiler often applies **Named Return Value Optimization (NRVO)** — it constructs the return value directly in the caller's memory, skipping the copy entirely. When NRVO isn't possible, the move constructor is used. Either way, returning a `vector<int>` with a million elements is essentially free.
+An rvalue is a temporary that is about to be discarded. If you are initializing a new object from a temporary, there is no need to copy the temporary's data -- you can just steal it.
+
+This is the **move operation**: instead of copying data from source to destination and then destroying the source, move hands ownership of the source's resources directly to the destination, then puts the source in a valid-but-empty state.
+
+```
+Copy:
+  [Source]  --> makes a duplicate --> [Destination]
+  [Source] still valid and full     [Destination] is a new copy
+
+Move:
+  [Source]  --> hands over resources --> [Destination]
+  [Source] is now empty (valid but empty)  [Destination] owns the data
+```
+
+For a `std::vector` with 1 million elements:
+
+```
+Copy: allocate 4MB, copy 1M integers, now two 4MB allocations exist
+Move: copy 3 pointers (data, size, capacity), set source to empty state
+      -- essentially free
+```
+
+---
+
+## `std::move` -- Casting to rvalue
+
+By default, named variables are lvalues and are copied. To tell C++ "treat this lvalue as a temporary so it can be moved," use `std::move`:
 
 ```cpp
-std::vector<int> make_big_vector() {
-    std::vector<int> v(1'000'000);
-    return v;   // NRVO: constructed directly in caller — zero copies
+std::vector<int> a(1'000'000, 42);   // a: 4MB
+
+std::vector<int> b = a;              // COPY: 4MB allocated, 1M ints copied
+std::vector<int> c = std::move(a);   // MOVE: 3 pointers copied, a is now empty
+// a is empty after the move -- do not use a anymore
+```
+
+`std::move` does NOT move anything. It just casts `a` to an rvalue reference, signaling that the move constructor (instead of the copy constructor) should be used.
+
+---
+
+## Move Semantics and Returned Values
+
+```cpp
+std::vector<int> make_million() {
+    std::vector<int> v(1'000'000, 0);
+    return v;   // v is a local variable, about to be destroyed
+                // compiler applies NRVO (named return value optimization)
+                // or the implicit move -- either way, no copy
+}
+
+auto result = make_million();   // no copy of 4MB
+```
+
+The compiler applies **NRVO** (Named Return Value Optimization) or uses the implicit move. In practice, returning a local variable from a function is always efficient in modern C++. Do not write `return std::move(v)` -- that actually disables NRVO.
+
+---
+
+## Move Constructor and Move Assignment
+
+You can define how your own class moves:
+
+```cpp
+class Buffer {
+    int* data;
+    int  size;
+
+public:
+    // Constructor
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // Destructor
+    ~Buffer() { delete[] data; }
+
+    // Copy constructor (deep copy -- expensive)
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
+        std::copy(other.data, other.data + size, data);
+    }
+
+    // Move constructor (steal the pointer -- cheap)
+    Buffer(Buffer&& other) noexcept        // && = rvalue reference
+        : data{other.data}, size{other.size} {
+        other.data = nullptr;              // source is now empty
+        other.size = 0;
+    }
+
+    // Move assignment
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            delete[] data;             // free current data
+            data = other.data;         // steal other's data
+            size = other.size;
+            other.data = nullptr;      // leave other empty
+            other.size = 0;
+        }
+        return *this;
+    }
+};
+```
+
+The `&&` in `Buffer(Buffer&& other)` is an **rvalue reference** -- a reference that binds only to temporaries (rvalues). This overload is chosen when moving from a temporary.
+
+`noexcept` tells the compiler "this function will not throw." Move operations should be `noexcept` whenever possible -- some standard library algorithms (like `std::vector` reallocation) can only use the move constructor if it is `noexcept`.
+
+---
+
+## `std::string` and `std::vector` Move in Action
+
+```cpp
+std::string s1 = "This is a long string that lives on the heap";
+std::string s2 = s1;              // copy: s2 gets its own copy of the chars
+std::string s3 = std::move(s1);   // move: s3 steals the char buffer from s1
+                                  // s1 is now an empty string ""
+
+std::cout << s2 << "\n";  // "This is a long string..."
+std::cout << s3 << "\n";  // "This is a long string..."
+std::cout << s1 << "\n";  // "" (empty -- moved-from state)
+```
+
+---
+
+## When C++ Moves Automatically
+
+You do not always need `std::move` explicitly. Moves happen automatically:
+
+1. **Returning a local variable from a function** (NRVO or implicit move)
+2. **Initializing from a temporary** (rvalue): `auto s = get_string();`
+3. **Passing a temporary to a function**: `process(std::vector<int>{1,2,3});`
+
+You need explicit `std::move` when:
+1. You want to transfer ownership from one named variable to another
+2. You want to move-insert into a container
+
+```cpp
+std::vector<std::string> words;
+std::string word = "hello";
+words.push_back(word);             // copy: word still valid
+words.push_back(std::move(word));  // move: word is now empty, faster
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using a Moved-From Object
+
+**The bug:**
+```cpp
+std::vector<int> src = {1, 2, 3};
+auto dst = std::move(src);
+for (int n : src) { ... }   // src is empty -- loop runs zero times
+                             // (well-defined but probably wrong)
+```
+**The rule:** After `std::move(x)`, treat `x` as if it were default-constructed (empty). Reassign before using.
+
+### Mistake 2: `return std::move(local)` Disabling NRVO
+
+**The bug:**
+```cpp
+std::vector<int> make() {
+    std::vector<int> v = {1, 2, 3};
+    return std::move(v);   // PESSIMIZATION: disables NRVO
 }
 ```
+**The fix:** Just write `return v;`. The compiler already knows to move or elide.
 
-### Rvalue References (`&&`)
+---
 
-An rvalue reference binds to temporaries. It's what move constructors and move assignment operators accept:
+## Exercises
 
-```cpp
-void process(std::vector<int>&& v) {  // takes an rvalue reference
-    // we can steal from v since caller indicated it's disposable
-    internal_data = std::move(v);
-}
+**Exercise 15.1 -- lvalue or rvalue?**
 
-process(std::vector<int>{1, 2, 3});  // temporary — OK
-// process(my_vector);               // ERROR — lvalue can't bind to &&
-process(std::move(my_vector));       // OK — explicit move
-```
-
-### Perfect Forwarding
-
-In templates, you sometimes want to forward an argument preserving whether it was an lvalue or rvalue. This uses *forwarding references* (`T&&` in a template) and `std::forward`:
+Classify each expression as lvalue or rvalue:
 
 ```cpp
-template<typename T>
-void wrapper(T&& arg) {
-    actual_function(std::forward<T>(arg));  // forwards as lvalue or rvalue
-}
+int x = 5;
+int arr[3] = {1,2,3};
+
+x           // (a)
+x + 1       // (b)
+arr[0]      // (c)
+42          // (d)
+std::string{"hello"}  // (e)
 ```
 
-This pattern appears everywhere in the standard library and in factory functions like `make_unique`. We'll revisit it in the templates chapters.
+*Answer:*
+- (a) lvalue -- `x` is a named variable with a persistent address
+- (b) rvalue -- `x + 1` is a temporary result
+- (c) lvalue -- `arr[0]` refers to a specific array element with an address
+- (d) rvalue -- `42` is a literal, no persistent address
+- (e) rvalue -- a temporary `std::string` constructed inline
 
-### Move Semantics Summary
+---
 
-| Operation | What happens |
-|-----------|-------------|
-| Copy (`b = a`) | Both `a` and `b` have their own copy of the data |
-| Move (`b = std::move(a)`) | `b` takes `a`'s data; `a` is left empty |
-| NRVO (returning local) | Object constructed directly in destination — no copy, no move |
+**Exercise 15.2 -- Move vs copy performance**
 
-### Key Takeaways
+Explain in your own words why moving a `std::vector<int>` with 1 million elements is faster than copying it.
 
-- lvalues are named, persistent variables. rvalues are temporaries.
-- Move semantics let you *steal* resources from objects about to be destroyed — vastly cheaper than copying for containers.
-- `std::move(x)` casts `x` to an rvalue, signaling "you can steal this."
-- After moving from an object, it's in a valid but unspecified state. Don't read its value.
-- NRVO means returning local variables by value is usually free — return containers by value without fear.
+*Answer:* A `std::vector` consists of three things: a pointer to the heap-allocated element array, a size, and a capacity. Copying requires allocating a new heap array and copying all 1 million integers -- O(N) work proportional to the number of elements. Moving just copies the three pointer/size/capacity values and sets the source to empty -- O(1) work, regardless of the number of elements. The move does not touch the elements at all; it transfers ownership of the existing heap array.
+
+---
+
+**Exercise 15.3 -- Efficient string collection**
+
+Write a function that takes a `std::string` and pushes it into a `std::vector<std::string>`. Write two versions: one that copies, one that moves. When would you use each?
+
+*Answer:*
+```cpp
+std::vector<std::string> words;
+
+// Version 1: copy (use when you need to keep the original)
+void add_copy(const std::string& s) {
+    words.push_back(s);           // copies s into the vector
+}
+
+// Version 2: move (use when you are done with the original)
+void add_move(std::string s) {    // takes by value (already a copy or move from caller)
+    words.push_back(std::move(s)); // moves into the vector
+}
+
+std::string word = "hello";
+add_copy(word);                   // word still valid ("hello")
+add_move(std::move(word));        // word is now empty
+```
 
 ---
 
 <a name="ch16"></a>
-## Chapter 16: The Rule of 0, 3, and 5
+# Chapter 16: The Rule of 0, 3, and 5
 
-### The Compiler-Generated Special Member Functions
+## The Problem: Special Member Functions
 
-C++ automatically generates six special member functions if you don't define them:
+C++ classes have six **special member functions** that the compiler can generate automatically:
 
-1. **Default constructor** — `MyClass()` — creates an object with no arguments
-2. **Copy constructor** — `MyClass(const MyClass&)` — creates a copy
-3. **Copy assignment operator** — `operator=(const MyClass&)` — assigns from a copy
-4. **Move constructor** — `MyClass(MyClass&&)` — creates from a temporary (C++11)
-5. **Move assignment operator** — `operator=(MyClass&&)` — assigns from a temporary (C++11)
-6. **Destructor** — `~MyClass()` — cleans up
+| Function | Signature | What it does |
+|----------|-----------|-------------|
+| Default constructor | `T()` | Creates an object with no arguments |
+| Copy constructor | `T(const T&)` | Creates a copy of another object |
+| Copy assignment | `T& operator=(const T&)` | Overwrites this object with a copy |
+| Destructor | `~T()` | Cleans up when the object goes out of scope |
+| Move constructor | `T(T&&)` | Creates object by stealing from a temporary |
+| Move assignment | `T& operator=(T&&)` | Overwrites this object by stealing a temporary |
 
-The generated versions do *memberwise* operations: copy/move/destroy each member in turn.
+The compiler generates these automatically if you do not write them. The compiler-generated versions do **memberwise** operations -- they copy/move/destroy each member in turn.
 
-### The Rule of Zero
+The problem: the compiler-generated versions are wrong when your class **owns a resource** (raw pointer, file handle, socket, etc.).
 
-**If you don't manage any resources directly, don't define any of the six.**
+---
 
-Let the compiler-generated defaults do memberwise operations. Rely on your members (vectors, strings, smart pointers) to manage their own resources via RAII.
+## The Rule of Zero
+
+If your class does **not** own any raw resources, do not define any special member functions. Let the compiler generate them all. The compiler's versions will correctly copy/move/destroy each member.
 
 ```cpp
-class Person {
-    std::string name;     // std::string manages its own memory
-    int age;
-    std::vector<std::string> hobbies;  // vector manages its own memory
-    // No raw pointers — no manual resource management
-public:
-    Person(std::string n, int a) : name(std::move(n)), age(a) {}
-    // No destructor, copy constructor, etc. needed
-    // The compiler generates correct versions automatically
+// Rule of Zero: no raw resources, no user-defined special members
+struct PlayerStats {
+    std::string name;        // std::string manages its own memory
+    int score{0};
+    std::vector<int> history; // std::vector manages its own memory
+    // No raw pointers, no new/delete -- compiler generates correct defaults
 };
+
+PlayerStats a{"Alice", 100, {90, 95, 100}};
+PlayerStats b = a;           // correct memberwise copy
+PlayerStats c = std::move(a); // correct memberwise move
 ```
 
-This is the rule you should follow for most classes. The standard library types manage their own resources correctly, so memberwise operations are correct.
+This is the best outcome. Use `std::string`, `std::vector`, and smart pointers as members, so the Rule of Zero applies.
 
-### The Rule of Three
+---
 
-If your class manages a resource directly (raw pointer, file handle, etc.), you need to define all three of: **destructor**, **copy constructor**, **copy assignment operator**.
+## The Rule of Three
 
-Why? Because the compiler's default copy just copies the pointer — both objects then point to the same resource. When one is destroyed, the other has a dangling pointer (double-free bug).
+If you define **any** of: destructor, copy constructor, or copy assignment -- define all three.
+
+**Why:** If you need a custom destructor, your class probably manages a resource. If it manages a resource, the compiler's copy operations (which do a shallow copy of the pointer) are wrong.
 
 ```cpp
 class Buffer {
     int* data;
     int  size;
-public:
-    Buffer(int n) : data(new int[n]), size(n) {}
 
-    // MUST define: default copy would give two Buffers pointing to same memory
-    Buffer(const Buffer& other) : data(new int[other.size]), size(other.size) {
+public:
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // 1. Destructor: free the resource
+    ~Buffer() { delete[] data; }
+
+    // 2. Copy constructor: deep copy
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
         std::copy(other.data, other.data + size, data);
     }
 
+    // 3. Copy assignment: free old, deep copy new
     Buffer& operator=(const Buffer& other) {
-        if (this == &other) return *this;  // self-assignment guard
+        if (this == &other) return *this;   // self-assignment guard
         delete[] data;
-        data = new int[other.size];
         size = other.size;
+        data = new int[size]{};
         std::copy(other.data, other.data + size, data);
         return *this;
     }
-
-    ~Buffer() { delete[] data; }
 };
 ```
 
-### The Rule of Five
+Without copy constructor and copy assignment, the compiler generates shallow copies -- both objects' `data` pointer points to the same heap memory. When both destructors run, `delete[]` is called twice on the same pointer. Crash.
 
-C++11 adds move semantics. If you define any of the three above, also define **move constructor** and **move assignment operator** for efficiency:
+---
+
+## The Rule of Five
+
+C++11 added move semantics. If you are defining the Rule of Three, also define the move constructor and move assignment for efficiency: the **Rule of Five**.
 
 ```cpp
 class Buffer {
     int* data;
     int  size;
-public:
-    Buffer(int n) : data(new int[n]), size(n) {}
 
-    // Copy (deep)
-    Buffer(const Buffer& other) : data(new int[other.size]), size(other.size) {
+public:
+    Buffer(int n) : data{new int[n]{}}, size{n} {}
+
+    // 1. Destructor
+    ~Buffer() { delete[] data; }
+
+    // 2. Copy constructor (deep copy)
+    Buffer(const Buffer& other) : data{new int[other.size]{}}, size{other.size} {
         std::copy(other.data, other.data + size, data);
     }
+
+    // 3. Copy assignment (free old, deep copy)
     Buffer& operator=(const Buffer& other) {
         if (this == &other) return *this;
         delete[] data;
-        data = new int[other.size];
         size = other.size;
+        data = new int[size]{};
         std::copy(other.data, other.data + size, data);
         return *this;
     }
 
-    // Move (steal the pointer — no allocation)
-    Buffer(Buffer&& other) noexcept : data(other.data), size(other.size) {
-        other.data = nullptr;  // leave source in valid state
+    // 4. Move constructor (steal pointer)
+    Buffer(Buffer&& other) noexcept
+        : data{other.data}, size{other.size} {
+        other.data = nullptr;
         other.size = 0;
     }
+
+    // 5. Move assignment (free old, steal pointer)
     Buffer& operator=(Buffer&& other) noexcept {
         if (this == &other) return *this;
         delete[] data;
@@ -2279,357 +6126,786 @@ public:
         other.size = 0;
         return *this;
     }
-
-    ~Buffer() { delete[] data; }
 };
 ```
 
-### The Practical Advice
+---
 
-1. **Default to Rule of Zero.** Use `std::vector`, `std::unique_ptr`, `std::string` for resources. Never define any of the five.
-2. If you **must** hold a raw resource (rare in modern C++), apply the Rule of Five.
-3. Use `= default` and `= delete` to explicitly control generation:
+## `= delete` and `= default`
+
+You can explicitly suppress or request the default implementation:
 
 ```cpp
-class NonCopyable {
+class Unique {
 public:
-    NonCopyable() = default;
-    NonCopyable(const NonCopyable&) = delete;             // disable copy
-    NonCopyable& operator=(const NonCopyable&) = delete;  // disable copy assign
-    NonCopyable(NonCopyable&&) = default;                 // allow move
-    NonCopyable& operator=(NonCopyable&&) = default;      // allow move assign
+    Unique() = default;                          // use compiler's default constructor
+
+    Unique(const Unique&) = delete;              // copying is forbidden
+    Unique& operator=(const Unique&) = delete;   // copy assignment is forbidden
+
+    Unique(Unique&&) = default;                  // move is fine, use default
+    Unique& operator=(Unique&&) = default;
+};
+
+Unique a;
+Unique b = a;             // COMPILE ERROR: copy constructor is deleted
+Unique c = std::move(a);  // OK: move is allowed
+```
+
+`= delete` is how `std::unique_ptr` prevents copying. It causes a clear compile error rather than a silent wrong-copy.
+
+`= default` explicitly requests the compiler-generated version, which is useful when you need to declare one special member (which inhibits some compiler-generated ones) but still want the defaults for others.
+
+---
+
+## Compiler-Generated Functions Are Suppressed When You Define Others
+
+The rules for when the compiler generates special members are complex. Key interactions:
+
+| You define | Compiler suppresses |
+|------------|-------------------|
+| Destructor | Move constructor, move assignment (still generates copy ops) |
+| Copy constructor | Default constructor, move constructor, move assignment |
+| Copy assignment | Move constructor, move assignment |
+| Move constructor | Copy constructor, copy assignment |
+| Move assignment | Copy constructor, copy assignment |
+
+This is why the Rule of Five says: if you define any one, define all five. Defining just a destructor silently disables move semantics, forcing expensive copies everywhere.
+
+---
+
+## The Practical Takeaway
+
+In priority order:
+
+1. **Rule of Zero** (best): use standard containers and smart pointers as members. The compiler generates correct defaults. No special member functions needed.
+
+2. **Rule of Five** (when you must own raw resources): write all five explicitly. This is mainly for implementing containers and RAII wrappers, not typical application code.
+
+3. Never write only a destructor without the others. The compiler's default copy does a shallow copy of raw pointers, leading to double-free crashes.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Shallow Copy of Owning Pointer (Forgetting Rule of Three)
+
+**The bug:**
+```cpp
+class Buffer {
+    int* data;
+public:
+    Buffer(int n) { data = new int[n]{}; }
+    ~Buffer() { delete[] data; }
+    // forgot copy constructor and copy assignment
+};
+
+Buffer a{10};
+Buffer b = a;    // compiler shallow-copies: b.data == a.data (same pointer!)
+// both destructors run: double-free crash
+```
+**The fix:** Implement copy constructor and copy assignment (or use `= delete` to forbid copying).
+
+### Mistake 2: Forgetting the Self-Assignment Guard
+
+**The bug:**
+```cpp
+Buffer& operator=(const Buffer& other) {
+    delete[] data;             // frees data
+    size = other.size;
+    data = new int[size]{};
+    std::copy(other.data, ...); // if other IS *this, other.data was just deleted!
+}
+// buf = buf; --> crash
+```
+**The fix:** `if (this == &other) return *this;` at the top of copy assignment.
+
+---
+
+## Exercises
+
+**Exercise 16.1 -- Rule of Zero or Three?**
+
+For each class, say whether the Rule of Zero (no user-defined specials needed) or Rule of Three/Five applies:
+
+```cpp
+struct Point { double x, y; };                          // (a)
+class Socket { int fd; public: Socket(int f):fd{f}{}    // (b)
+               ~Socket() { close(fd); } };
+struct Config { std::string name; std::vector<int> v; }; // (c)
+class RawArr { int* p; int n; public: RawArr(int n):p{new int[n]{}},n{n}{}
+               ~RawArr(){delete[]p;} };                  // (d)
+```
+
+*Answer:*
+- (a): Rule of Zero -- `double` members, no resource ownership. Compiler generates correct copy/move.
+- (b): Rule of Five -- owns a file descriptor (OS resource). Needs explicit copy/move handling (probably `= delete` for copy, custom move that sets `fd = -1`).
+- (c): Rule of Zero -- `std::string` and `std::vector` manage their own resources. Compiler generates correct defaults.
+- (d): Rule of Five -- owns a raw `int*`. Needs destructor (done), copy constructor (deep copy), copy assignment, move constructor (steal pointer), move assignment.
+
+---
+
+**Exercise 16.2 -- Complete the Rule of Five**
+
+Complete `RawArr` from the exercise above with all five special members. The copy should make a deep copy; the move should steal the pointer.
+
+*Answer:*
+```cpp
+class RawArr {
+    int* p;
+    int  n;
+public:
+    RawArr(int sz) : p{new int[sz]{}}, n{sz} {}
+
+    ~RawArr() { delete[] p; }
+
+    RawArr(const RawArr& o) : p{new int[o.n]{}}, n{o.n} {
+        std::copy(o.p, o.p + n, p);
+    }
+
+    RawArr& operator=(const RawArr& o) {
+        if (this == &o) return *this;
+        delete[] p;
+        n = o.n;
+        p = new int[n]{};
+        std::copy(o.p, o.p + n, p);
+        return *this;
+    }
+
+    RawArr(RawArr&& o) noexcept : p{o.p}, n{o.n} {
+        o.p = nullptr; o.n = 0;
+    }
+
+    RawArr& operator=(RawArr&& o) noexcept {
+        if (this == &o) return *this;
+        delete[] p;
+        p = o.p; n = o.n;
+        o.p = nullptr; o.n = 0;
+        return *this;
+    }
 };
 ```
 
-### Key Takeaways
+---
 
-- The compiler generates 6 special member functions. By default they do memberwise operations.
-- **Rule of Zero**: don't define any if you don't manage resources directly (the best case).
-- **Rule of Three**: if you manage a resource, define destructor + copy constructor + copy assignment.
-- **Rule of Five**: add move constructor + move assignment for efficiency.
-- Use `= delete` to explicitly prohibit copying. Use `= default` to explicitly request the compiler-generated version.
+*Part III is complete. You now understand the ownership model that makes C++ both safe and fast: RAII ties resource lifetime to object lifetime, smart pointers automate ownership, move semantics avoid unnecessary copies, and the Rule of Zero/Five ensures correct copy and move behavior for your own types.*
+
+*Part IV covers object-oriented programming -- classes, constructors, inheritance, virtual functions, and polymorphism. Ask to continue.*
 
 ---
 
----
+# Part IV -- Object-Oriented Programming
 
-# Part IV — Object-Oriented Programming
+C++ OOP looks similar to Python OOP on the surface -- both have classes, inheritance, and virtual dispatch. The differences are in where they live (stack vs heap), how they are initialized (constructor member initializer lists), what you must declare explicitly (virtual, override, abstract), and the performance implications of each choice.
 
 ---
 
 <a name="ch17"></a>
-## Chapter 17: Classes, Objects, and Encapsulation
+# Chapter 17: Classes, Objects, and Encapsulation
 
-### Classes in Python vs C++
-
-Python classes are straightforward:
+## Python Classes vs C++ Classes
 
 ```python
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-    
-    def distance_to(self, other):
-        return ((self.x - other.x)**2 + (self.y - other.y)**2) ** 0.5
+# Python class
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width        # no access control -- everything is public
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+r = Rectangle(3, 4)
+r.width = -5       # Python cannot stop this
+print(r.area())    # -20 -- corrupt state
 ```
 
-C++ classes are similar but with explicit access control and a declaration/definition split:
+```cpp
+// C++ class
+class Rectangle {
+public:                             // public interface
+    Rectangle(double w, double h);  // constructor declaration
+    double area() const;            // method declaration
+
+private:                            // hidden implementation
+    double width;                   // cannot be accessed from outside
+    double height;
+};
+```
+
+The key difference: **access specifiers**. C++ divides class members into:
+
+- `public`: accessible by anyone
+- `private`: accessible only by the class's own member functions
+- `protected`: accessible by the class and its derived classes (Chapter 19)
+
+In Python everything is public by convention (with `_` as a hint). In C++, `private` is enforced by the compiler.
+
+---
+
+## Defining a Class: Full Example
 
 ```cpp
-#include <cmath>
+// Rectangle.h
+#pragma once
+#include <string>
 
-class Point {
-public:                          // access specifier: anyone can access
-    double x;
-    double y;
+class Rectangle {
+public:
+    // Constructor
+    Rectangle(double width, double height);
 
-    Point(double x, double y) : x(x), y(y) {}  // constructor
+    // Const methods (do not modify the object)
+    double area()      const;
+    double perimeter() const;
+    std::string describe() const;
 
-    double distance_to(const Point& other) const {
-        double dx = x - other.x;
-        double dy = y - other.y;
-        return std::sqrt(dx*dx + dy*dy);
-    }
+    // Getters and setters with validation
+    double get_width()  const;
+    double get_height() const;
+    void   set_width(double w);
+    void   set_height(double h);
+
+private:
+    double width;
+    double height;
 };
+```
 
-int main() {
-    Point p1{1.0, 2.0};
-    Point p2{4.0, 6.0};
-    std::cout << p1.distance_to(p2) << "\n";  // 5.0
+```cpp
+// Rectangle.cpp
+#include "Rectangle.h"
+#include <stdexcept>
+#include <string>
+
+// Constructor: ClassName::method_name(params) { body }
+Rectangle::Rectangle(double w, double h) {
+    if (w <= 0 || h <= 0)
+        throw std::invalid_argument("Dimensions must be positive");
+    width  = w;
+    height = h;
+}
+
+double Rectangle::area()      const { return width * height; }
+double Rectangle::perimeter() const { return 2.0 * (width + height); }
+
+std::string Rectangle::describe() const {
+    return "Rectangle(" + std::to_string(width) + " x "
+                        + std::to_string(height) + ")";
+}
+
+double Rectangle::get_width()  const { return width; }
+double Rectangle::get_height() const { return height; }
+
+void Rectangle::set_width(double w) {
+    if (w <= 0) throw std::invalid_argument("Width must be positive");
+    width = w;
+}
+void Rectangle::set_height(double h) {
+    if (h <= 0) throw std::invalid_argument("Height must be positive");
+    height = h;
 }
 ```
 
-### Access Specifiers
-
-C++ has three access levels. Python relies on convention (`_private`, `__mangled`); C++ enforces them at compile time.
-
 ```cpp
-class BankAccount {
-public:      // accessible from anywhere
-    std::string owner_name;
-    
-    void deposit(double amount) { balance += amount; }
-    double get_balance() const { return balance; }
+// main.cpp
+#include <iostream>
+#include "Rectangle.h"
 
-protected:   // accessible from this class and derived classes
-    double balance = 0.0;
+int main() {
+    Rectangle r{3.0, 4.0};           // calls constructor
+    std::cout << r.area()       << "\n";  // 12
+    std::cout << r.perimeter()  << "\n";  // 14
+    std::cout << r.describe()   << "\n";  // Rectangle(3.000000 x 4.000000)
 
-private:     // accessible ONLY from within this class
-    int account_number;
-    std::string pin;
-};
+    r.set_width(5.0);
+    std::cout << r.area() << "\n";   // 20
 
-BankAccount acct;
-acct.deposit(100.0);         // OK — public
-acct.get_balance();          // OK — public
-// acct.balance;             // depends — protected (not accessible here)
-// acct.pin;                 // ERROR — private
+    // r.width = -1;   // COMPILE ERROR: 'width' is private
+    // r.set_width(-1); // throws std::invalid_argument at runtime
+}
 ```
 
-The default access in a `class` is `private`. In a `struct`, it's `public`. This is the only difference between `class` and `struct` in C++ — use `struct` for plain data, `class` for things with invariants.
+---
 
-### `this` Pointer
+## `struct` vs `class`
 
-Inside a member function, `this` is a pointer to the current object (like Python's `self`):
+In C++, `struct` and `class` are almost identical. The only difference: `struct` members are `public` by default; `class` members are `private` by default.
+
+```cpp
+struct Point {       // members are public by default
+    double x, y;
+};
+
+class Point2 {       // members are private by default
+    double x, y;     // these are private
+};
+
+Point  p{1.0, 2.0};   // p.x accessible
+Point2 q{1.0, 2.0};   // q.x NOT accessible (private)
+```
+
+Convention:
+- Use `struct` for simple data aggregates with no invariants to protect (Point, Color, Size)
+- Use `class` when you need access control and invariants (Rectangle must have positive dimensions)
+
+---
+
+## Memory Layout of a Class
+
+```cpp
+class Vec2 {
+    float x;   // 4 bytes
+    float y;   // 4 bytes
+};
+
+Vec2 v{1.0f, 2.0f};
+```
+
+```
+Stack (or wherever v lives):
+
+Address    Member    Bytes
+0x1000     x (float) [00][00][80][3F]   <- 1.0f in IEEE 754
+0x1004     y (float) [00][00][00][40]   <- 2.0f in IEEE 754
+
+sizeof(Vec2) == 8  (same as two separate floats)
+```
+
+There is no hidden per-object overhead from member functions. Functions exist once in the `.text` section of the executable. The object just holds data.
+
+```
+Code (compiled once, shared by all Vec2 instances):
+.text:
+  Vec2::area():
+    mov eax, [this+0]   <- reads this->x
+    ...
+```
+
+The `this` pointer (implicit first parameter of every member function) tells the function which object to operate on.
+
+---
+
+## `this` Pointer
+
+Inside any non-static member function, `this` is a pointer to the current object:
 
 ```cpp
 class Counter {
-    int value = 0;
+    int count{0};
 public:
     Counter& increment() {
-        ++value;
-        return *this;  // return reference to self — enables chaining
+        ++count;      // same as: ++(this->count)
+        return *this; // return reference to self (enables chaining)
     }
-    int get() const { return value; }
+    int get() const { return count; }
 };
 
 Counter c;
-c.increment().increment().increment();  // method chaining
-std::cout << c.get();  // 3
+c.increment().increment().increment();   // method chaining
+std::cout << c.get();   // 3
 ```
 
-Python makes `self` explicit. C++ makes `this` implicit (you don't have to name it in the parameter list) but accessible when needed.
+`return *this` returns a reference to the object itself, allowing `.method()` to be called immediately on the result. This pattern (fluent interface / method chaining) is common in builder classes.
 
-### Separating Declaration and Definition
+---
 
-For real projects, class declarations go in headers and method definitions go in source files:
+## Static Members
+
+`static` data members and methods belong to the **class**, not to any individual object:
 
 ```cpp
-// point.h
-#pragma once
+class Player {
+    std::string name;
+    static int  player_count;    // shared across ALL Player objects
 
-class Point {
 public:
-    double x, y;
-    Point(double x, double y);
-    double distance_to(const Point& other) const;
+    Player(std::string n) : name{n} { ++player_count; }
+    ~Player()                       { --player_count; }
+
+    static int get_count() { return player_count; }
+    // static methods have no 'this' -- cannot access non-static members
 };
 
-// point.cpp
-#include "point.h"
-#include <cmath>
+int Player::player_count = 0;   // definition outside the class (required)
 
-Point::Point(double x, double y) : x(x), y(y) {}
+Player p1{"Alice"};
+Player p2{"Bob"};
+std::cout << Player::get_count() << "\n";  // 2  (call via class name)
+{
+    Player p3{"Carol"};
+    std::cout << Player::get_count() << "\n";  // 3
+}   // p3 destroyed
+std::cout << Player::get_count() << "\n";  // 2
+```
 
-double Point::distance_to(const Point& other) const {
-    double dx = x - other.x;
-    double dy = y - other.y;
-    return std::sqrt(dx*dx + dy*dy);
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting the `::` Scope Resolution in the `.cpp` File
+
+**The bug:**
+```cpp
+// Rectangle.cpp
+double area() const {   // ERROR: this defines a FREE function named area,
+    return width * height;  // not Rectangle::area. 'width' is not in scope.
 }
 ```
+**The fix:** `double Rectangle::area() const { return width * height; }`
 
-`Point::` is the *scope resolution operator* — it says "this function belongs to the `Point` class."
+### Mistake 2: Calling a Non-const Method on a Const Object
 
-### Encapsulation: Why It Matters
-
-Encapsulation means hiding implementation details and exposing a controlled interface. The user of `BankAccount` shouldn't directly manipulate `balance` — they should go through `deposit`/`withdraw` which can enforce business rules (no negative balance, audit logging, etc.).
-
+**The bug:**
 ```cpp
-class Temperature {
-    double celsius;
+const Rectangle r{3.0, 4.0};
+r.set_width(5.0);   // ERROR: set_width is non-const (it modifies the object)
+```
+**Compiler message:**
+```
+error: passing 'const Rectangle' as 'this' argument discards qualifiers
+```
+**The fix:** Either remove `const` from the object, or don't call mutating methods on const objects.
+
+### Mistake 3: Forgetting to Define Static Members
+
+**The bug:**
+```cpp
+class Foo { static int count; };
+// Forgot: int Foo::count = 0;
+// Linker error: undefined reference to 'Foo::count'
+```
+**The fix:** Static data members must be defined exactly once in a `.cpp` file.
+
+---
+
+## Exercises
+
+**Exercise 17.1 -- Design a class**
+
+Design a `BankAccount` class with:
+- Private `balance` (double, starts at 0)
+- `deposit(double amount)` -- adds to balance (reject negative amounts)
+- `withdraw(double amount)` -- subtracts (reject if insufficient funds)
+- `get_balance() const` -- returns balance
+
+*Answer:*
+```cpp
+class BankAccount {
+    double balance{0.0};
 public:
-    Temperature(double c) : celsius(c) {}
-    
-    double get_celsius()    const { return celsius; }
-    double get_fahrenheit() const { return celsius * 9.0/5.0 + 32.0; }
-    double get_kelvin()     const { return celsius + 273.15; }
-    
-    void set_celsius(double c) {
-        if (c < -273.15) throw std::invalid_argument("Below absolute zero");
-        celsius = c;
+    void deposit(double amount) {
+        if (amount <= 0) throw std::invalid_argument("Amount must be positive");
+        balance += amount;
     }
+    void withdraw(double amount) {
+        if (amount <= 0)      throw std::invalid_argument("Amount must be positive");
+        if (amount > balance) throw std::runtime_error("Insufficient funds");
+        balance -= amount;
+    }
+    double get_balance() const { return balance; }
 };
 ```
 
-The internal representation is `celsius`. The class exposes conversions. If you later switch the internal representation to kelvin, none of the users' code changes — only the implementation.
+---
 
-### Key Takeaways
+**Exercise 17.2 -- Const correctness**
 
-- `public`, `protected`, `private` control access. `class` defaults to private; `struct` to public.
-- `this` is an implicit pointer to the current object (like Python's `self`, but a pointer).
-- Separate declaration (`.h`) from definition (`.cpp`) for non-trivial classes.
-- Encapsulation: expose methods, hide data. Invariants are enforced in methods, not by trusting callers.
+Which of these methods should be `const`?
+
+```cpp
+class Circle {
+    double radius;
+public:
+    void    set_radius(double r) { radius = r; }
+    double  get_radius()        { return radius; }
+    double  area()              { return 3.14159 * radius * radius; }
+    bool    is_unit_circle()    { return radius == 1.0; }
+};
+```
+
+*Answer:* `get_radius()`, `area()`, and `is_unit_circle()` should all be `const` -- none of them modify `radius`. `set_radius()` cannot be `const` because it assigns to `radius`.
 
 ---
 
 <a name="ch18"></a>
-## Chapter 18: Constructors, Destructors, and Initialization
+# Chapter 18: Constructors, Destructors, and Initialization
 
-### Constructors
+## The Member Initializer List
 
-Constructors initialize objects. A class can have multiple constructors (overloaded). They have the same name as the class and no return type.
+C++ constructors have a special syntax for initializing members **before the constructor body runs**. This is the **member initializer list**, the `:` clause between the parameter list and `{`:
 
 ```cpp
-class Rectangle {
-    double width, height;
-public:
-    Rectangle() : width(0), height(0) {}              // default constructor
-    Rectangle(double w, double h) : width(w), height(h) {}  // parameterized
-    Rectangle(double side) : width(side), height(side) {}   // square
-    
-    double area() const { return width * height; }
-};
+class Particle {
+    double x, y;
+    double vx, vy;
+    std::string name;
 
-Rectangle r1;           // default constructor
-Rectangle r2(3.0, 4.0); // parameterized
-Rectangle r3(5.0);      // square
-Rectangle r4{3.0, 4.0}; // uniform initialization (preferred)
+public:
+    // WITHOUT member initializer list (suboptimal):
+    Particle(double px, double py, std::string n) {
+        x    = px;   // assignment (not initialization)
+        y    = py;   // members are default-constructed first, then assigned
+        vx   = 0.0;
+        vy   = 0.0;
+        name = n;    // name is default-constructed to "" then copy-assigned
+    }
+
+    // WITH member initializer list (correct and efficient):
+    Particle(double px, double py, std::string n)
+        : x{px}, y{py}, vx{0.0}, vy{0.0}, name{std::move(n)}
+    {   // body runs after all members are initialized
+    }
+};
 ```
 
-### Member Initializer Lists
+The member initializer list directly constructs each member with the given value. The assignment version first default-constructs each member, then overwrites it -- two operations instead of one.
 
-The `: width(w), height(h)` syntax is a *member initializer list*. It initializes members **before** the constructor body runs.
+For `std::string`, `std::vector`, and any class type, always use the initializer list. For `const` members and reference members, the initializer list is not optional -- they **cannot** be assigned after construction:
+
+```cpp
+class Fixed {
+    const int id;
+    int& ref;
+public:
+    Fixed(int i, int& r) : id{i}, ref{r} {}  // MUST use initializer list
+    // id = i;  // COMPILE ERROR: cannot assign to const member
+};
+```
+
+### Initialization Order
+
+Members are initialized in the **order they are declared in the class**, not the order they appear in the initializer list:
+
+```cpp
+class Tricky {
+    int a;
+    int b;
+public:
+    Tricky(int x) : b{x}, a{b}  // WARNING: a is initialized before b!
+    {}
+    // a is initialized with b's value, but b hasn't been initialized yet
+    // 'a' gets garbage
+};
+```
+
+**Rule:** Put initializers in the same order as the declarations. Most compilers warn about order mismatches with `-Wall`.
+
+---
+
+## Delegating Constructors (C++11)
+
+One constructor can call another constructor of the same class:
+
+```cpp
+class Vec3 {
+    double x, y, z;
+public:
+    Vec3(double x, double y, double z) : x{x}, y{y}, z{z} {}
+
+    // Delegate to the main constructor:
+    Vec3()               : Vec3{0.0, 0.0, 0.0} {}   // zero vector
+    Vec3(double uniform) : Vec3{uniform, uniform, uniform} {}
+};
+
+Vec3 origin;       // (0, 0, 0)
+Vec3 ones{1.0};    // (1, 1, 1)
+Vec3 point{1.0, 2.0, 3.0};
+```
+
+---
+
+## Constructor Kinds
+
+### Default Constructor
+
+Called when no arguments are provided:
 
 ```cpp
 class Foo {
-    int x;
-    int y;
 public:
-    // Good: uses initializer list
-    Foo(int x, int y) : x(x), y(y) {}
-    
-    // Bad: assignment in body (default-constructs first, then assigns)
-    Foo(int x, int y) { this->x = x; this->y = y; }
+    Foo() { std::cout << "default constructed\n"; }
 };
+Foo f;              // calls Foo()
+Foo g{};            // also calls Foo()
+std::vector<Foo> v(5);  // calls Foo() five times
 ```
 
-For `const` members and reference members, the initializer list is not optional — they *must* be initialized in the list (you can't assign to const or references after construction).
+If you declare **any** constructor, the compiler no longer generates a default constructor automatically. Add `Foo() = default;` to get it back.
 
-Members are initialized in **declaration order**, not the order in the initializer list. The compiler warns if the order disagrees.
-
-### `explicit` Constructors
-
-A single-argument constructor can accidentally convert:
+### Explicit Constructor (Prevent Implicit Conversion)
 
 ```cpp
-class Kg {
+class Radius {
     double value;
 public:
-    Kg(double v) : value(v) {}
+    Radius(double v) : value{v} {}   // implicit: Radius r = 5.0; works
 };
 
-void weigh(Kg mass) { /* ... */ }
-weigh(75.0);  // silently converts double to Kg — OK? or bug?
-```
-
-Mark single-argument constructors `explicit` to prevent implicit conversion:
-
-```cpp
-class Kg {
+class SafeRadius {
     double value;
 public:
-    explicit Kg(double v) : value(v) {}
+    explicit SafeRadius(double v) : value{v} {}  // explicit: no implicit conversion
 };
 
-weigh(75.0);          // COMPILE ERROR — no implicit conversion
-weigh(Kg{75.0});      // OK — explicit construction
+Radius    r1 = 5.0;        // OK: implicit conversion double -> Radius
+SafeRadius r2 = 5.0;        // ERROR: explicit constructor cannot convert implicitly
+SafeRadius r3{5.0};         // OK: direct initialization always works
+SafeRadius r4(5.0);         // OK: direct initialization
+
+void process(Radius r) {}
+process(5.0);               // OK for Radius (implicit conversion allowed)
+process(SafeRadius{5.0});   // OK: explicit construction then pass
 ```
 
-### Delegating Constructors (C++11)
+Use `explicit` for single-argument constructors to prevent surprising implicit conversions. `std::vector(int)` is `explicit` -- `std::vector<int> v = 5;` would be confusing.
 
-Constructors can call other constructors:
+---
+
+## Destructor Revisited: The Full Rules
 
 ```cpp
-class Circle {
-    double x, y, radius;
+class Resource {
+    int* data;
 public:
-    Circle(double x, double y, double r) : x(x), y(y), radius(r) {}
-    Circle(double r) : Circle(0.0, 0.0, r) {}   // delegates to the 3-arg ctor
-    Circle()         : Circle(1.0) {}             // delegates to the 1-arg ctor
+    Resource()  : data{new int[100]{}} { std::cout << "acquired\n"; }
+    ~Resource()                        { delete[] data; std::cout << "released\n"; }
 };
 ```
 
-### Destructors
+Destructors are called:
+1. **When a local variable goes out of scope** (stack unwinding)
+2. **When `delete` is called** on a heap-allocated object
+3. **When a container element is removed** (`vector::pop_back`, etc.)
+4. **When a member variable's owner is destroyed** (member destructors run after the owner's destructor body)
 
-Covered in RAII (Chapter 12), but a few more details:
+The destructor call order for members is the **reverse of construction order**.
 
-- There is exactly one destructor per class. No overloading, no parameters.
-- If you don't define one, the compiler generates one that destructs members in reverse declaration order.
-- In a class hierarchy with virtual functions, the base class destructor **must** be `virtual` (Chapter 20).
+---
+
+## In-Class Member Initializers (C++11)
+
+Members can have default values directly in the class definition:
 
 ```cpp
-class FileWriter {
-    std::ofstream file;  // std::ofstream is RAII — closes in destructor
+class Config {
+    int    width{1920};       // default: 1920
+    int    height{1080};      // default: 1080
+    bool   fullscreen{false}; // default: false
+    std::string title{"My App"};
+
 public:
-    FileWriter(const std::string& path) : file(path) {}
-    void write(const std::string& s) { file << s; }
-    // No explicit destructor needed — ofstream's destructor closes the file
-};
-```
+    Config() = default;   // uses all defaults above
 
-### Aggregate Initialization
-
-Structs (or classes with all public members and no user-provided constructors) can be initialized with `{}` directly:
-
-```cpp
-struct Color {
-    float r, g, b, a;
+    Config(int w, int h)  // overrides width and height, keeps other defaults
+        : width{w}, height{h} {}
 };
 
-Color red  = {1.0f, 0.0f, 0.0f, 1.0f};  // aggregate init
-Color blue{0.0f, 0.0f, 1.0f, 1.0f};     // equivalent
+Config default_cfg;       // 1920x1080, windowed, "My App"
+Config custom{800, 600};  // 800x600, windowed, "My App"
 ```
 
-### `= default` and `= delete`
+This is the cleanest way to set defaults. Prefer it over setting values in the constructor body.
 
-Request or suppress generated functions:
+---
 
+## Common Mistakes in This Chapter
+
+### Mistake 1: Initializer List Order Different From Declaration Order
+
+**The bug:**
 ```cpp
-class Singleton {
+class Pair {
+    int second;   // declared first
+    int first;    // declared second
 public:
-    static Singleton& instance() {
-        static Singleton s;
-        return s;
+    Pair(int f, int s) : first{f}, second{s} {}
+    // first is initialized with f -- but second is initialized FIRST (declaration order)
+    // and second{s} is fine since s is not dependent on first
+    // If instead: Pair(int x) : first{x}, second{first*2}{}
+    // then second = first*2 but first hasn't been initialized yet!
+};
+```
+**The fix:** Keep initializer list order matching declaration order.
+
+### Mistake 2: Missing `explicit` on Converting Constructor
+
+**The bug:**
+```cpp
+class Seconds { double val; public: Seconds(double v):val{v}{} };
+void wait(Seconds s) { ... }
+wait(100);   // Did you mean 100 seconds? Or was 100 an int you forgot to convert?
+```
+**The fix:** `explicit Seconds(double v)` forces `wait(Seconds{100})` -- the intent is clear.
+
+---
+
+## Exercises
+
+**Exercise 18.1 -- Rewrite with initializer list**
+
+Rewrite this constructor to use a member initializer list:
+
+```cpp
+class Player {
+    std::string name;
+    int hp;
+    int max_hp;
+public:
+    Player(std::string n, int health) {
+        name   = n;
+        hp     = health;
+        max_hp = health;
     }
-    Singleton(const Singleton&) = delete;             // no copying
-    Singleton& operator=(const Singleton&) = delete;  // no copy assign
-private:
-    Singleton() = default;  // private default constructor
 };
 ```
 
-### Key Takeaways
+*Answer:*
+```cpp
+Player(std::string n, int health)
+    : name{std::move(n)}, hp{health}, max_hp{health} {}
+```
+`std::move(n)` avoids copying the string (since `n` is a value parameter, it's a local copy we can move from).
 
-- Use member initializer lists, not body assignments. They're more efficient and required for `const`/reference members.
-- `explicit` prevents accidental implicit conversions from single-argument constructors.
-- Delegating constructors let constructors call each other to reduce duplication.
-- `= default` and `= delete` control compiler-generated functions explicitly.
+---
+
+**Exercise 18.2 -- Delegating constructors**
+
+Write a `Color` class with `r`, `g`, `b` components (0.0-1.0 doubles). Provide:
+- A full 3-argument constructor
+- A grayscale constructor taking one value (sets r=g=b)
+- A default constructor (black: 0,0,0)
+
+Use delegating constructors.
+
+*Answer:*
+```cpp
+class Color {
+    double r, g, b;
+public:
+    Color(double r, double g, double b) : r{r}, g{g}, b{b} {}
+    Color(double gray)  : Color{gray, gray, gray} {}
+    Color()             : Color{0.0} {}
+};
+```
 
 ---
 
 <a name="ch19"></a>
-## Chapter 19: Inheritance and Composition
+# Chapter 19: Inheritance and Composition
 
-### Two Ways to Reuse Code
+## Two Kinds of Reuse
 
-**Composition** — "has-a": A `Car` has an `Engine`. The class contains an instance of another class as a member.
+When one class needs functionality from another, you have two options:
 
-**Inheritance** — "is-a": A `Dog` is an `Animal`. The class derives from another class, inheriting its members and interface.
+- **Inheritance ("is-a")**: `Dog` is-a `Animal`. `Dog` inherits from `Animal`.
+- **Composition ("has-a")**: `Car` has-a `Engine`. `Car` has an `Engine` as a member.
 
-Python uses both. C++ uses both, but the details differ.
+Python programmers often overuse inheritance. Prefer composition in C++ (and generally): it is more flexible and avoids the tight coupling that inheritance creates.
 
-### Inheritance Syntax
+---
+
+## Inheritance Syntax
 
 ```python
 # Python
@@ -2647,165 +6923,252 @@ class Dog(Animal):
 ```cpp
 // C++
 class Animal {
-protected:
+protected:             // accessible by Animal and derived classes
     std::string name;
 public:
-    Animal(std::string n) : name(std::move(n)) {}
+    Animal(const std::string& n) : name{n} {}
+    std::string get_name() const { return name; }
     virtual std::string speak() const { return "..."; }
+    virtual ~Animal() {}   // virtual destructor -- explained in Chapter 20
 };
 
-class Dog : public Animal {        // Dog inherits from Animal
+class Dog : public Animal {    // Dog inherits publicly from Animal
 public:
-    Dog(std::string n) : Animal(std::move(n)) {}  // call base constructor
+    Dog(const std::string& n) : Animal{n} {}   // must call base constructor
+
     std::string speak() const override { return "Woof"; }
+    //                            ^--- override keyword (C++11): verifies this
+    //                                 actually overrides a virtual base method
 };
 ```
 
-The `: public Animal` means `Dog` publicly inherits from `Animal`. `public` inheritance means the `public`/`protected` interface of `Animal` is preserved in `Dog`.
+### The `public` Inheritance Keyword
 
-### Constructor Chaining
+`class Dog : public Animal` -- the `public` here controls how the base class's access specifiers are inherited:
 
-Derived class constructors must call the base class constructor (explicitly or implicitly if there's a default constructor):
+| Inheritance type | public becomes | protected becomes | private becomes |
+|------------------|---------------|-------------------|-----------------|
+| `public`         | public        | protected         | inaccessible    |
+| `protected`      | protected     | protected         | inaccessible    |
+| `private`        | private       | private           | inaccessible    |
 
-```cpp
-class Vehicle {
-    int year;
-public:
-    Vehicle(int y) : year(y) {}
-    int get_year() const { return year; }
-};
+Almost always use `public` inheritance. `private` and `protected` inheritance are rare, specialized tools.
 
-class Car : public Vehicle {
-    std::string model;
-public:
-    Car(std::string m, int y) : Vehicle(y), model(std::move(m)) {}
-    //                           ^^^^^^^^^^
-    //                           call base constructor first
-};
-```
+---
 
-### `protected` Members
+## Constructors in Derived Classes
 
-`protected` members are accessible from the class itself *and* derived classes, but not from outside:
+A derived class constructor **must** call the base class constructor:
 
 ```cpp
-class Animal {
-protected:
-    int energy = 100;   // derived classes can access this
-private:
-    int dna_sequence;   // derived classes cannot access this
-};
-
-class Dog : public Animal {
-public:
-    void eat() { energy += 20; }  // OK — energy is protected
-};
-```
-
-### Composition vs Inheritance
-
-Prefer composition over inheritance for code reuse. Use inheritance only when you need polymorphism (the ability to treat derived objects as the base type).
-
-```cpp
-// Composition (prefer this for reuse):
-class Logger {
-public:
-    void log(const std::string& msg) { std::cout << msg << "\n"; }
-};
-
-class Server {
-    Logger logger;   // Server HAS a Logger
-public:
-    void handle_request() {
-        logger.log("Request received");
-        // ...
-    }
-};
-
-// Inheritance (use when polymorphism is needed):
 class Shape {
+    std::string color;
 public:
-    virtual double area() const = 0;  // pure virtual — must override
+    Shape(const std::string& c) : color{c} {}
+    std::string get_color() const { return color; }
 };
 
 class Circle : public Shape {
     double radius;
 public:
-    Circle(double r) : radius(r) {}
-    double area() const override { return 3.14159 * radius * radius; }
+    Circle(double r, const std::string& c)
+        : Shape{c}       // must explicitly call base constructor
+        , radius{r}      // then initialize own members
+    {}
+    double area() const { return 3.14159 * radius * radius; }
 };
 ```
 
-### Multiple Inheritance
+If the base class has no default constructor, the derived class **must** explicitly call a base constructor in its initializer list. The base part is always constructed first, before the derived members.
 
-C++ allows a class to inherit from multiple bases. Python does too, but C++ adds complexity:
+---
+
+## Memory Layout With Inheritance
 
 ```cpp
-class Flyable {
-public:
-    virtual void fly() = 0;
+class Base {
+    int x;   // 4 bytes
+    int y;   // 4 bytes
 };
 
-class Swimmable {
-public:
-    virtual void swim() = 0;
+class Derived : public Base {
+    int z;   // 4 bytes
 };
 
-class Duck : public Animal, public Flyable, public Swimmable {
+Derived d;
+```
+
+```
+Memory layout of d (Derived):
+
+Address    Member      Size
+0x1000     x (Base)    4 bytes    <- Base part comes first
+0x1004     y (Base)    4 bytes
+0x1008     z (Derived) 4 bytes    <- Derived's own members after
+
+sizeof(Derived) == 12
+```
+
+The base class subobject lives at the beginning of the derived object's memory. A pointer to `Derived` is also a valid pointer to `Base` (just points to the same address -- the Base subobject is right there).
+
+---
+
+## Slicing: The Object-Oriented Trap
+
+```cpp
+Animal a = Dog{"Rex"};   // BAD: Dog is sliced into an Animal!
+a.speak();               // calls Animal::speak, not Dog::speak -- "..."
+```
+
+When you copy a `Dog` into an `Animal` variable, only the `Animal` part is copied. The `Dog`-specific data is sliced off. The object is now truly just an `Animal`.
+
+```
+Before slice:                After slice:
++-------------------+        +-------------------+
+| Dog               |        | Animal            |
+|   name: "Rex"     | -->    |   name: "Rex"     |
+|   (Dog data)      |        | (Dog data GONE)   |
++-------------------+        +-------------------+
+```
+
+To avoid slicing, use pointers or references to the base class:
+
+```cpp
+// Correct: pointer to Animal, no slicing
+std::unique_ptr<Animal> a = std::make_unique<Dog>("Rex");
+a->speak();   // "Woof" -- polymorphic dispatch (Chapter 20)
+
+// Correct: reference to Animal, no slicing
+Dog dog{"Rex"};
+Animal& ref = dog;
+ref.speak();  // "Woof" -- polymorphic dispatch
+```
+
+---
+
+## Composition vs Inheritance
+
+Most "is-a" relationships in the real world are actually "can-do" or "has-a". Prefer composition:
+
+```cpp
+// Inheritance: Engine IS-A Vehicle? No. Engine is part of Vehicle.
+class Engine { void start(); void stop(); };
+class CarBad : public Engine {};    // wrong: Car is NOT an Engine
+
+// Composition: Car HAS-A Engine
+class CarGood {
+    Engine engine;   // Engine is a component
 public:
-    Duck(std::string n) : Animal(std::move(n)) {}
-    std::string speak() const override { return "Quack"; }
-    void fly() override { std::cout << "Duck flying\n"; }
-    void swim() override { std::cout << "Duck swimming\n"; }
+    void start() { engine.start(); }
 };
 ```
 
-Diamond inheritance (where a class inherits from two classes that both inherit from the same base) requires `virtual` inheritance to avoid duplicating the base. It's complex; avoid if possible.
+**Prefer composition when:**
+- You need the functionality of another class but are not that class
+- You want to change the implementation later without affecting callers
+- You want to combine multiple behaviors (C++ has single inheritance)
 
-### Key Takeaways
+**Use inheritance when:**
+- There is a genuine "is-a" relationship
+- You need polymorphic dispatch (Chapter 20) through a common base pointer
 
-- `: public Base` is the inheritance syntax. Access public base members with derived-class code.
-- Derived constructors must call the base constructor via the initializer list.
-- `protected` is accessible in derived classes but not from outside the hierarchy.
-- Composition ("has-a") is usually better than inheritance for code reuse. Use inheritance for "is-a" polymorphism.
-- C++ supports multiple inheritance but it adds complexity.
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting to Call the Base Constructor
+
+**The bug:**
+```cpp
+class Derived : public Base {
+public:
+    Derived(int x) { ... }   // Base's constructor never called!
+    // If Base has no default constructor: compile error
+    // If Base has a default constructor: it is called, possibly not what you want
+};
+```
+**The fix:** `Derived(int x) : Base{...} { ... }`
+
+### Mistake 2: Object Slicing
+
+**The bug:**
+```cpp
+void process(Animal a) { a.speak(); }  // takes by value -- slices!
+process(Dog{"Rex"});    // Dog is sliced to Animal; speak() returns "..."
+```
+**The fix:** `void process(const Animal& a)` or `void process(Animal* a)` -- reference/pointer avoids slicing.
+
+---
+
+## Exercises
+
+**Exercise 19.1 -- Class hierarchy**
+
+Design a small hierarchy: `Shape` (base), `Rectangle` and `Circle` (derived). Each should have `area() const` and `perimeter() const`. Use composition or inheritance as appropriate.
+
+*Answer (abbreviated):*
+```cpp
+class Shape {
+public:
+    virtual double area()      const = 0;   // pure virtual (Chapter 21)
+    virtual double perimeter() const = 0;
+    virtual ~Shape() {}
+};
+
+class Rectangle : public Shape {
+    double w, h;
+public:
+    Rectangle(double w, double h) : w{w}, h{h} {}
+    double area()      const override { return w * h; }
+    double perimeter() const override { return 2*(w+h); }
+};
+
+class Circle : public Shape {
+    double r;
+public:
+    Circle(double r) : r{r} {}
+    double area()      const override { return 3.14159265 * r * r; }
+    double perimeter() const override { return 2 * 3.14159265 * r; }
+};
+```
 
 ---
 
 <a name="ch20"></a>
-## Chapter 20: Virtual Functions and Polymorphism
+# Chapter 20: Virtual Functions and Polymorphism
 
-### The Problem Without `virtual`
-
-Without virtual functions, function calls resolve at compile time based on the static type of the variable:
+## The Problem Without Virtual
 
 ```cpp
 class Animal {
 public:
-    std::string speak() const { return "..."; }
+    std::string speak() const { return "..."; }   // not virtual
 };
 
 class Dog : public Animal {
 public:
-    std::string speak() const { return "Woof"; }
+    std::string speak() const { return "Woof"; }  // hides, not overrides
 };
 
-Animal* p = new Dog();
-std::cout << p->speak();  // "..." — calls Animal::speak!
-                          // because p's static type is Animal*
+Animal* a = new Dog{};
+std::cout << a->speak();  // "..." -- calls Animal::speak, not Dog::speak!
 ```
 
-This is probably not what you want. You want to call `Dog::speak` because the object is actually a `Dog`.
+Without `virtual`, the function called is determined by the **type of the pointer** at compile time. `a` is `Animal*`, so `Animal::speak` is called. The fact that the object is actually a `Dog` is ignored.
 
-### Virtual Functions
+This is called **static dispatch** (compile-time resolution).
 
-Mark a function `virtual` in the base class. Now calls resolve at *runtime* based on the actual object type (dynamic dispatch):
+---
+
+## `virtual` Enables Dynamic Dispatch
+
+Adding `virtual` tells the compiler to resolve the call at **runtime** based on the actual type of the object:
 
 ```cpp
 class Animal {
 public:
     virtual std::string speak() const { return "..."; }
-    virtual ~Animal() {}  // ALWAYS make destructor virtual in polymorphic bases
+    virtual ~Animal() {}   // always virtual destructor in polymorphic base classes
 };
 
 class Dog : public Animal {
@@ -2818,111 +7181,270 @@ public:
     std::string speak() const override { return "Meow"; }
 };
 
-Animal* p = new Dog();
-std::cout << p->speak();  // "Woof" — calls Dog::speak at runtime
+Animal* a1 = new Dog{};
+Animal* a2 = new Cat{};
+std::cout << a1->speak() << "\n";  // "Woof" -- dynamic dispatch to Dog::speak
+std::cout << a2->speak() << "\n";  // "Meow" -- dynamic dispatch to Cat::speak
+delete a1;
+delete a2;
+```
+
+The same pointer type (`Animal*`), the same call (`->speak()`), different behavior based on what the pointer actually points to. This is **runtime polymorphism**.
+
+---
+
+## How Virtual Dispatch Works: The vtable
+
+For each class with virtual functions, the compiler creates a **vtable** (virtual function table): an array of function pointers, one per virtual function.
+
+Each object of a polymorphic class has a hidden **vptr** (vtable pointer) pointing to its class's vtable:
+
+```
+Memory layout of a Dog object (with virtual speak):
+
++--------------------+
+| vptr -----------> Dog's vtable:
+|                    |  [0] --> Dog::speak()
+| name (string)      |  [1] --> Dog::~Dog()
++--------------------+
+
+Memory layout of a Cat object:
+
++--------------------+
+| vptr -----------> Cat's vtable:
+|                    |  [0] --> Cat::speak()
+| name (string)      |  [1] --> Cat::~Cat()
++--------------------+
+```
+
+When you call `a->speak()`:
+1. Load `a` (the pointer)
+2. Follow `a` to the object
+3. Load `vptr` from the object (first bytes of the object)
+4. Index into the vtable: `vptr[0]`
+5. Call the function pointer found there
+
+The overhead: one pointer dereference and one indirect call. Tiny but non-zero. For hot inner loops, this matters (Chapter 38 covers alternatives).
+
+---
+
+## `override` and `final` (C++11)
+
+`override` tells the compiler to verify that this function actually overrides a virtual base function. Without it, a typo silently creates a new function instead:
+
+```cpp
+class Animal {
+    virtual std::string speak() const { return "..."; }
+};
+
+class Dog : public Animal {
+    std::string speek() const { return "Woof"; }  // typo! No error without override.
+    // Does not override speak(). Dog::speek is a new function.
+    // Animal::speak is still called for Dog objects via base pointer.
+};
+
+class DogCorrect : public Animal {
+    std::string speek() const override { return "Woof"; }
+    // ERROR: 'speek' does not override any virtual function
+    //        Compiler catches the typo.
+};
+```
+
+Always use `override`. No downside, catches bugs.
+
+`final` prevents further overriding (for a method) or prevents inheritance (for a class):
+
+```cpp
+class SafeAnimal : public Animal {
+    std::string speak() const override final { return "safe"; }
+    // no derived class can override speak() anymore
+};
+
+class Terminal final : public Animal { ... };
+// class Sub : public Terminal {};  // ERROR: Terminal is final
+```
+
+---
+
+## Virtual Destructor: Why It Is Required
+
+```cpp
+class Base {
+public:
+    ~Base() { std::cout << "Base destroyed\n"; }  // NOT virtual
+};
+
+class Derived : public Base {
+    int* data;
+public:
+    Derived() : data{new int[100]{}} {}
+    ~Derived() { delete[] data; std::cout << "Derived destroyed\n"; }
+};
+
+Base* p = new Derived{};
+delete p;   // calls Base::~Base ONLY -- Derived::~Derived never called!
+            // 'data' is leaked every time
+```
+
+When you `delete` through a base class pointer and the destructor is not virtual, only the base class destructor is called. The derived class's destructor (and its cleanup code) is bypassed.
+
+```cpp
+class Base {
+public:
+    virtual ~Base() { std::cout << "Base destroyed\n"; }  // virtual
+};
+// Now: delete p; calls Derived::~Derived first (via vtable), then Base::~Base
+```
+
+**Rule: If a class has any virtual functions, make its destructor virtual.** The overhead is one vtable slot -- negligible.
+
+---
+
+## Polymorphism With `unique_ptr`
+
+Modern C++ polymorphism uses smart pointers, not raw pointers:
+
+```cpp
+#include <memory>
+#include <vector>
+
+std::vector<std::unique_ptr<Animal>> animals;
+animals.push_back(std::make_unique<Dog>("Rex"));
+animals.push_back(std::make_unique<Cat>("Whiskers"));
+animals.push_back(std::make_unique<Dog>("Buddy"));
+
+for (const auto& a : animals) {
+    std::cout << a->get_name() << " says: " << a->speak() << "\n";
+}
+// Rex says: Woof
+// Whiskers says: Meow
+// Buddy says: Woof
+// All Animals deleted automatically when vector is destroyed
+```
+
+No manual `delete`. No memory leaks. Full polymorphism.
+
+---
+
+## Python Polymorphism vs C++ Polymorphism
+
+Python uses **duck typing**: no inheritance required. Any object with a `speak()` method works.
+
+```python
+class Dog: def speak(self): return "Woof"
+class Cat: def speak(self): return "Meow"
+class Rock: pass  # no speak
+
+animals = [Dog(), Cat()]
+for a in animals:
+    print(a.speak())  # works because both have speak()
+```
+
+C++ polymorphism requires:
+1. A common base class with `virtual` functions
+2. The object accessed through a base pointer or reference
+3. `override` in derived classes
+
+C++ offers **static polymorphism** via templates (Chapter 23/25) for zero-overhead duck typing.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Non-Virtual Base Destructor
+
+Already covered above. Always make the destructor `virtual` in a polymorphic base class.
+
+### Mistake 2: Forgetting `override`
+
+**The bug:**
+```cpp
+class Derived : public Base {
+    void render() { ... }   // Base has: virtual void Render() { ... }
+    // typo: render vs Render -- silent new function, not an override
+};
+```
+**The fix:** Always write `override`. The compiler will tell you if the name doesn't match.
+
+### Mistake 3: Calling Virtual Functions in Constructors/Destructors
+
+**The bug:**
+```cpp
+class Base {
+public:
+    Base() { initialize(); }          // calls virtual -- WRONG
+    virtual void initialize() { std::cout << "Base\n"; }
+};
+class Derived : public Base {
+public:
+    void initialize() override { std::cout << "Derived\n"; }
+};
+Derived d;  // prints "Base", not "Derived" -- vtable not fully set up yet
+```
+**Why:** During the base constructor, the object is still a `Base`. The vtable points to `Base`'s functions. Dynamic dispatch is suspended during construction and destruction.
+**The fix:** Never call virtual functions in constructors or destructors. Use a factory function or a two-phase initialization if needed.
+
+---
+
+## Exercises
+
+**Exercise 20.1 -- Virtual dispatch trace**
+
+```cpp
+struct A {
+    virtual void f() { std::cout << "A\n"; }
+    void g()         { std::cout << "A::g\n"; }
+};
+struct B : A {
+    void f() override { std::cout << "B\n"; }
+    void g()          { std::cout << "B::g\n"; }
+};
+A* p = new B{};
+p->f();    // (a)
+p->g();    // (b)
+B* q = static_cast<B*>(p);
+q->f();    // (c)
+q->g();    // (d)
 delete p;
 ```
 
-`override` is a C++11 keyword that tells the compiler "I intend to override a virtual function." If the signature doesn't match a base virtual, it's a compile error — catching typos.
+*Answer:*
+- (a): `B` -- `f()` is virtual, dynamic dispatch to `B::f`
+- (b): `A::g` -- `g()` is not virtual, compile-time resolution via `A*`
+- (c): `B` -- `f()` is virtual, `q` is `B*`, dispatch to `B::f`
+- (d): `B::g` -- `g()` is not virtual, compile-time resolution via `B*`
 
-### How Virtual Dispatch Works (the vtable)
+---
 
-Each class with virtual functions has a hidden **vtable** (virtual function table) — an array of function pointers. Each object has a hidden **vptr** (vtable pointer) as its first member.
+**Exercise 20.2 -- Polymorphic zoo**
 
-```
-Dog object in memory:
-[ vptr ] → Dog's vtable → [ Dog::speak, Dog::destructor, ... ]
-[ Animal members: name ]
-[ Dog members: ... ]
-```
+Create a vector of `unique_ptr<Animal>`, add at least 3 different animal types, and print each one's `speak()` result using a range-based loop.
 
-When you call `p->speak()`, the CPU:
-1. Follows `p` to the object.
-2. Follows the vptr to the vtable.
-3. Calls the function at the `speak` slot.
-
-This indirection has a tiny runtime cost (two pointer dereferences per call). For most code this is irrelevant. For extremely hot inner loops (millions of calls per second), it can matter.
-
-### Polymorphism with Containers
-
-The real power: treat heterogeneous objects uniformly through a base pointer:
-
+*Answer:*
 ```cpp
-#include <vector>
 #include <memory>
+#include <vector>
+#include <iostream>
 
+// Using the Animal/Dog/Cat hierarchy from this chapter:
 std::vector<std::unique_ptr<Animal>> zoo;
 zoo.push_back(std::make_unique<Dog>("Rex"));
 zoo.push_back(std::make_unique<Cat>("Whiskers"));
 zoo.push_back(std::make_unique<Dog>("Buddy"));
 
 for (const auto& animal : zoo) {
-    std::cout << animal->speak() << "\n";
+    std::cout << animal->get_name() << ": " << animal->speak() << "\n";
 }
-// Woof
-// Meow
-// Woof
 ```
-
-Each `unique_ptr<Animal>` can hold any `Animal` subtype. The right `speak` is called via virtual dispatch.
-
-### `virtual` Destructor
-
-If you `delete` a derived object through a base pointer, and the base destructor is not virtual, only the base destructor runs — the derived destructor is skipped → resource leak:
-
-```cpp
-class Base {
-public:
-    ~Base() { std::cout << "Base dtor\n"; }  // NOT virtual — BUG
-};
-class Derived : public Base {
-    int* data = new int[100];
-public:
-    ~Derived() { delete[] data; std::cout << "Derived dtor\n"; }
-};
-
-Base* p = new Derived();
-delete p;  // only "Base dtor" — data is leaked!
-```
-
-**Rule: If a class has any virtual functions, make its destructor virtual.**
-
-### `final` Keyword
-
-`final` prevents further overriding or inheritance:
-
-```cpp
-class Shape {
-public:
-    virtual double area() const = 0;
-};
-
-class Circle final : public Shape {  // can't derive from Circle
-    double r;
-public:
-    Circle(double r) : r(r) {}
-    double area() const override final { return 3.14159 * r * r; }
-    //                          ^^^^^
-    //                          can't override area in further derived classes
-};
-```
-
-### Key Takeaways
-
-- `virtual` enables runtime dispatch (calling the derived class's version through a base pointer/reference).
-- `override` keyword documents intent and catches signature mismatches at compile time.
-- Always make the base class destructor `virtual` if the class has any virtual functions.
-- The vtable is the mechanism: a hidden per-class array of function pointers.
-- Virtual dispatch has a tiny overhead (two pointer hops). It matters only in extremely hot code.
 
 ---
 
 <a name="ch21"></a>
-## Chapter 21: Abstract Classes and Interfaces
+# Chapter 21: Abstract Classes and Interfaces
 
-### Pure Virtual Functions
+## Pure Virtual Functions
 
-A **pure virtual function** has no body in the base class — it's marked `= 0`. A class with at least one pure virtual function is an **abstract class** — it cannot be instantiated directly.
+A **pure virtual function** is a virtual function declared with `= 0`. It has no implementation in the base class. Any class with at least one pure virtual function is an **abstract class** -- it cannot be instantiated.
 
 ```cpp
 class Shape {
@@ -2933,802 +7455,1801 @@ public:
     virtual ~Shape() {}
 };
 
-Shape s;  // ERROR — cannot instantiate abstract class
+Shape s;   // COMPILE ERROR: cannot instantiate abstract class 'Shape'
 ```
 
-Any derived class that doesn't override all pure virtual functions is also abstract. You must override them all to create concrete objects.
+A class is abstract to express: "I define the interface; subclasses provide the implementation."
+
+---
+
+## Concrete Derived Classes
+
+A derived class that provides implementations for all pure virtual functions is **concrete** (can be instantiated):
 
 ```cpp
 class Circle : public Shape {
     double radius;
 public:
-    Circle(double r) : radius(r) {}
-    double area()      const override { return 3.14159 * radius * radius; }
-    double perimeter() const override { return 2 * 3.14159 * radius; }
-    void   draw()      const override { std::cout << "Drawing circle\n"; }
+    Circle(double r) : radius{r} {}
+
+    double area()      const override { return 3.14159265 * radius * radius; }
+    double perimeter() const override { return 2 * 3.14159265 * radius; }
+    void   draw()      const override { std::cout << "O\n"; }
 };
 
-Circle c(5.0);         // OK — all pure virtuals implemented
-Shape* s = &c;         // OK — pointer to abstract base
-std::cout << s->area(); // calls Circle::area via virtual dispatch
+class Square : public Shape {
+    double side;
+public:
+    Square(double s) : side{s} {}
+
+    double area()      const override { return side * side; }
+    double perimeter() const override { return 4 * side; }
+    void   draw()      const override { std::cout << "[]\n"; }
+};
+
+// Now concrete:
+Circle c{5.0};
+Square s{3.0};
+std::cout << c.area() << "\n";  // 78.5...
+std::cout << s.area() << "\n";  // 9
 ```
 
-### Interfaces
-
-C++ has no `interface` keyword. An *interface* in C++ is a convention: an abstract class with **only** pure virtual functions and a virtual destructor — no data members, no non-virtual methods.
+If a derived class leaves any pure virtual functions unimplemented, it is also abstract:
 
 ```cpp
-class Serializable {
+class PartialShape : public Shape {
+    double area() const override { return 0; }
+    // perimeter() and draw() not implemented -- PartialShape is still abstract
+};
+PartialShape p;   // COMPILE ERROR: still abstract
+```
+
+---
+
+## Interfaces in C++
+
+C++ does not have a built-in `interface` keyword (unlike Java or C#). An **interface** is a convention: an abstract class with only pure virtual functions and a virtual destructor -- no data members, no implementation.
+
+```python
+# Python "interface" via ABC
+from abc import ABC, abstractmethod
+
+class Drawable(ABC):
+    @abstractmethod
+    def draw(self) -> None: ...
+
+    @abstractmethod
+    def bounding_box(self) -> tuple: ...
+```
+
+```cpp
+// C++ interface convention
+class IDrawable {
 public:
-    virtual std::string serialize() const = 0;
-    virtual void deserialize(const std::string& data) = 0;
-    virtual ~Serializable() = default;
+    virtual void  draw()         const = 0;
+    virtual std::pair<double,double> bounding_box() const = 0;
+    virtual ~IDrawable() {}
 };
 
-class Drawable {
+class ISerializable {
 public:
-    virtual void draw(Canvas& canvas) const = 0;
-    virtual ~Drawable() = default;
+    virtual std::string serialize()   const = 0;
+    virtual void        deserialize(const std::string&) = 0;
+    virtual ~ISerializable() {}
 };
 
-// A class can implement multiple interfaces
-class Sprite : public Drawable, public Serializable {
+// A class can implement multiple interfaces:
+class Sprite : public IDrawable, public ISerializable {
+    // must implement all pure virtuals from both interfaces
+    void   draw()         const override { ... }
+    std::pair<double,double> bounding_box() const override { ... }
+    std::string serialize()   const override { ... }
+    void        deserialize(const std::string&) override { ... }
+};
+```
+
+Multiple inheritance from multiple **pure-interface** base classes is safe and common. Multiple inheritance from classes with data members is tricky (diamond problem) and usually avoided.
+
+---
+
+## Partial Implementations (Partially Abstract)
+
+A class can implement some pure virtuals and leave others:
+
+```cpp
+class AbstractRenderer : public IDrawable {
+public:
+    // Provides a default implementation for draw:
+    void draw() const override {
+        set_up_context();
+        do_draw();         // calls another pure virtual -- template method pattern
+        tear_down_context();
+    }
+    // Subclasses must provide do_draw():
+    virtual void do_draw() const = 0;
+protected:
+    void set_up_context() const { ... }
+    void tear_down_context() const { ... }
+};
+
+class OpenGLRenderer : public AbstractRenderer {
+    void do_draw() const override { ... }  // only override what is necessary
+};
+```
+
+This is the **Template Method** pattern: the base class defines the algorithm skeleton, derived classes fill in the specific steps.
+
+---
+
+## Checking the Type at Runtime: `dynamic_cast`
+
+When you have a base class pointer and need to find out the real type:
+
+```cpp
+void process(Shape* s) {
+    if (Circle* c = dynamic_cast<Circle*>(s)) {
+        // s points to a Circle (or derived from Circle)
+        std::cout << "radius: " << c->radius << "\n";
+    } else if (Square* sq = dynamic_cast<Square*>(s)) {
+        std::cout << "side: " << sq->side << "\n";
+    }
+}
+```
+
+`dynamic_cast<Circle*>(s)` returns a `Circle*` if `s` actually points to a `Circle`, or `nullptr` otherwise. It works via the vtable (requires at least one virtual function).
+
+**Caveat:** Frequent `dynamic_cast` is usually a design smell. It means the code is asking "what type is this?" at runtime instead of using virtual dispatch. Prefer redesigning with virtual functions. `dynamic_cast` is legitimate for occasional introspection or when interacting with external code.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Instantiating an Abstract Class
+
+**The bug:**
+```cpp
+Shape s{};   // or: Shape* p = new Shape{};
+```
+**Compiler error:**
+```
+error: cannot declare variable 's' to be of abstract type 'Shape'
+note: because the following virtual functions are pure within 'Shape':
+note: virtual double Shape::area() const
+```
+**The fix:** Instantiate a concrete derived class, not the abstract base.
+
+### Mistake 2: Missing `override` in Concrete Class
+
+**The bug:**
+```cpp
+class Rect : public Shape {
+    double area() const { return w * h; }  // forgot override
+    // If Shape::area() signature changes, this silently stops overriding it
+};
+```
+**The fix:** Always write `override`. If the signature in the base changes, the compiler will tell you.
+
+---
+
+## Exercises
+
+**Exercise 21.1 -- Design an interface**
+
+Design a `ILogger` interface with methods `log_info(std::string)`, `log_warning(std::string)`, `log_error(std::string)`. Then write two implementations: `ConsoleLogger` (prints to cout) and `NullLogger` (does nothing -- useful for disabling logging in tests).
+
+*Answer:*
+```cpp
+class ILogger {
+public:
+    virtual void log_info(const std::string& msg)    = 0;
+    virtual void log_warning(const std::string& msg) = 0;
+    virtual void log_error(const std::string& msg)   = 0;
+    virtual ~ILogger() {}
+};
+
+class ConsoleLogger : public ILogger {
+public:
+    void log_info(const std::string& msg)    override {
+        std::cout << "[INFO]  " << msg << "\n"; }
+    void log_warning(const std::string& msg) override {
+        std::cout << "[WARN]  " << msg << "\n"; }
+    void log_error(const std::string& msg)   override {
+        std::cout << "[ERROR] " << msg << "\n"; }
+};
+
+class NullLogger : public ILogger {
+public:
+    void log_info(const std::string&)    override {}
+    void log_warning(const std::string&) override {}
+    void log_error(const std::string&)   override {}
+};
+
+// Usage: inject the logger as a pointer to interface
+void do_work(ILogger& log) {
+    log.log_info("Starting work");
     // ...
-};
-```
-
-This is how C++ achieves interface-based polymorphism. It's the same idea as Java/Python abstract base classes, just with different syntax.
-
-### Abstract Base Classes vs Interfaces
-
-- **Abstract base class**: may have data, non-virtual methods, partial implementations. Some methods are pure virtual — subclasses fill in the rest.
-- **Interface**: all pure virtual, no data, no implementation. Pure contract.
-
-```cpp
-// Abstract base class (partial implementation)
-class Animal {
-    std::string name;  // data member
-public:
-    Animal(std::string n) : name(std::move(n)) {}
-    std::string get_name() const { return name; }  // concrete method
-    virtual std::string speak() const = 0;          // derived must implement
-    virtual ~Animal() = default;
-};
-
-// Interface (pure contract)
-class Printable {
-public:
-    virtual std::string to_string() const = 0;
-    virtual ~Printable() = default;
-};
-```
-
-### `dynamic_cast` — Safe Downcasting
-
-Sometimes you have a base pointer but need to access a derived-specific method. `dynamic_cast` checks at runtime whether the cast is valid:
-
-```cpp
-Animal* a = get_some_animal();
-
-Dog* d = dynamic_cast<Dog*>(a);  // returns nullptr if a is not a Dog
-if (d != nullptr) {
-    d->fetch();  // Dog-specific method
+    log.log_warning("Something unusual");
 }
 
-// With references (throws std::bad_cast on failure instead of returning null):
-try {
-    Dog& d = dynamic_cast<Dog&>(*a);
-    d.fetch();
-} catch (const std::bad_cast& e) {
-    // not a Dog
-}
+ConsoleLogger cl;
+do_work(cl);   // prints
+
+NullLogger nl;
+do_work(nl);   // prints nothing (testing/silent mode)
 ```
-
-`dynamic_cast` requires at least one virtual function in the hierarchy (the vtable provides the runtime type information).
-
-Use it sparingly — frequent downcasting is a sign of a design problem. Prefer virtual functions that do the right thing per type without explicit type checking.
-
-### Key Takeaways
-
-- Pure virtual functions (`= 0`) make a class abstract — it cannot be instantiated.
-- A class with only pure virtual functions and a virtual destructor is an *interface*.
-- C++ doesn't have an `interface` keyword — it's a convention using abstract classes.
-- Multiple inheritance lets a class implement multiple interfaces.
-- `dynamic_cast` safely downcasts at runtime but requires virtual functions and should be used sparingly.
 
 ---
 
 <a name="ch22"></a>
-## Chapter 22: Operator Overloading
+# Chapter 22: Operator Overloading
 
-### What Is Operator Overloading?
+## What Operator Overloading Is
 
-In Python you can define `__add__`, `__eq__`, `__lt__`, etc. to make your classes work with operators. C++ has the same feature, with different syntax.
+C++ lets you define what the built-in operators (`+`, `-`, `==`, `<`, `<<`, `[]`, etc.) do for your own types. This is called **operator overloading**.
+
+Python calls these **dunder methods** (double underscore):
 
 ```python
-# Python
-class Vector2D:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-    def __add__(self, other):
-        return Vector2D(self.x + other.x, self.y + other.y)
-    def __str__(self):
-        return f"({self.x}, {self.y})"
+class Vec2:
+    def __init__(self, x, y): self.x, self.y = x, y
+    def __add__(self, other):  return Vec2(self.x+other.x, self.y+other.y)
+    def __repr__(self):        return f"Vec2({self.x}, {self.y})"
+
+a = Vec2(1, 2)
+b = Vec2(3, 4)
+print(a + b)   # Vec2(4, 6)
 ```
 
 ```cpp
-// C++
-struct Vector2D {
+struct Vec2 {
     double x, y;
-    Vector2D(double x, double y) : x(x), y(y) {}
-    
-    Vector2D operator+(const Vector2D& other) const {
-        return {x + other.x, y + other.y};
-    }
-    
-    bool operator==(const Vector2D& other) const {
-        return x == other.x && y == other.y;
+
+    Vec2 operator+(const Vec2& other) const {
+        return Vec2{x + other.x, y + other.y};
     }
 };
 
-// Can also be a free function (outside the class):
-std::ostream& operator<<(std::ostream& os, const Vector2D& v) {
+// Non-member: output stream operator
+std::ostream& operator<<(std::ostream& os, const Vec2& v) {
+    return os << "Vec2(" << v.x << ", " << v.y << ")";
+}
+
+Vec2 a{1.0, 2.0};
+Vec2 b{3.0, 4.0};
+Vec2 c = a + b;
+std::cout << c << "\n";   // Vec2(4, 6)
+```
+
+---
+
+## Which Operators to Overload
+
+Not all operators make sense for all types. Overload only what has a clear, unsurprising meaning for your type.
+
+```cpp
+struct Vec2 {
+    double x, y;
+
+    // Arithmetic (member: left operand is *this)
+    Vec2 operator+(const Vec2& o) const { return {x+o.x, y+o.y}; }
+    Vec2 operator-(const Vec2& o) const { return {x-o.x, y-o.y}; }
+    Vec2 operator*(double s)      const { return {x*s,   y*s  }; }
+    Vec2 operator-()              const { return {-x,    -y   }; }  // unary minus
+
+    // Compound assignment
+    Vec2& operator+=(const Vec2& o) { x+=o.x; y+=o.y; return *this; }
+    Vec2& operator-=(const Vec2& o) { x-=o.x; y-=o.y; return *this; }
+    Vec2& operator*=(double s)      { x*=s;   y*=s;   return *this; }
+
+    // Comparison (C++20 spaceship operator generates all 6 at once)
+    bool operator==(const Vec2& o) const { return x==o.x && y==o.y; }
+    bool operator!=(const Vec2& o) const { return !(*this == o); }
+
+    // Array subscript
+    double& operator[](int i) {
+        if (i == 0) return x;
+        if (i == 1) return y;
+        throw std::out_of_range{"Vec2 index out of range"};
+    }
+    const double& operator[](int i) const {   // const version
+        if (i == 0) return x;
+        if (i == 1) return y;
+        throw std::out_of_range{"Vec2 index out of range"};
+    }
+};
+
+// Non-member: allows s * v as well as v * s
+Vec2 operator*(double s, const Vec2& v) { return v * s; }
+
+// Non-member: stream output (cannot be member because left operand is ostream)
+std::ostream& operator<<(std::ostream& os, const Vec2& v) {
     return os << "(" << v.x << ", " << v.y << ")";
 }
 ```
 
-### Which Operators Can Be Overloaded?
-
-Almost all: `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `[]`, `()`, `++`, `--`, `<<`, `>>`, `=`, `->`, `&`, `|`, `^`, and more.
-
-Cannot overload: `::`, `.`, `.*`, `sizeof`, `?:`.
-
-### Member vs Free Function
-
-Operators can be member functions or free functions. Guidelines:
-
-- **Make it a member** when the left operand is your type: `+=`, `-=`, `[]`, `()`, `->`, unary operators.
-- **Make it a free function** when symmetry is needed or the left operand isn't your type: `+`, `-`, `==`, `<<`.
+Usage:
 
 ```cpp
-struct Vec {
-    double x, y;
-    
-    // Member — left operand is Vec
-    Vec& operator+=(const Vec& rhs) {
-        x += rhs.x; y += rhs.y;
-        return *this;
-    }
-};
-
-// Free function — allows: vec + vec, but also could allow double + vec
-Vec operator+(Vec lhs, const Vec& rhs) {
-    lhs += rhs;   // reuse +=
-    return lhs;
-}
+Vec2 a{1.0, 2.0};
+Vec2 b{3.0, 4.0};
+Vec2 c = a + b;        // (4, 6)
+Vec2 d = 2.0 * a;     // (2, 4)
+Vec2 e = -a;           // (-1, -2)
+a += b;                // a = (4, 6)
+std::cout << c << "\n"; // (4, 6)
+std::cout << c[0] << "\n"; // 4
 ```
 
-Note the `Vec lhs` (by value, not reference) in `operator+`. This copies `lhs` so we can modify and return it.
+---
 
-### The Spaceship Operator (C++20)
+## Member vs Non-Member Operators
 
-C++20 adds `<=>` (three-way comparison), which auto-generates `<`, `>`, `<=`, `>=` from one definition:
+Some operators must be members (`=`, `[]`, `()`, `->`). Others should be non-members when the left operand may not be your type.
+
+**Rule of thumb:**
+- If the operator modifies the object (`+=`, `-=`, etc.): **member**
+- If the left operand might not be your type (`<<`, `*`, `+` with mixed types): **non-member**
+- Symmetric binary operators (`+`, `-`, `==`): **non-member** (for symmetry)
+
+For `operator<<` specifically: the left operand is `std::ostream`, which is not your type. You cannot add a member to `std::ostream`. Therefore `operator<<` is always a non-member.
+
+---
+
+## The Spaceship Operator (C++20)
+
+C++20 introduced `operator<=>` (the three-way comparison operator), which generates all six comparison operators at once:
 
 ```cpp
 #include <compare>
 
 struct Point {
-    int x, y;
-    auto operator<=>(const Point&) const = default;  // compiler generates all comparisons
-    bool operator==(const Point&)  const = default;
+    double x, y;
+
+    auto operator<=>(const Point& o) const = default;
+    // Generates: ==, !=, <, <=, >, >= all with memberwise comparison
 };
 
-Point a{1, 2}, b{1, 3};
-bool less = a < b;   // works
-bool eq   = a == b;  // works
+Point a{1.0, 2.0};
+Point b{1.0, 3.0};
+bool less = (a < b);    // true: a.x == b.x, a.y < b.y
+bool eq   = (a == a);   // true
 ```
 
-### Subscript Operator `[]`
-
-```cpp
-class Matrix {
-    double data[4][4];
-public:
-    double* operator[](int row) { return data[row]; }
-    const double* operator[](int row) const { return data[row]; }
-};
-
-Matrix m;
-m[0][1] = 3.14;   // m.operator[](0) returns data[0], then [1]
-```
-
-### Function Call Operator `()`
-
-A class with `operator()` is a *functor* (function object). It can be called like a function:
-
-```cpp
-class Multiplier {
-    double factor;
-public:
-    Multiplier(double f) : factor(f) {}
-    double operator()(double x) const { return x * factor; }
-};
-
-Multiplier double_it(2.0);
-std::cout << double_it(5.0);  // 10.0
-std::cout << double_it(3.0);  // 6.0
-```
-
-Functors are the precursor to lambdas (Chapter 30). Lambdas generate anonymous functor classes behind the scenes.
-
-### Key Takeaways
-
-- Operator overloading uses `operator+`, `operator==`, etc. — the same concept as Python's `__add__`, `__eq__`.
-- Member operators for operations where the left operand is your type; free functions for symmetric operations.
-- Implement `+=` first, then implement `+` in terms of `+=`.
-- C++20's `<=>` generates all comparison operators from one definition.
-- `operator()` makes a class callable — this is a functor.
+`= default` tells the compiler to generate memberwise comparison in declaration order. For most value types, this is exactly right.
 
 ---
 
+## `operator()` -- Making Objects Callable
+
+```cpp
+struct Adder {
+    int n;
+    Adder(int n) : n{n} {}
+    int operator()(int x) const { return x + n; }
+};
+
+Adder add5{5};
+std::cout << add5(10) << "\n";   // 15
+std::cout << add5(20) << "\n";   // 25
+```
+
+An object with `operator()` is called a **functor** or **function object**. They can store state (unlike raw function pointers) and are the foundation of lambdas (Chapter 30).
+
 ---
 
-# Part V — Generic Programming
+## Rules and Guidelines for Operator Overloading
+
+```
+DO:
+  Overload only when the semantics are obvious and unsurprising
+  Keep operators consistent with each other (if + is defined, += should be too)
+  Make operators non-throwing when possible
+  Return *this from compound-assignment operators (enables a += b += c)
+
+DON'T:
+  Overload operators for unrelated meanings (e.g., using << for bit-shift on a list)
+  Overload &&, ||, or comma (,) -- they lose short-circuit/sequencing guarantees
+  Make operator+ modify the left operand (it should return a new value)
+  Overload more operators than your type needs
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Returning `*this` by Value Instead of Reference From `+=`
+
+**The bug:**
+```cpp
+Vec2 operator+=(const Vec2& o) {   // returns by value
+    x += o.x; y += o.y;
+    return *this;   // returns a COPY
+}
+(a += b) = c;   // modifies the temporary copy, not a -- probably wrong
+```
+**The fix:** Return `Vec2&` (reference to `*this`): `Vec2& operator+=(const Vec2& o) { ... return *this; }`
+
+### Mistake 2: Missing the Const Overload for `operator[]`
+
+**The bug:**
+```cpp
+double& operator[](int i) { ... }   // only non-const version
+const Vec2 v{1.0, 2.0};
+v[0];   // ERROR: no operator[] for const Vec2
+```
+**The fix:** Provide both `double& operator[](int i)` and `const double& operator[](int i) const`.
+
+---
+
+## Exercises
+
+**Exercise 22.1 -- Complete the vector class**
+
+Add the following to `Vec2`:
+- `length() const` returning `sqrt(x*x + y*y)`
+- `normalized() const` returning a unit vector (length 1.0)
+- `dot(Vec2) const` returning the dot product
+
+*Answer:*
+```cpp
+#include <cmath>
+
+double length() const { return std::sqrt(x*x + y*y); }
+
+Vec2 normalized() const {
+    double len = length();
+    if (len < 1e-12) throw std::runtime_error("Cannot normalize zero vector");
+    return {x/len, y/len};
+}
+
+double dot(const Vec2& o) const { return x*o.x + y*o.y; }
+```
+
+---
+
+**Exercise 22.2 -- Implement a Matrix2x2**
+
+Write a `Mat2` class (2x2 matrix of doubles) with:
+- `operator*` for matrix-matrix multiplication
+- `operator*` for matrix-vector multiplication (using `Vec2`)
+- `operator==`
+
+*Answer:*
+```cpp
+struct Mat2 {
+    double a, b, c, d;  // [a b; c d]
+
+    Mat2 operator*(const Mat2& o) const {
+        return {a*o.a + b*o.c,  a*o.b + b*o.d,
+                c*o.a + d*o.c,  c*o.b + d*o.d};
+    }
+
+    Vec2 operator*(const Vec2& v) const {
+        return {a*v.x + b*v.y, c*v.x + d*v.y};
+    }
+
+    bool operator==(const Mat2& o) const {
+        return a==o.a && b==o.b && c==o.c && d==o.d;
+    }
+};
+```
+
+---
+
+*Part IV is complete. You can now design a full object-oriented C++ system: classes with proper encapsulation, constructors with initializer lists, inheritance hierarchies with virtual dispatch, abstract interfaces, and expressive operator overloading.*
+
+*Part V covers generic programming -- templates and concepts, which let you write type-safe code that works for any type that meets your requirements, with zero runtime overhead. Ask to continue.*
+
+---
+
+# Part V -- Generic Programming
+
+Python uses duck typing: if an object has the right methods, any algorithm works on it. C++ achieves the same expressiveness at compile time through **templates** -- code that is parameterized over types. The key difference: Python resolves method calls at runtime; C++ generates specialized code for each type at compile time, producing no overhead.
 
 ---
 
 <a name="ch23"></a>
-## Chapter 23: Function and Class Templates
+# Chapter 23: Function and Class Templates
 
-### What Is Generic Programming?
+## The Problem Without Templates
 
-In Python, functions are already generic — they work on any type that supports the required operations. Duck typing handles it at runtime.
+You want a `max` function. You need it for `int`, `double`, `float`, `long long` -- every numeric type:
+
+```cpp
+int    max(int a,    int b)    { return a > b ? a : b; }
+double max(double a, double b) { return a > b ? a : b; }
+float  max(float a,  float b)  { return a > b ? a : b; }
+// ... and so on for every type
+```
+
+The logic is identical for every type. Only the type changes. This is what templates solve.
+
+---
+
+## Function Templates
+
+A function template is a pattern. You write it once with a placeholder type, and the compiler generates concrete functions for each type you use it with.
 
 ```python
-def add(a, b):
-    return a + b  # works for int, float, str, anything with +
+# Python: works for any type automatically (duck typing)
+def my_max(a, b):
+    return a if a > b else b
+
+my_max(3, 5)       # int
+my_max(3.14, 2.7)  # float
+my_max("b", "a")   # str
 ```
 
-C++ is statically typed. Without templates, you'd need separate functions for every type:
-
 ```cpp
-int    add(int a,    int b)    { return a + b; }
-double add(double a, double b) { return a + b; }  // tedious duplication
-```
-
-Templates let you write the function once and have the compiler generate type-specific versions as needed.
-
-### Function Templates
-
-```cpp
-template<typename T>
-T add(T a, T b) {
-    return a + b;
+// C++: template -- compiler generates a version for each type
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
 }
 
-int    r1 = add(1, 2);         // T = int
-double r2 = add(1.5, 2.5);    // T = double
-// compiler generates two separate functions — fully type-checked, zero overhead
+my_max(3, 5);          // compiler generates: int my_max(int, int)
+my_max(3.14, 2.7);     // compiler generates: double my_max(double, double)
+my_max('b', 'a');      // compiler generates: char my_max(char, char)
+// my_max("b", "a");   // works too: const char* comparison (pointer comparison -- careful)
 ```
 
-`typename T` (or `class T` — identical meaning) declares `T` as a type parameter. You can have multiple:
-
-```cpp
-template<typename From, typename To>
-To convert(From value) {
-    return static_cast<To>(value);
-}
-
-int n = convert<double, int>(3.7);  // explicit template arguments
-auto d = convert<int, double>(5);   // explicit
-```
-
-The compiler usually deduces template arguments from function arguments, so you don't need to specify them explicitly unless disambiguation is needed.
-
-### Class Templates
-
-```cpp
-template<typename T>
-class Stack {
-    std::vector<T> data;
-public:
-    void push(const T& value) { data.push_back(value); }
-    void pop()                { data.pop_back(); }
-    T&   top()                { return data.back(); }
-    bool empty() const        { return data.empty(); }
-    int  size()  const        { return data.size(); }
-};
-
-Stack<int>         int_stack;
-Stack<std::string> str_stack;
-
-int_stack.push(42);
-str_stack.push("hello");
-```
-
-### Template Instantiation
-
-When you use `Stack<int>`, the compiler generates a concrete `Stack` class with `T` replaced by `int`. This is called *instantiation*. Each instantiation is compiled independently — the code is generated only for types you actually use.
-
-This is why **templates must be defined in headers** (not split across `.h`/`.cpp` like regular functions). The compiler needs the full template definition at every instantiation point.
-
-### Non-Type Template Parameters
-
-Template parameters can be values, not just types:
-
-```cpp
-template<typename T, int N>
-class FixedArray {
-    T data[N];
-    int count = 0;
-public:
-    void push(const T& v) {
-        if (count < N) data[count++] = v;
-    }
-    T& operator[](int i) { return data[i]; }
-    int size() const { return count; }
-};
-
-FixedArray<int, 10> arr;   // T=int, N=10 — no heap allocation
-```
-
-`std::array<T, N>` from the standard library is exactly this pattern.
+`template <typename T>` declares a **type parameter** `T`. Everywhere `T` appears in the function, the compiler substitutes the actual type when instantiating the template.
 
 ### Template Type Deduction
 
-The compiler deduces template arguments from function call arguments. Understanding the rules prevents surprises:
+The compiler deduces `T` from the arguments. You usually do not need to specify it explicitly:
 
 ```cpp
-template<typename T>
-void foo(T x);
-
-int   a = 5;
-foo(a);      // T = int
-foo(5);      // T = int
-foo(5.0);    // T = double
-
-template<typename T>
-void bar(T& x);  // reference parameter
-
-bar(a);      // T = int  (not int& — reference is part of the parameter, not T)
+my_max(3, 5);              // T deduced as int
+my_max<double>(3, 5);      // T explicitly specified as double (3 and 5 converted)
+my_max(3, 5.0);            // ERROR: ambiguous -- is T int or double?
+my_max<double>(3, 5.0);    // OK: explicit T=double
 ```
 
-Full deduction rules are nuanced. Chapter 33 (auto) and Chapter 15 (forwarding references) cover the relevant edge cases.
+When arguments have different types, deduction fails (the compiler cannot pick one `T`). Specify `T` explicitly, or cast one argument.
 
-### Key Takeaways
+### Multiple Template Parameters
 
-- Templates let you write type-independent code that the compiler instantiates for each type used.
-- `template<typename T>` precedes both function and class templates.
-- Templates must be defined in headers — the compiler needs the definition at instantiation.
-- Non-type template parameters (like `int N`) let you parameterize on values.
-- Template instantiation is zero-cost at runtime — each use generates a type-specific compiled function.
+```cpp
+template <typename T, typename U>
+auto add(T a, U b) {     // auto return type: deduced from the expression
+    return a + b;
+}
+
+add(1, 2.0);      // returns double (int + double = double)
+add(1, 2);        // returns int
+```
+
+---
+
+## How Templates Are Compiled
+
+Templates are compiled differently from regular functions. This is why template errors look strange and why templates must be in headers.
+
+When you write `my_max(3, 5)`, the compiler:
+1. Finds the template definition
+2. Substitutes `T = int` throughout
+3. Compiles the resulting `int my_max(int, int)` as if you wrote it by hand
+4. Places it in the object file
+
+```
+Source:
+  template<typename T> T my_max(T a, T b) { ... }
+  my_max(3, 5);     --> generates: int    my_max(int, int)    { ... }
+  my_max(3.0, 5.0); --> generates: double my_max(double, double) { ... }
+  my_max('a', 'b'); --> generates: char   my_max(char, char)   { ... }
+```
+
+Each instantiation is a separate compiled function. No runtime type dispatch. Zero overhead compared to writing three functions by hand.
+
+### Why Templates Must Live in Headers
+
+When the compiler processes `main.cpp` and sees `my_max(3, 5)`, it needs the template definition to generate the instantiation. It cannot use a declaration alone (unlike regular functions where the linker handles it later).
+
+Therefore: **template definitions go in header files**, not `.cpp` files.
+
+```cpp
+// math_utils.h  -- template definitions here, not in a .cpp
+#pragma once
+
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+```
+
+If you put a template definition in a `.cpp` file and try to use it from another file, you get "undefined reference" at link time -- the compiler in the other `.cpp` had no template definition to instantiate from.
+
+---
+
+## Class Templates
+
+The standard library containers (`std::vector<T>`, `std::map<K,V>`) are class templates. You can write your own:
+
+```cpp
+// A simple fixed-size stack
+template <typename T, int MaxSize = 16>    // T: type, MaxSize: non-type parameter
+class Stack {
+    T   data[MaxSize];
+    int top{0};
+
+public:
+    void push(const T& value) {
+        if (top >= MaxSize) throw std::overflow_error{"Stack full"};
+        data[top++] = value;
+    }
+
+    T pop() {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        return data[--top];
+    }
+
+    const T& peek() const {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        return data[top - 1];
+    }
+
+    bool empty() const { return top == 0; }
+    int  size()  const { return top; }
+};
+```
+
+Usage:
+
+```cpp
+Stack<int>     int_stack;          // Stack of ints, max 16
+Stack<double, 32> big_stack;       // Stack of doubles, max 32
+
+int_stack.push(1);
+int_stack.push(2);
+int_stack.push(3);
+std::cout << int_stack.pop() << "\n";  // 3
+std::cout << int_stack.pop() << "\n";  // 2
+
+Stack<std::string> str_stack;
+str_stack.push("hello");
+str_stack.push("world");
+std::cout << str_stack.peek() << "\n"; // "world" (not popped)
+```
+
+Each combination of type arguments generates a completely separate class. `Stack<int>` and `Stack<double>` are two distinct types with no relationship to each other.
+
+---
+
+## Non-Type Template Parameters
+
+Templates can be parameterized by values (not just types):
+
+```cpp
+template <int N>
+struct Factorial {
+    static constexpr int value = N * Factorial<N-1>::value;
+};
+
+template <>                                  // specialization for base case
+struct Factorial<0> {
+    static constexpr int value = 1;
+};
+
+constexpr int f5 = Factorial<5>::value;  // 120, computed entirely at compile time
+constexpr int f10 = Factorial<10>::value; // 3628800
+```
+
+Array sizes, buffer sizes, and algorithm tuning parameters can all be non-type template parameters. This is how `std::array<int, 10>` works -- the size `10` is a non-type template parameter.
+
+---
+
+## Template Functions in the Standard Library
+
+The standard library is built on templates. Some functions you will use constantly:
+
+```cpp
+#include <algorithm>
+#include <vector>
+
+std::vector<int> v = {5, 3, 1, 4, 2};
+
+// All work for any type that supports the required operations:
+std::sort(v.begin(), v.end());                   // {1,2,3,4,5}
+std::reverse(v.begin(), v.end());                // {5,4,3,2,1}
+auto it = std::find(v.begin(), v.end(), 3);      // iterator to 3
+int  mx = *std::max_element(v.begin(), v.end()); // 5
+
+std::vector<double> dv = {1.0, 2.0, 3.0};
+std::sort(dv.begin(), dv.end());                 // same template, different type
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Putting Template Definitions in a `.cpp` File
+
+**The bug:**
+```cpp
+// math.cpp:
+template <typename T>
+T square(T x) { return x * x; }
+
+// main.cpp:
+template <typename T> T square(T x);   // declaration only
+int main() { square(5); }              // linker error: no instantiation found
+```
+**Linker error:** `undefined reference to 'int square<int>(int)'`
+**The fix:** Move the template definition into the header.
+
+### Mistake 2: Mixed Types Without Explicit Instantiation
+
+**The bug:**
+```cpp
+template <typename T>
+T add(T a, T b) { return a + b; }
+
+add(1, 2.0);  // ERROR: deduction fails -- is T int or double?
+```
+**The fix:** `add<double>(1, 2.0)` or `add(1.0, 2.0)` or `add(1, 2)`.
+
+### Mistake 3: Confusing Template Errors With Logic Errors
+
+Template errors are notorious for long, cryptic messages because the error is reported after instantiation. Always look at the first error and the "required from" line that shows where you used the template.
+
+---
+
+## Exercises
+
+**Exercise 23.1 -- Write a swap template**
+
+Write `template_swap(a, b)` that swaps two values of any type. Test with `int`, `double`, and `std::string`.
+
+*Answer:*
+```cpp
+template <typename T>
+void template_swap(T& a, T& b) {
+    T tmp = std::move(a);
+    a = std::move(b);
+    b = std::move(tmp);
+}
+
+int a = 1, b = 2;
+template_swap(a, b);   // a=2, b=1
+
+double x = 1.5, y = 2.5;
+template_swap(x, y);   // x=2.5, y=1.5
+
+std::string s = "hello", t = "world";
+template_swap(s, t);   // s="world", t="hello"
+```
+
+---
+
+**Exercise 23.2 -- min/max template**
+
+Write `clamp<T>(value, lo, hi)` that returns `lo` if `value < lo`, `hi` if `value > hi`, otherwise `value`. The standard library has `std::clamp` -- write your own.
+
+*Answer:*
+```cpp
+template <typename T>
+T clamp(T value, T lo, T hi) {
+    if (value < lo) return lo;
+    if (value > hi) return hi;
+    return value;
+}
+
+clamp(5, 0, 10);    // 5
+clamp(-3, 0, 10);   // 0
+clamp(15, 0, 10);   // 10
+clamp(0.5, 0.0, 1.0); // 0.5
+```
+
+---
+
+**Exercise 23.3 -- Class template Pair**
+
+Write a class template `Pair<A, B>` that stores two values of potentially different types. Provide:
+- Constructor `Pair(A, B)`
+- `first()` and `second()` getters (const)
+- Non-member `make_pair(a, b)` that deduces the types
+
+*Answer:*
+```cpp
+template <typename A, typename B>
+class Pair {
+    A first_val;
+    B second_val;
+public:
+    Pair(A a, B b) : first_val{std::move(a)}, second_val{std::move(b)} {}
+    const A& first()  const { return first_val; }
+    const B& second() const { return second_val; }
+};
+
+template <typename A, typename B>
+Pair<A,B> make_pair(A a, B b) {
+    return Pair<A,B>{std::move(a), std::move(b)};
+}
+
+auto p = make_pair(42, std::string{"hello"});
+std::cout << p.first() << " " << p.second() << "\n";  // 42 hello
+```
 
 ---
 
 <a name="ch24"></a>
-## Chapter 24: Template Specialization and Variadic Templates
+# Chapter 24: Template Specialization and Variadic Templates
 
-### Full Specialization
+## Template Specialization
 
-You can provide a custom implementation for a specific type:
+Sometimes the generic template is wrong or inefficient for a specific type. **Full specialization** provides a completely custom implementation for a concrete type:
 
 ```cpp
-template<typename T>
-T max_val(T a, T b) {
-    return a > b ? a : b;
-}
+// Primary template: works for any T
+template <typename T>
+struct TypeInfo {
+    static std::string name() { return "unknown"; }
+};
 
-// Full specialization for const char* (C strings):
-template<>
-const char* max_val<const char*>(const char* a, const char* b) {
-    return std::strcmp(a, b) > 0 ? a : b;
-}
+// Full specialization for int:
+template <>                   // <> means: no template parameters -- this is a specialization
+struct TypeInfo<int> {
+    static std::string name() { return "int"; }
+};
 
-max_val(3, 5);               // general template
-max_val("apple", "banana");  // uses specialization
+// Full specialization for double:
+template <>
+struct TypeInfo<double> {
+    static std::string name() { return "double"; }
+};
+
+std::cout << TypeInfo<int>::name()    << "\n";  // "int"
+std::cout << TypeInfo<double>::name() << "\n";  // "double"
+std::cout << TypeInfo<char>::name()   << "\n";  // "unknown" (uses primary template)
 ```
 
 ### Partial Specialization
 
-Class templates (not function templates) support partial specialization — specializing on a subset of template parameters:
+**Partial specialization** provides a custom implementation for a subset of type combinations, keeping some template parameters generic:
 
 ```cpp
-// General template
-template<typename T, typename U>
-class Pair {
-    T first;
-    U second;
-    // ...
+// Primary template
+template <typename T, typename U>
+struct IsSame { static constexpr bool value = false; };
+
+// Partial specialization: both types are the same
+template <typename T>
+struct IsSame<T, T> { static constexpr bool value = true; };
+
+IsSame<int, int>::value    // true
+IsSame<int, double>::value // false
+```
+
+Another common example -- specializing for pointers:
+
+```cpp
+// Primary template: general case
+template <typename T>
+class Storage {
+    T data;
+public:
+    void set(T v) { data = v; }
+    T    get()    { return data; }
 };
 
-// Partial specialization: when both types are the same
-template<typename T>
-class Pair<T, T> {
-    T first, second;
-    // can have different implementation
+// Partial specialization for pointer types
+template <typename T>
+class Storage<T*> {          // specialization matches any T*
+    T* data{nullptr};
+public:
+    void set(T* p) { data = p; }
+    T*   get()     { return data; }
+    bool valid()   { return data != nullptr; }
+    // Extra: null check makes sense for pointers
 };
 
-// Partial specialization: when U is a pointer
-template<typename T, typename U>
-class Pair<T, U*> {
-    T first;
-    U* second;
-    // pointer-specific handling
-};
+Storage<int>    si;     // uses primary template
+Storage<int*>   sp;     // uses pointer specialization -- has valid() method
 ```
-
-### Variadic Templates (C++11)
-
-Variadic templates accept any number of type parameters. They power `std::tuple`, `std::make_unique`, and much of the modern standard library.
-
-```cpp
-// Variadic function: sum any number of arguments
-template<typename T>
-T sum(T first) {
-    return first;
-}
-
-template<typename T, typename... Rest>
-T sum(T first, Rest... rest) {
-    return first + sum(rest...);  // recursive: peel off first, recurse on rest
-}
-
-sum(1, 2, 3, 4, 5);  // 15
-sum(1.1, 2.2, 3.3);  // 6.6
-```
-
-`typename... Rest` is a *parameter pack* — zero or more types. `rest...` *expands* the pack.
-
-### Fold Expressions (C++17)
-
-Fold expressions provide a cleaner way to apply operators over parameter packs:
-
-```cpp
-template<typename... Args>
-auto sum(Args... args) {
-    return (args + ...);   // left fold: ((a + b) + c) + d...
-}
-
-template<typename... Args>
-void print_all(Args&&... args) {
-    ((std::cout << args << " "), ...);  // comma fold — calls for each
-}
-
-print_all(1, "hello", 3.14, true);  // 1 hello 3.14 1
-```
-
-Four fold forms: `(pack op ...)` (right fold), `(... op pack)` (left fold), and versions with an initial value.
-
-### `if constexpr` in Templates
-
-C++17's `if constexpr` lets you branch on compile-time conditions inside templates:
-
-```cpp
-template<typename T>
-void process(T value) {
-    if constexpr (std::is_integral_v<T>) {
-        std::cout << "Integer: " << value << "\n";
-    } else if constexpr (std::is_floating_point_v<T>) {
-        std::cout << "Float: " << std::fixed << value << "\n";
-    } else {
-        std::cout << "Other: " << value << "\n";
-    }
-}
-```
-
-Unlike a regular `if`, branches not taken are not compiled — so code that's invalid for a particular type doesn't cause errors.
-
-### Key Takeaways
-
-- Full specialization provides a custom template implementation for one specific type.
-- Partial specialization (classes only) specializes on patterns of template arguments.
-- Variadic templates (`typename... T`) accept any number of types.
-- Fold expressions cleanly apply operators over parameter packs without recursion.
-- `if constexpr` enables compile-time branching inside templates.
 
 ---
 
-<a name="ch25"></a>
-## Chapter 25: Concepts (C++20) — Compile-Time Duck Typing
+## `if constexpr` -- Compile-Time Branching
 
-### The Problem with Unconstrained Templates
-
-When a template constraint is violated, the error messages are notoriously bad:
-
-```cpp
-template<typename T>
-T add(T a, T b) { return a + b; }
-
-struct Foo {};
-add(Foo{}, Foo{});  // ERROR: but the error message is cryptic — 
-                    // "no match for operator+" buried in template instantiation
-```
-
-The error happens inside the template, far from the call site. With complex templates, error messages can be hundreds of lines.
-
-### Concepts
-
-Concepts are named constraints on template parameters. They're checked at the call site, giving clear error messages.
-
-```cpp
-#include <concepts>
-
-// Define a concept: T must support + and return T
-template<typename T>
-concept Addable = requires(T a, T b) {
-    { a + b } -> std::convertible_to<T>;
-};
-
-// Use the concept to constrain the template
-template<Addable T>
-T add(T a, T b) { return a + b; }
-
-struct Foo {};
-add(Foo{}, Foo{});  // CLEAR ERROR: "Foo does not satisfy Addable"
-                    // at the call site
-```
-
-### Standard Library Concepts
-
-C++20 provides built-in concepts in `<concepts>`:
-
-```cpp
-#include <concepts>
-
-std::integral<T>           // T is an integer type
-std::floating_point<T>     // T is float/double/long double
-std::same_as<T, U>         // T and U are the same type
-std::derived_from<T, Base> // T derives from Base
-std::convertible_to<T, U>  // T converts to U
-std::equality_comparable<T>// T supports ==
-std::totally_ordered<T>    // T supports all comparison operators
-std::copyable<T>           // T can be copied
-std::movable<T>            // T can be moved
-```
-
-Using them:
-
-```cpp
-template<std::integral T>
-T greatest_common_divisor(T a, T b) {
-    while (b != 0) { a %= b; std::swap(a, b); }
-    return a;
-}
-
-gcd(12, 8);    // OK
-gcd(1.5, 2.5); // ERROR: double doesn't satisfy std::integral
-```
-
-### Abbreviated Function Templates
-
-C++20 allows `auto` parameters with concept constraints as shorthand:
-
-```cpp
-// Full syntax
-template<std::integral T>
-T square(T x) { return x * x; }
-
-// Abbreviated (C++20):
-std::integral auto square(std::integral auto x) { return x * x; }
-// or just:
-auto square(std::integral auto x) { return x * x; }
-```
-
-### Requires Clauses and Expressions
-
-```cpp
-template<typename T>
-requires std::is_arithmetic_v<T>  // requires clause
-T abs_val(T x) { return x < 0 ? -x : x; }
-
-// Inline requires expression:
-template<typename T>
-T safe_divide(T a, T b)
-requires requires(T x, T y) { x / y; } {   // checks if / is valid
-    if (b == T{0}) throw std::invalid_argument("divide by zero");
-    return a / b;
-}
-```
-
-### Why Concepts Matter
-
-1. **Clear errors** — constraint violations reported at call site with meaningful messages.
-2. **Documentation** — the template's requirements are explicit in the signature.
-3. **Overload resolution** — more constrained templates are preferred over less constrained ones.
-4. **Replaces SFINAE** — the old (C++11/14) approach of constraining templates was cryptic; concepts are readable.
-
-### Key Takeaways
-
-- Concepts are named compile-time constraints on template parameters.
-- They give clear error messages at the call site instead of deep inside template instantiation.
-- Standard concepts in `<concepts>`: `std::integral`, `std::floating_point`, `std::copyable`, etc.
-- C++20's abbreviated syntax: `void f(std::integral auto x)` is shorthand for a constrained template.
-- Concepts replace SFINAE — they're the modern, readable way to constrain templates.
-
----
-
-<a name="ch26"></a>
-## Chapter 26: An Introduction to Template Metaprogramming
-
-### What Is Template Metaprogramming?
-
-Template metaprogramming (TMP) is using the C++ template system to perform computations at *compile time*. The "program" runs during compilation; the result is embedded in the compiled code.
-
-It sounds esoteric but you already use its outputs: `std::tuple`, type traits, `constexpr` algorithms.
-
-### Type Traits
-
-Type traits are compile-time predicates about types. They live in `<type_traits>`:
+Before concepts (next chapter), `if constexpr` lets you branch based on compile-time conditions inside templates:
 
 ```cpp
 #include <type_traits>
 
-std::is_integral_v<int>        // true
-std::is_integral_v<double>     // false
-std::is_pointer_v<int*>        // true
-std::is_same_v<int, int>       // true
-std::is_same_v<int, long>      // false
-std::is_base_of_v<Base, Derived> // true if Derived inherits from Base
-std::is_copy_constructible_v<T>  // true if T can be copied
+template <typename T>
+void describe(T value) {
+    if constexpr (std::is_integral_v<T>) {
+        std::cout << "integer: " << value << "\n";
+    } else if constexpr (std::is_floating_point_v<T>) {
+        std::cout << "float:   " << value << "\n";
+    } else {
+        std::cout << "other:   " << value << "\n";
+    }
+}
+
+describe(42);       // "integer: 42"
+describe(3.14);     // "float:   3.14"
+describe("hello");  // "other:   hello"
 ```
 
-These are used to branch at compile time:
+Unlike a regular `if`, only the matching branch is compiled. The other branches can contain code that would fail to compile for this type -- they are simply discarded.
 
 ```cpp
-template<typename T>
-void serialize(const T& value) {
+template <typename T>
+void print_info(T v) {
     if constexpr (std::is_integral_v<T>) {
-        write_int(value);
-    } else if constexpr (std::is_floating_point_v<T>) {
-        write_float(value);
+        std::cout << "bits: " << sizeof(T) * 8 << "\n";
+        std::cout << "max:  " << std::numeric_limits<T>::max() << "\n";
     } else {
-        value.serialize_to_stream();  // user-defined method
+        std::cout << "not an integer\n";
     }
 }
 ```
 
-### Type Transformations
+---
 
-Type traits can transform types at compile time:
+## Type Traits
+
+`<type_traits>` provides compile-time predicates about types:
 
 ```cpp
-std::remove_const_t<const int>    // int
-std::add_pointer_t<int>           // int*
-std::remove_reference_t<int&>     // int
-std::decay_t<const int&>          // int  (removes const, ref, array decay)
-std::conditional_t<true, int, double>  // int  (compile-time ternary)
+#include <type_traits>
+
+std::is_integral_v<int>         // true
+std::is_integral_v<double>      // false
+std::is_floating_point_v<float> // true
+std::is_pointer_v<int*>         // true
+std::is_reference_v<int&>       // true
+std::is_const_v<const int>      // true
+std::is_same_v<int, int>        // true
+std::is_same_v<int, long>       // false (on most platforms!)
+std::is_base_of_v<Animal, Dog>  // true
+std::is_convertible_v<int, double> // true
 ```
 
-### Computing at Compile Time
+These are the building blocks of generic code that adapts to the type it receives.
 
-Before `constexpr` (Chapter 34), TMP was the only way to compute at compile time. Here's the classic Fibonacci example — educational for understanding TMP recursion:
+---
+
+## Variadic Templates
+
+A variadic template accepts **any number of type arguments** (including zero). This is how `std::tuple`, `std::make_unique`, and `std::format` are implemented.
+
+```python
+# Python: *args handles any number of arguments
+def print_all(*args):
+    for arg in args:
+        print(arg)
+
+print_all(1, "hello", 3.14)
+```
 
 ```cpp
-template<int N>
+// C++: variadic template with parameter pack
+template <typename... Args>   // Args is a "parameter pack" -- zero or more types
+void print_all(Args... args) {
+    // Expand the pack using fold expression (C++17):
+    (std::cout << ... << args);   // prints each arg with no separator
+    std::cout << "\n";
+}
+
+print_all(1, " hello ", 3.14);   // "1 hello 3.14"
+```
+
+The `...` is the pack expansion operator. `Args...` unpacks the types; `args...` unpacks the values.
+
+### Recursive Variadic Template (Classic Style)
+
+Before C++17 fold expressions, variadic templates were handled recursively:
+
+```cpp
+// Base case: zero arguments
+void print_all() {}
+
+// Recursive case: print first, then recurse on the rest
+template <typename First, typename... Rest>
+void print_all(First first, Rest... rest) {
+    std::cout << first << " ";
+    print_all(rest...);   // recurse with one fewer argument
+}
+
+print_all(1, "hello", 3.14, true);
+// Output: 1 hello 3.14 1
+```
+
+### Fold Expressions (C++17)
+
+More concise for common patterns:
+
+```cpp
+// Sum of any number of values:
+template <typename... Ts>
+auto sum(Ts... args) {
+    return (... + args);      // left fold: ((arg1 + arg2) + arg3) + ...
+}
+
+sum(1, 2, 3, 4, 5);   // 15
+sum(1.0, 2.5, 0.5);   // 4.0
+sum(std::string{"a"}, std::string{"b"}, std::string{"c"});  // "abc"
+```
+
+Fold expression forms:
+
+```cpp
+(... op pack)      // left fold:  (((a op b) op c) op d)
+(pack op ...)      // right fold: (a op (b op (c op d)))
+(init op ... op pack) // left fold with initial value
+(pack op ... op init) // right fold with initial value
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Full Specialization After the Template Is Already Instantiated
+
+**The bug:**
+```cpp
+template <typename T> void foo(T) { std::cout << "generic\n"; }
+foo(5);                              // instantiates foo<int> as generic
+template <> void foo<int>(int) { std::cout << "int\n"; }
+// Too late: the specialization after the call point may not be seen by the compiler
+```
+**The fix:** Declare all specializations before any instantiations -- usually by putting everything in the header, with specializations after the primary template.
+
+### Mistake 2: Forgetting `template <>` for Full Specialization
+
+**The bug:**
+```cpp
+template <typename T> struct Foo { };
+struct Foo<int> { };   // ERROR: looks like a redefinition of a non-template class
+```
+**The fix:** `template <> struct Foo<int> { };`
+
+---
+
+## Exercises
+
+**Exercise 24.1 -- Specialize for bool**
+
+The `Stack<T>` from Chapter 23 stores `bool` values as full `T data[MaxSize]` which wastes space. Write a full specialization `Stack<bool>` that uses a `uint64_t` as a bitset (packing 64 bools into one uint64_t). Only implement `push`, `pop`, and `size`.
+
+*Answer (simplified):*
+```cpp
+template <>
+class Stack<bool, 64> {
+    uint64_t bits{0};
+    int      top{0};
+public:
+    void push(bool v) {
+        if (top >= 64) throw std::overflow_error{"Stack full"};
+        if (v) bits |= (1ULL << top);
+        else   bits &= ~(1ULL << top);
+        ++top;
+    }
+    bool pop() {
+        if (top == 0) throw std::underflow_error{"Stack empty"};
+        --top;
+        return (bits >> top) & 1;
+    }
+    int size() const { return top; }
+};
+```
+
+---
+
+**Exercise 24.2 -- Variadic min**
+
+Write a variadic `vmin(args...)` that returns the minimum of any number of values.
+
+*Answer:*
+```cpp
+template <typename T>
+T vmin(T only) { return only; }
+
+template <typename T, typename... Rest>
+T vmin(T first, Rest... rest) {
+    T rest_min = vmin(rest...);
+    return first < rest_min ? first : rest_min;
+}
+
+vmin(5, 3, 8, 1, 6);  // 1
+vmin(3.14, 2.71, 1.41); // 1.41
+```
+
+---
+
+<a name="ch25"></a>
+# Chapter 25: Concepts (C++20) -- Compile-Time Duck Typing
+
+## The Problem With Unconstrained Templates
+
+```cpp
+template <typename T>
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+
+struct Foo {};
+my_max(Foo{}, Foo{});  // ERROR -- but the error is inside the template, very confusing
+```
+
+The error message:
+
+```
+error: no match for 'operator>' (operand types are 'Foo' and 'Foo')
+   3 |     return a > b ? a : b;
+      |            ~~^~~
+note: in instantiation of function template specialization 'my_max<Foo>' requested here
+   8 |     my_max(Foo{}, Foo{});
+```
+
+The error tells you the problem, but for complex templates it can span dozens of lines. More importantly, the error message talks about the template's internals -- not about what the caller did wrong.
+
+**Concepts** let you state requirements on template parameters up front, producing clear error messages at the call site.
+
+---
+
+## Defining and Using Concepts
+
+A **concept** is a named compile-time predicate over types:
+
+```python
+# Python 3.12+ type hints (still runtime duck typing)
+from typing import Protocol
+
+class Comparable(Protocol):
+    def __gt__(self, other) -> bool: ...
+```
+
+```cpp
+// C++20 concept: compile-time, enforced by compiler
+#include <concepts>
+
+template <typename T>
+concept Comparable = requires(T a, T b) {
+    { a > b } -> std::convertible_to<bool>;   // expression 'a > b' must be valid
+    { a < b } -> std::convertible_to<bool>;   // and convertible to bool
+};
+
+// Use the concept to constrain the template:
+template <Comparable T>     // shorthand constraint syntax
+T my_max(T a, T b) {
+    return a > b ? a : b;
+}
+
+// Or equivalent with 'requires' clause:
+template <typename T>
+requires Comparable<T>
+T my_max(T a, T b) { return a > b ? a : b; }
+```
+
+Now trying `my_max(Foo{}, Foo{})` gives:
+
+```
+error: no matching function for call to 'my_max(Foo, Foo)'
+note: constraints not satisfied
+note: 'Comparable<Foo>' evaluated to false
+note: 'a > b' is not a valid expression for type 'Foo'
+```
+
+The error is at the call site and says exactly what is missing.
+
+---
+
+## Standard Library Concepts (`<concepts>`)
+
+C++20 provides many ready-made concepts:
+
+```cpp
+#include <concepts>
+
+std::integral<int>          // true: int is integral
+std::integral<double>       // false
+std::floating_point<double> // true
+std::signed_integral<int>   // true
+std::same_as<int, int>      // true
+std::derived_from<Dog, Animal> // true (Dog derived from Animal)
+std::convertible_to<int, double> // true
+std::equality_comparable<int>   // true (int has == and !=)
+std::totally_ordered<int>       // true (int has <, >, <=, >=)
+std::copyable<std::vector<int>> // true
+std::movable<std::unique_ptr<int>> // true
+std::callable<std::function<int()>> // true
+```
+
+Use these in your own templates:
+
+```cpp
+#include <concepts>
+
+template <std::integral T>       // T must be an integral type
+T next(T n) { return n + 1; }
+
+template <std::floating_point T>  // T must be a float type
+T reciprocal(T n) { return T{1} / n; }
+
+next(5);         // OK
+next(3.14);      // ERROR: double does not satisfy 'integral'
+reciprocal(2.0); // OK
+reciprocal(2);   // ERROR: int does not satisfy 'floating_point'
+```
+
+---
+
+## Writing Your Own Concepts
+
+A concept is defined with `requires` expressions that describe what operations must be valid:
+
+```cpp
+// A type T is Printable if it can be inserted into an ostream:
+template <typename T>
+concept Printable = requires(T v, std::ostream& os) {
+    { os << v };    // this expression must compile
+};
+
+// A type T is Container if it has begin(), end(), and size():
+template <typename T>
+concept Container = requires(T c) {
+    { c.begin() } -> std::input_iterator;
+    { c.end()   } -> std::input_iterator;
+    { c.size()  } -> std::convertible_to<std::size_t>;
+};
+
+// A type T is Numeric if it supports +, -, *, / with itself:
+template <typename T>
+concept Numeric = requires(T a, T b) {
+    { a + b } -> std::same_as<T>;
+    { a - b } -> std::same_as<T>;
+    { a * b } -> std::same_as<T>;
+    { a / b } -> std::same_as<T>;
+};
+
+// Use all three:
+template <Container C, Printable E>
+requires std::same_as<typename C::value_type, E>
+void print_container(const C& c) {
+    for (const E& e : c)
+        std::cout << e << " ";
+    std::cout << "\n";
+}
+```
+
+---
+
+## Abbreviated Function Templates (C++20)
+
+The cleanest concept syntax uses `auto` with concept constraints:
+
+```cpp
+// Instead of:
+template <std::integral T>
+T double_it(T n) { return n * 2; }
+
+// Write:
+std::integral auto double_it(std::integral auto n) { return n * 2; }
+//              ^-- abbreviated function template: auto = template parameter
+//   std::integral auto means "auto, but constrained to integral types"
+```
+
+For simple cases this is much shorter. For complex cases with multiple interdependent parameters, the explicit `template <typename T>` form is clearer.
+
+---
+
+## Concepts vs Runtime Type Checks
+
+Concepts check types at **compile time**. The entire constraint system is resolved before any code runs. Failed constraints are compiler errors, not runtime exceptions.
+
+```
+Python (duck typing):
+  - Checked at runtime when the method is called
+  - TypeError raised if method missing
+  - Only the failing call path is caught
+
+C++ concepts:
+  - Checked at compile time when the template is instantiated
+  - Compile error if constraint not satisfied
+  - All call sites checked, not just the ones tested
+  - Zero runtime overhead
+```
+
+This is what C++ means by "you don't pay for what you don't use" -- concepts are checked once at compile time and then disappear from the runtime.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using `requires` in the Wrong Place
+
+**The bug:**
+```cpp
+template <typename T>
+T foo(T a) requires std::integral<T>  // requires clause at end of function signature
+{ return a; }
+// Fine syntactically, but easy to confuse with body. Prefer:
+template <std::integral T> T foo(T a) { return a; }
+```
+Both are legal; the second is cleaner for simple cases.
+
+### Mistake 2: Concept Is Too Strict or Too Loose
+
+**The bug:** Writing a concept that requires `operator<` but your algorithm actually needs `operator<=`:
+```cpp
+template <typename T>
+concept Ordered = requires(T a, T b) { a < b; };   // missing <=
+
+template <Ordered T>
+bool in_range(T val, T lo, T hi) {
+    return lo <= val && val <= hi;  // uses <= -- not checked by concept!
+}
+```
+**The fix:** List every operation your template actually uses in the concept.
+
+---
+
+## Exercises
+
+**Exercise 25.1 -- Constrain my_max**
+
+Rewrite `my_max` from Chapter 23 with a concept that requires `operator>`. Test that it rejects `Foo{}` with a clear error.
+
+*Answer:*
+```cpp
+template <typename T>
+concept HasGreaterThan = requires(T a, T b) {
+    { a > b } -> std::convertible_to<bool>;
+};
+
+template <HasGreaterThan T>
+T my_max(T a, T b) { return a > b ? a : b; }
+
+my_max(3, 5);     // OK
+my_max(3.0, 5.0); // OK
+// my_max(Foo{}, Foo{});  // Compile error with clear message
+```
+
+---
+
+**Exercise 25.2 -- Numeric concept**
+
+Write a `sum` function that computes the sum of a `std::vector<T>` where `T` must satisfy `std::integral` or `std::floating_point`. Use a combined concept.
+
+*Answer:*
+```cpp
+template <typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
+template <Arithmetic T>
+T sum(const std::vector<T>& v) {
+    T total{};
+    for (const T& x : v) total += x;
+    return total;
+}
+
+sum(std::vector<int>{1, 2, 3, 4, 5});     // 15
+sum(std::vector<double>{1.1, 2.2, 3.3});  // 6.6
+// sum(std::vector<std::string>{"a","b"}); // ERROR: string not Arithmetic
+```
+
+---
+
+<a name="ch26"></a>
+# Chapter 26: An Introduction to Template Metaprogramming
+
+## What Is Template Metaprogramming?
+
+**Template metaprogramming (TMP)** is using the C++ template system to compute values and make decisions at **compile time**. The template system is Turing-complete -- in principle you can compute anything at compile time.
+
+In practice, TMP is used for:
+- Computing compile-time constants (sizes, masks, lookup tables)
+- Selecting code paths based on types without runtime overhead
+- Generating optimized code for specific type configurations
+- Implementing type traits and concepts
+
+Modern C++ has made most raw TMP unnecessary. `constexpr` functions, `if constexpr`, and concepts replace many old TMP patterns more readably. But understanding TMP helps you read library code and write efficient generic code.
+
+---
+
+## Compile-Time Recursion
+
+TMP was originally done with recursive struct templates (before `constexpr`):
+
+```cpp
+// Fibonacci at compile time (old style):
+template <int N>
 struct Fib {
     static constexpr int value = Fib<N-1>::value + Fib<N-2>::value;
 };
+template <> struct Fib<0> { static constexpr int value = 0; };
+template <> struct Fib<1> { static constexpr int value = 1; };
 
-template<> struct Fib<0> { static constexpr int value = 0; };
-template<> struct Fib<1> { static constexpr int value = 1; };
-
-constexpr int f10 = Fib<10>::value;  // 55 — computed at compile time
+constexpr int f10 = Fib<10>::value;  // 55, computed at compile time
 ```
 
-Today, `constexpr` functions are cleaner for this. TMP shines for type-level computation.
-
-### `std::tuple` and Index Sequences
-
-`std::tuple` stores a heterogeneous collection of types — it's TMP in action:
+Modern equivalent with `constexpr` function (far more readable):
 
 ```cpp
+constexpr int fib(int n) {
+    if (n <= 1) return n;
+    return fib(n-1) + fib(n-2);
+}
+constexpr int f10 = fib(10);  // 55, computed at compile time
+```
+
+Always prefer `constexpr` functions over struct-recursion TMP for computations.
+
+---
+
+## `std::enable_if` -- Conditional Compilation (Old Style)
+
+Before concepts, `std::enable_if` was used to enable or disable template instantiations based on type traits:
+
+```cpp
+#include <type_traits>
+
+// Only enabled for integral types (old style, pre-C++20):
+template <typename T,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
+T next(T n) { return n + 1; }
+
+// With concepts (C++20, prefer this):
+template <std::integral T>
+T next(T n) { return n + 1; }
+```
+
+You will encounter `enable_if` in older code and library documentation. Understanding it: `std::enable_if_t<condition>` is `void` when `condition` is true (template is valid) and causes substitution failure when `condition` is false (template is removed from consideration). This is called **SFINAE** (Substitution Failure Is Not An Error).
+
+---
+
+## Type Lists -- Compile-Time Lists of Types
+
+Variadic templates let you create lists of types that exist purely at compile time:
+
+```cpp
+// A type list:
+template <typename... Ts>
+struct TypeList {};
+
+using MyTypes = TypeList<int, double, std::string, bool>;
+
+// Count the types in a list:
+template <typename List>
+struct Length;
+
+template <typename... Ts>
+struct Length<TypeList<Ts...>> {
+    static constexpr int value = sizeof...(Ts);
+};
+
+constexpr int n = Length<MyTypes>::value;  // 4
+```
+
+Type lists are the foundation of tuple implementations, plugin systems, and serialization frameworks that need to enumerate types at compile time.
+
+---
+
+## Compile-Time Lookup Tables
+
+A powerful pattern: compute a lookup table at compile time so it is a static constant array in the binary:
+
+```cpp
+#include <array>
+
+// Generate a table of squares at compile time:
+constexpr std::array<int, 10> squares = []() {
+    std::array<int, 10> arr{};
+    for (int i = 0; i < 10; ++i) arr[i] = i * i;
+    return arr;
+}();   // immediately invoked lambda
+
+// At runtime, squares is a pre-computed constant array in .rodata
+// No runtime computation at all:
+std::cout << squares[7] << "\n";   // 49 -- just a memory read
+```
+
+This pattern works because:
+1. The lambda is `constexpr`-evaluatable
+2. `std::array` is a literal type
+3. The entire computation happens at compile time
+
+For game engines, look-up tables for sin/cos, byte-reversal, CRC, and huffman trees are often pre-computed this way.
+
+---
+
+## `std::tuple` -- Compile-Time Heterogeneous Collections
+
+`std::tuple` is a variadic class template that holds values of different types:
+
+```python
+# Python tuple
+t = (42, "hello", 3.14)
+print(t[0])   # 42  (runtime indexing)
+```
+
+```cpp
+// C++ tuple
 #include <tuple>
+std::tuple<int, std::string, double> t{42, "hello", 3.14};
 
-auto t = std::make_tuple(42, 3.14, std::string("hello"));
-auto n = std::get<0>(t);  // 42
-auto d = std::get<1>(t);  // 3.14
-auto s = std::get<2>(t);  // "hello"
+// Access by index -- index must be a compile-time constant:
+std::get<0>(t);  // 42
+std::get<1>(t);  // "hello"
+std::get<2>(t);  // 3.14
 
-// Size at compile time:
-constexpr int sz = std::tuple_size_v<decltype(t)>;  // 3
+// Cannot do: std::get<i>(t) where i is a runtime variable
+// The index is resolved at compile time
+
+// C++17 structured bindings (much nicer):
+auto [num, str, flt] = t;
+std::cout << num << " " << str << " " << flt << "\n";
 ```
 
-To iterate over a tuple's elements at compile time, you use `std::index_sequence`:
-
-```cpp
-template<typename Tuple, std::size_t... Is>
-void print_tuple_impl(const Tuple& t, std::index_sequence<Is...>) {
-    ((std::cout << std::get<Is>(t) << " "), ...);
-}
-
-template<typename Tuple>
-void print_tuple(const Tuple& t) {
-    print_tuple_impl(t, std::make_index_sequence<std::tuple_size_v<Tuple>>{});
-}
-
-print_tuple(std::make_tuple(1, "hi", 3.14));  // 1 hi 3.14
-```
-
-### SFINAE (Substitution Failure Is Not An Error)
-
-Before concepts, templates were constrained using SFINAE: a substitution failure in a template argument is not an error — it just removes that overload from consideration.
-
-```cpp
-// Old style (C++11/14): enable this overload only for integral T
-template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-T square(T x) { return x * x; }
-```
-
-With concepts (Chapter 25), this becomes:
-
-```cpp
-template<std::integral T>
-T square(T x) { return x * x; }
-```
-
-You'll encounter SFINAE in legacy code. For new code, use concepts.
-
-### Key Takeaways
-
-- TMP runs computations during compilation, embedding results in the executable.
-- Type traits (`<type_traits>`) are compile-time predicates and transformations on types.
-- `if constexpr` uses type traits to branch at compile time inside templates.
-- `std::tuple` is the canonical TMP data structure — a heterogeneous compile-time list.
-- SFINAE is the old way to constrain templates; concepts (C++20) replaced it with readable syntax.
+`std::get<N>` is resolved at compile time. Accessing `std::get<5>(t)` on a 3-element tuple is a compile error, not a runtime error.
 
 ---
 
+## `std::conditional` -- Type Selection at Compile Time
+
+Choose between two types based on a condition:
+
+```cpp
+#include <type_traits>
+
+// If condition is true, type is int; otherwise long long
+template <bool IsSmall>
+using StorageType = std::conditional_t<IsSmall, int, long long>;
+
+StorageType<true>  a = 5;          // int
+StorageType<false> b = 5000000000; // long long
+
+// Practical use: choose between fast and accurate computation
+template <bool Fast>
+using Float = std::conditional_t<Fast, float, double>;
+```
+
 ---
 
-# Part VI — The Standard Library (STL)
+## The Difference Between TMP and `constexpr`
+
+```
+Template Metaprogramming:
+  - Computation done by the template instantiation engine
+  - Types are first-class citizens
+  - Syntax is complex (recursive struct templates, enable_if)
+  - Result is a type or compile-time constant
+  - Use when you need to manipulate TYPES at compile time
+
+constexpr:
+  - Computation done by a regular function (or expression) evaluated at compile time
+  - Normal C++ syntax, easy to read
+  - Result is a VALUE (int, array, struct...)
+  - Use when you need to compute VALUES at compile time
+
+C++20 guidance:
+  - For compile-time values: use constexpr functions
+  - For type selection: use concepts, if constexpr, std::conditional
+  - Raw TMP (recursive struct templates) is rarely needed in new code
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Trying to Use a Runtime Value as a Template Argument
+
+**The bug:**
+```cpp
+int n;
+std::cin >> n;
+std::array<int, n> arr;  // ERROR: n is not a compile-time constant
+```
+**The fix:** Use `std::vector<int>(n)` for runtime sizes.
+
+### Mistake 2: Recursive TMP Instead of `constexpr`
+
+**The bug:**
+```cpp
+template <int N> struct Pow2 { static constexpr int v = 2 * Pow2<N-1>::v; };
+template <>      struct Pow2<0> { static constexpr int v = 1; };
+```
+**Better:** `constexpr int pow2(int n) { return 1 << n; }`
+
+---
+
+## Exercises
+
+**Exercise 26.1 -- Compile-time lookup table**
+
+Create a `constexpr std::array<int, 16>` of the first 16 powers of 2 (1, 2, 4, 8, ...). Access element 10 and verify it is 1024.
+
+*Answer:*
+```cpp
+constexpr std::array<int, 16> powers_of_2 = []() {
+    std::array<int, 16> arr{};
+    arr[0] = 1;
+    for (int i = 1; i < 16; ++i) arr[i] = arr[i-1] * 2;
+    return arr;
+}();
+
+static_assert(powers_of_2[10] == 1024);  // compile-time check
+std::cout << powers_of_2[10] << "\n";    // 1024
+```
+
+---
+
+**Exercise 26.2 -- Type traits**
+
+Write a function `type_name<T>()` that returns a `std::string` naming the type as "integral", "floating_point", "string", or "other":
+
+*Answer:*
+```cpp
+#include <concepts>
+#include <string>
+
+template <typename T>
+std::string type_name() {
+    if constexpr (std::integral<T>)        return "integral";
+    else if constexpr (std::floating_point<T>) return "floating_point";
+    else if constexpr (std::same_as<T, std::string>) return "string";
+    else                                   return "other";
+}
+
+type_name<int>();          // "integral"
+type_name<double>();       // "floating_point"
+type_name<std::string>();  // "string"
+type_name<bool>();         // "integral" (bool is integral)
+type_name<char*>();        // "other"
+```
+
+---
+
+**Exercise 26.3 -- Tuple structured binding**
+
+Create a function `minmax(std::vector<T>)` that returns a `std::pair<T, T>` containing the minimum and maximum element. Use structured bindings to unpack the result.
+
+*Answer:*
+```cpp
+#include <vector>
+#include <utility>
+#include <algorithm>
+
+template <typename T>
+std::pair<T, T> minmax_pair(const std::vector<T>& v) {
+    auto [mn, mx] = std::minmax_element(v.begin(), v.end());
+    return {*mn, *mx};
+}
+
+std::vector<int> v = {5, 2, 8, 1, 9, 3};
+auto [lo, hi] = minmax_pair(v);
+std::cout << "min=" << lo << " max=" << hi << "\n";  // min=1 max=9
+```
+
+---
+
+*Part V is complete. You now understand C++ generic programming: function and class templates, specialization, variadic templates, concepts for type-safe constraints, and the foundations of template metaprogramming.*
+
+*Part VI covers the C++ Standard Library in depth -- containers, iterators, algorithms, lambdas, ranges, and utility types. These are the tools you will use in every real program. Ask to continue.*
+
+---
+
+# Part VI -- The Standard Library
+
+The C++ Standard Library is not a collection of helper functions bolted on after the fact. It is a carefully designed ecosystem of containers, iterators, algorithms, and utilities that work together through a common interface. Learning to use it well is the difference between writing C++ that feels like C with classes and C++ that is expressive, safe, and fast.
 
 ---
 
 <a name="ch27"></a>
-## Chapter 27: Containers: `vector`, `map`, `set`, `array`, and friends
+# Chapter 27: Containers: `vector`, `map`, `set`, `array`, and Friends
 
-### Container Taxonomy
+## The Container Taxonomy
 
-The STL containers are divided into three categories:
+All standard containers fall into three categories:
 
-**Sequence containers** — ordered by position:
-- `std::vector<T>` — dynamic array (use by default)
-- `std::array<T, N>` — fixed-size array
-- `std::deque<T>` — double-ended queue
-- `std::list<T>` — doubly linked list
-- `std::forward_list<T>` — singly linked list
+```
+Sequence containers (ordered by position):
+  std::array<T, N>        fixed-size array, stack-allocated
+  std::vector<T>          dynamic array, heap-allocated
+  std::deque<T>           double-ended queue
+  std::list<T>            doubly-linked list
+  std::forward_list<T>    singly-linked list
 
-**Associative containers** — ordered by key (sorted):
-- `std::set<T>` — unique sorted keys
-- `std::multiset<T>` — sorted keys, duplicates allowed
-- `std::map<K, V>` — sorted key-value pairs
-- `std::multimap<K, V>` — sorted, duplicate keys allowed
+Associative containers (ordered by key):
+  std::map<K, V>          sorted key-value pairs, unique keys
+  std::multimap<K, V>     sorted key-value pairs, duplicate keys allowed
+  std::set<K>             sorted unique keys
+  std::multiset<K>        sorted keys, duplicates allowed
 
-**Unordered containers** — hash-based (average O(1)):
-- `std::unordered_set<T>`
-- `std::unordered_map<K, V>`
+Unordered associative containers (hash-based):
+  std::unordered_map<K, V>   hash map, unique keys
+  std::unordered_set<K>      hash set, unique keys
 
-### `std::vector` — the Default Choice
-
-Covered in Chapter 10. Prefer `vector` unless you have a specific reason to choose something else. Its cache-friendly contiguous memory beats linked lists in almost all real workloads.
-
-```cpp
-std::vector<int> v = {3, 1, 4, 1, 5, 9, 2, 6};
-std::sort(v.begin(), v.end());   // sorts in place
+Container adapters (built on other containers):
+  std::stack<T>           LIFO adapter (uses deque by default)
+  std::queue<T>           FIFO adapter (uses deque by default)
+  std::priority_queue<T>  max-heap adapter (uses vector by default)
 ```
 
-### `std::map` — Python's `dict` (sorted)
+---
 
-`std::map<K, V>` is an ordered dictionary. Keys are sorted. Operations are O(log n) (red-black tree internally).
+## `std::vector<T>` -- Your Default Container
+
+Already covered in Chapter 10. Here are the parts you need for real programs:
+
+### Reservation and Capacity Management
+
+```cpp
+std::vector<int> v;
+v.reserve(1000);           // pre-allocate space for 1000 elements
+                           // avoids repeated reallocations during push_back
+
+std::cout << v.size()     << "\n";  // 0     (no elements yet)
+std::cout << v.capacity() << "\n";  // 1000  (space reserved)
+
+for (int i = 0; i < 1000; ++i)
+    v.push_back(i);         // no reallocations happen (capacity was reserved)
+
+v.shrink_to_fit();          // release excess capacity to OS
+```
+
+```
+Without reserve (1000 push_backs):
+  Realloc at 1, 2, 4, 8, 16, ... 512 = ~10 reallocations
+  Each realloc: allocate new array, copy all elements, free old array
+  Total element copies: 1+2+4+...+512 ≈ 1000 extra copies
+
+With reserve(1000):
+  Zero reallocations. Zero extra copies.
+```
+
+Reserve when you know an upper bound on the number of elements.
+
+### `emplace_back` vs `push_back`
+
+```cpp
+struct Point { double x, y; Point(double x, double y) : x{x}, y{y} {} };
+
+std::vector<Point> pts;
+
+// push_back: constructs a Point, then copies/moves it into the vector
+pts.push_back(Point{1.0, 2.0});   // construct temporary, then move-construct into vector
+
+// emplace_back: constructs the Point DIRECTLY inside the vector memory
+pts.emplace_back(1.0, 2.0);       // no temporary, arguments forwarded to constructor
+```
+
+`emplace_back` is generally preferred for class types -- it constructs in-place, avoiding the temporary. For types where the move is cheap (most standard types), the difference is minimal. For non-movable types, `emplace_back` is the only option.
+
+---
+
+## `std::deque<T>` -- Fast at Both Ends
+
+Like `vector` but also allows O(1) insertion and removal at the front:
+
+```cpp
+#include <deque>
+std::deque<int> dq = {3, 4, 5};
+dq.push_front(2);    // {2, 3, 4, 5}
+dq.push_front(1);    // {1, 2, 3, 4, 5}
+dq.push_back(6);     // {1, 2, 3, 4, 5, 6}
+dq.pop_front();      // {2, 3, 4, 5, 6}
+```
+
+Use `deque` when you need fast insertion at both ends. Use `vector` otherwise -- `vector`'s cache efficiency is better for sequential access.
+
+---
+
+## `std::map<K, V>` -- Sorted Key-Value Store
 
 ```python
-# Python
+# Python dict -- hash map
 scores = {"Alice": 95, "Bob": 87, "Carol": 92}
 scores["Dave"] = 78
 print(scores["Alice"])  # 95
 ```
 
 ```cpp
+// C++ map -- sorted by key (balanced BST internally)
 #include <map>
 std::map<std::string, int> scores;
 scores["Alice"] = 95;
@@ -3736,1088 +9257,2134 @@ scores["Bob"]   = 87;
 scores["Carol"] = 92;
 scores["Dave"]  = 78;
 
-std::cout << scores["Alice"] << "\n";  // 95
-
-// Iterate in sorted key order:
-for (const auto& [name, score] : scores) {
-    std::cout << name << ": " << score << "\n";
-}
+std::cout << scores["Alice"] << "\n";   // 95
 ```
 
-`operator[]` inserts a default-value entry if the key doesn't exist. Use `.find()` when you don't want to accidentally insert:
+### Key Difference: `std::map` vs Python `dict`
+
+| Feature | Python `dict` | `std::map` | `std::unordered_map` |
+|---------|--------------|-----------|---------------------|
+| Order | Insertion order (3.7+) | Sorted by key | No guaranteed order |
+| Lookup | O(1) average | O(log n) | O(1) average |
+| Key requirement | Hashable | Comparable (`<`) | Hashable |
+| Memory | Compact | BST nodes (pointers) | Hash buckets |
+
+Use `std::map` when you need ordered iteration. Use `std::unordered_map` when you need fast lookups and don't care about order.
+
+### Safe Lookup: `at()` vs `operator[]`
 
 ```cpp
-auto it = scores.find("Eve");
-if (it != scores.end()) {
-    std::cout << it->second;
-} else {
-    std::cout << "not found\n";
+std::map<std::string, int> m = {{"a", 1}, {"b", 2}};
+
+m["c"];        // WARNING: inserts "c" with default value 0 if not present!
+               // m is now {"a":1, "b":2, "c":0}
+
+m.at("d");     // throws std::out_of_range: "d" not in map (no insertion)
+m.at("a");     // 1 -- safe read
+
+// Best: check first
+if (m.count("a")) { std::cout << m.at("a") << "\n"; }
+
+// Or use find:
+auto it = m.find("a");
+if (it != m.end()) {
+    std::cout << it->first << " -> " << it->second << "\n";
 }
 ```
 
-### `std::unordered_map` — Python's `dict` (hash)
+The `operator[]` creates missing keys with a default-constructed value. This is a very common source of bugs: you check `map[key]` to see if a key exists, and it silently inserts a zero.
 
-For most Python-dict workloads, use `std::unordered_map` — average O(1) lookups vs O(log n) for `std::map`:
+### Iterating Over a Map
+
+```cpp
+std::map<std::string, int> m = {{"Alice", 95}, {"Bob", 87}, {"Carol", 92}};
+
+// Iteration is in sorted key order:
+for (const auto& [key, value] : m) {   // structured binding (C++17)
+    std::cout << key << ": " << value << "\n";
+}
+// Alice: 95
+// Bob: 87
+// Carol: 92
+```
+
+### Inserting and Checking Simultaneously
+
+```cpp
+// insert_or_assign (C++17): always sets the value
+m.insert_or_assign("Dave", 78);   // inserts if new, overwrites if exists
+
+// try_emplace (C++17): inserts only if key is absent, does nothing if present
+m.try_emplace("Alice", 100);      // Alice already exists: nothing happens (still 95)
+m.try_emplace("Eve", 88);         // Eve is new: inserted with 88
+
+// erase:
+m.erase("Bob");
+```
+
+---
+
+## `std::unordered_map<K, V>` -- Hash Map
+
+Same interface as `std::map` but uses hashing for O(1) average lookup:
 
 ```cpp
 #include <unordered_map>
-std::unordered_map<std::string, int> scores;
-scores["Alice"] = 95;
-auto it = scores.find("Alice");  // O(1) average
+std::unordered_map<std::string, int> umap;
+umap["Alice"] = 95;
+umap["Bob"]   = 87;
+
+// Same interface as map:
+umap.at("Alice");       // 95
+umap.count("Carol");    // 0 -- not present
+auto it = umap.find("Bob");
+
+// But NO guaranteed iteration order:
+for (const auto& [k, v] : umap) { ... }  // order is unpredictable
 ```
 
-Use `std::map` (sorted) when you need ordered iteration or range queries. Use `std::unordered_map` (hash) for pure lookup performance.
+Use `unordered_map` for most cases where you need key-value lookup. Use `map` when sorted order matters (e.g., printing in alphabetical order, range queries).
 
-### `std::set` — Unique Sorted Elements
+---
+
+## `std::set<K>` -- Sorted Unique Keys
 
 ```python
-# Python
-unique = {3, 1, 4, 1, 5, 9}  # {1, 3, 4, 5, 9}
+# Python set
+s = {3, 1, 4, 1, 5, 9, 2}
+print(s)  # {1, 2, 3, 4, 5, 9} (unordered)
 ```
 
 ```cpp
 #include <set>
-std::set<int> unique = {3, 1, 4, 1, 5, 9};  // {1, 3, 4, 5, 9} — sorted, unique
-unique.insert(7);
-unique.erase(3);
-bool has_5 = unique.count(5) > 0;  // or: unique.contains(5)  (C++20)
+std::set<int> s = {3, 1, 4, 1, 5, 9, 2};   // duplicates silently ignored
+// s contains: {1, 2, 3, 4, 5, 9} (sorted, unique)
+
+s.insert(7);             // {1, 2, 3, 4, 5, 7, 9}
+s.erase(4);              // {1, 2, 3, 5, 7, 9}
+s.count(5);              // 1 (present)
+s.count(4);              // 0 (erased)
+
+for (int n : s)
+    std::cout << n << " ";    // 1 2 3 5 7 9 (sorted order)
 ```
 
-### `std::deque` — Double-Ended Queue
+For hash-based set: `std::unordered_set<K>` -- O(1) lookup, no order.
 
-Like `vector` but efficient at both ends. Use when you need frequent `push_front`:
+---
 
+## Choosing the Right Container
+
+```
+I need to store N items and access by position:
+  - Size known at compile time: std::array<T, N>
+  - Size varies at runtime:     std::vector<T>
+  - Need fast front insertion:  std::deque<T>
+
+I need key-value lookup:
+  - Order matters / sorted iteration: std::map<K, V>
+  - Maximum speed, order irrelevant:  std::unordered_map<K, V>
+
+I need to track unique items:
+  - Order matters:               std::set<K>
+  - Maximum speed, no order:     std::unordered_set<K>
+
+I need LIFO (stack) behavior:   std::stack<T>
+I need FIFO (queue) behavior:   std::queue<T>
+I need the max element always:  std::priority_queue<T>
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `map[key]` to Check Existence
+
+**The bug:**
 ```cpp
-#include <deque>
-std::deque<int> dq = {2, 3, 4};
-dq.push_front(1);   // efficient
-dq.push_back(5);    // efficient
-dq.pop_front();
+std::map<std::string, int> m = {{"a", 1}};
+if (m["b"]) { ... }   // inserts "b" with value 0! "b" is now in the map.
+```
+**The fix:** `if (m.count("b"))` or `if (m.find("b") != m.end())`
+
+### Mistake 2: Invalidating Iterators by Modifying the Container
+
+**The bug:**
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (auto it = v.begin(); it != v.end(); ++it) {
+    if (*it == 3) v.erase(it);  // erase invalidates 'it' and all iterators after it!
+}
+```
+**The fix:**
+```cpp
+v.erase(std::remove(v.begin(), v.end(), 3), v.end()); // erase-remove idiom
 ```
 
-### Choosing the Right Container
+### Mistake 3: Linear Search on an Unsorted `vector` When a `set` Would Be O(log n)
 
+If you are repeatedly calling `std::find` on a `vector`, consider whether `std::set` or `std::unordered_set` would serve better.
+
+---
+
+## Exercises
+
+**Exercise 27.1 -- Word frequency count**
+
+Read a list of words and count how many times each word appears. Print words and counts in alphabetical order.
+
+*Answer:*
+```cpp
+#include <iostream>
+#include <map>
+#include <string>
+
+int main() {
+    std::map<std::string, int> freq;
+    std::string word;
+    while (std::cin >> word) {
+        ++freq[word];    // OK to use [] here: we WANT insertion with 0 if new
+    }
+    for (const auto& [w, count] : freq) {
+        std::cout << w << ": " << count << "\n";
+    }
+}
 ```
-Need a dynamic array?              → vector
-Need fast push/pop at both ends?   → deque
-Need sorted unique keys?           → set / map
-Need fast hash-based lookup?       → unordered_set / unordered_map
-Need fixed size, compile-time?     → array<T, N>
-Need O(1) insert anywhere?         → list (but cache-unfriendly)
+
+---
+
+**Exercise 27.2 -- Reverse a deque**
+
+Push the integers 1 through 10 into a `std::deque`, then repeatedly pop from the front to print them in reverse order (10 down to 1). Do not use `std::reverse`.
+
+*Answer:*
+```cpp
+std::deque<int> dq;
+for (int i = 1; i <= 10; ++i) dq.push_front(i);
+// dq is now: 10 9 8 7 6 5 4 3 2 1
+
+while (!dq.empty()) {
+    std::cout << dq.front() << " ";
+    dq.pop_front();
+}   // prints: 10 9 8 7 6 5 4 3 2 1
 ```
 
-### Key Takeaways
+---
 
-- `vector` is the default. It's contiguous memory, cache-friendly, and fast for most operations.
-- `map` is ordered (sorted key iteration). `unordered_map` is hash-based (faster lookups). Both are like Python's dict.
-- `set` / `unordered_set` for unique elements.
-- `operator[]` on map inserts on miss — use `.find()` when you only want to check.
-- C++20 adds `.contains()` to all associative containers.
+**Exercise 27.3 -- Unique elements**
+
+Given `std::vector<int> v = {5,3,1,4,2,3,5,1,4}`, produce a sorted vector of unique elements without writing a sort+unique manually.
+
+*Answer:*
+```cpp
+std::vector<int> v = {5,3,1,4,2,3,5,1,4};
+std::set<int> s(v.begin(), v.end());         // set removes duplicates, sorts
+std::vector<int> unique(s.begin(), s.end()); // back to vector: {1,2,3,4,5}
+```
 
 ---
 
 <a name="ch28"></a>
-## Chapter 28: Iterators
+# Chapter 28: Iterators
 
-### What Is an Iterator?
+## What Is an Iterator?
 
-An iterator is a generalization of a pointer. It provides a uniform interface for traversing any container, regardless of how the container stores its data.
+An iterator is an object that points into a container and can be advanced. It generalizes the concept of a pointer -- in fact, raw pointers are valid iterators for arrays.
 
-In Python, the iterator protocol is `__iter__` / `__next__`. In C++, an iterator supports `*` (dereference), `++` (advance), and `==`/`!=` (comparison).
-
-```cpp
-std::vector<int> v = {10, 20, 30, 40};
-
-// Iterator-based loop (equivalent to range-based for):
-for (auto it = v.begin(); it != v.end(); ++it) {
-    std::cout << *it << "\n";  // *it dereferences the iterator
-}
+```python
+# Python iteration: the iterator protocol (hidden from you)
+it = iter([1, 2, 3])
+next(it)   # 1
+next(it)   # 2
+next(it)   # 3
 ```
 
-`v.begin()` returns an iterator to the first element. `v.end()` returns an iterator *one past the last element* (a sentinel — never dereference it).
-
-### Iterator Categories
-
-Iterators come in categories based on what operations they support:
-
-| Category              | Supports                          | Example          |
-|-----------------------|-----------------------------------|------------------|
-| Input iterator        | Read once, forward only           | `istream_iterator`|
-| Output iterator       | Write once, forward only          | `ostream_iterator`|
-| Forward iterator      | Read/write, forward               | `forward_list`   |
-| Bidirectional iterator| Forward + backward (`--`)         | `list`, `map`    |
-| Random access iterator| + arithmetic, `[]`, `<`           | `vector`, `deque`|
-| Contiguous iterator   | Random + contiguous memory        | `vector`, `array`|
-
-Algorithms require a minimum iterator category. `std::sort` needs random access iterators — it works on `vector` but not `list`.
-
-### Common Iterator Operations
-
 ```cpp
-std::vector<int> v = {10, 20, 30, 40, 50};
-
-auto first = v.begin();       // iterator to first element
-auto last  = v.end();         // one past last
-auto mid   = v.begin() + 2;   // random access: iterator to element 2 (30)
-
-*mid = 99;                    // modify through iterator
-
-std::advance(first, 3);       // advance any iterator by n (works for all categories)
-auto dist = std::distance(v.begin(), mid);  // distance between iterators
+// C++ iterators: explicit objects you manipulate
+std::vector<int> v = {1, 2, 3};
+auto it = v.begin();   // iterator to first element
+std::cout << *it << "\n";  // 1   -- dereference like a pointer
+++it;
+std::cout << *it << "\n";  // 2
+++it;
+std::cout << *it << "\n";  // 3
+++it;
+// it == v.end() -- one past the last element (do not dereference!)
 ```
 
-### Reverse Iterators
+`v.begin()` returns an iterator to the first element.
+`v.end()` returns an iterator to one-past-the-last element.
 
-Traverse in reverse:
+The half-open range `[begin, end)` is a C++ convention. `end` itself is never valid to dereference -- it is a sentinel.
+
+---
+
+## Iterator Categories
+
+Different containers support different iterator capabilities:
+
+```
+Input iterator:    read once, advance once (e.g., reading from a file stream)
+Output iterator:   write once, advance once
+Forward iterator:  read/write, advance forward, multi-pass
+Bidirectional:     forward + go backward (std::list, std::map)
+Random access:     any position in O(1) (std::vector, std::array, raw array)
+Contiguous:        random access + elements are contiguous in memory (std::vector, std::array)
+```
 
 ```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+auto it = v.begin();
+
+it + 2;          // random access: jump forward by 2
+it[2];           // random access: subscript
+*(it + 2);       // 3
+it += 3;         // advance by 3
+
+std::list<int> l = {1, 2, 3};
+auto lit = l.begin();
+++lit;           // forward
+--lit;           // backward (bidirectional)
+// lit + 2;     // ERROR: list iterators are not random access
+```
+
+The algorithm functions in `<algorithm>` work on any appropriate iterator category. `std::sort` requires random-access iterators (works on `vector`, not `list`). `std::find` requires only forward iterators (works on both).
+
+---
+
+## The Iterator-Pair Pattern
+
+The standard library uses iterator pairs to describe ranges:
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// Operate on a subrange:
+std::sort(v.begin() + 2, v.begin() + 7);   // sort only elements [2, 7)
+// v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10} (already sorted, but you could sort reversed subrange)
+
+// Find in a subrange:
+auto it = std::find(v.begin(), v.begin() + 5, 3);   // search only first 5 elements
+```
+
+This is both powerful (you can describe any contiguous subrange) and error-prone (easy to get the boundaries wrong).
+
+---
+
+## `begin` / `end` Free Functions
+
+C++11 added free function versions that work on arrays too:
+
+```cpp
+int arr[5] = {5, 3, 1, 4, 2};
+std::sort(std::begin(arr), std::end(arr));   // sorts the C-array!
+
+std::vector<int> v = {5, 3, 1};
+std::sort(std::begin(v), std::end(v));       // same syntax
+```
+
+`std::begin(arr)` returns a pointer to `arr[0]`. `std::end(arr)` returns a pointer past the last element. Raw pointers are valid random-access iterators.
+
+---
+
+## Reverse Iterators
+
+```cpp
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// Iterate backward:
 for (auto it = v.rbegin(); it != v.rend(); ++it) {
-    std::cout << *it << "\n";  // prints 50 40 30 20 10
+    std::cout << *it << " ";   // 5 4 3 2 1
 }
+
+// rbegin() = reverse iterator to last element
+// rend()   = reverse iterator to one-before-first (sentinel)
+// ++ on a reverse iterator goes backward
 ```
 
-### Insert Iterators
+---
 
-Special iterators that insert elements into containers when assigned:
+## Insert Iterators
+
+Output iterators that insert into a container instead of overwriting:
 
 ```cpp
 #include <iterator>
-
 std::vector<int> src = {1, 2, 3};
 std::vector<int> dst;
 
+// back_inserter: calls push_back on each write
 std::copy(src.begin(), src.end(), std::back_inserter(dst));
-// back_inserter calls dst.push_back() for each element
+// dst = {1, 2, 3}
+
+// front_inserter: calls push_front (only for deque, list)
+std::deque<int> dq;
+std::copy(src.begin(), src.end(), std::front_inserter(dq));
+// dq = {3, 2, 1}  (each is pushed to front)
 ```
 
-### Iterators with Algorithms
+---
 
-Iterators are the glue between containers and algorithms. Algorithms take iterator pairs:
+## Stream Iterators
+
+Treat input/output streams as iterators:
 
 ```cpp
-std::vector<int> v = {5, 3, 1, 4, 2};
+#include <iterator>
+#include <fstream>
+#include <algorithm>
 
-std::sort(v.begin(), v.end());               // sort all
-std::sort(v.begin(), v.begin() + 3);        // sort first 3 only
+// Read all ints from stdin into a vector:
+std::vector<int> v(
+    std::istream_iterator<int>{std::cin},   // begin: reads ints from stdin
+    std::istream_iterator<int>{}            // end: default-constructed = EOF
+);
 
-auto it = std::find(v.begin(), v.end(), 4); // find value 4
-if (it != v.end()) std::cout << "found at index " << (it - v.begin());
-
-// Work on a subrange:
-std::fill(v.begin() + 1, v.begin() + 4, 0);  // set elements 1-3 to 0
+// Write a vector to stdout with spaces:
+std::copy(v.begin(), v.end(),
+          std::ostream_iterator<int>{std::cout, " "});
 ```
 
-### Key Takeaways
+---
 
-- Iterators generalize pointers: `*it` dereferences, `++it` advances, `it != end` checks for completion.
-- `begin()` points to the first element; `end()` is one past the last (a sentinel).
-- Iterator categories determine what algorithms can use a container.
-- `std::advance`, `std::distance` work across all iterator categories.
-- Iterators are the foundation of the STL algorithm library — understanding them unlocks everything.
+## Common Mistakes in This Chapter
+
+### Mistake 1: Dereferencing `end()`
+
+**The bug:**
+```cpp
+auto it = v.end();
+std::cout << *it;   // undefined behavior -- end() is one past the last element
+```
+**The fix:** Always check `it != v.end()` before dereferencing.
+
+### Mistake 2: Iterator Invalidation
+
+When you modify a container, its iterators may become invalid:
+
+```cpp
+std::vector<int> v = {1, 2, 3};
+auto it = v.begin();
+v.push_back(4);       // may reallocate! it is now dangling
+std::cout << *it;     // undefined behavior
+```
+
+**Rules:**
+- `vector`: any operation that changes size may invalidate ALL iterators
+- `map`/`set`: erasing a node invalidates ONLY that node's iterator; other iterators remain valid
+- `list`: inserting never invalidates iterators; erasing only invalidates the erased node
+
+---
+
+## Exercises
+
+**Exercise 28.1 -- Manual iteration**
+
+Without using a range-based for loop, iterate over `std::vector<int> v = {10, 20, 30, 40, 50}` using begin/end iterators and print each element.
+
+*Answer:*
+```cpp
+for (auto it = v.begin(); it != v.end(); ++it) {
+    std::cout << *it << "\n";
+}
+```
+
+---
+
+**Exercise 28.2 -- Count with iterators**
+
+Use `std::count` (takes `begin`, `end`, `value`) to count how many times 3 appears in `std::vector<int> v = {1,3,2,3,4,3,5}`.
+
+*Answer:*
+```cpp
+int c = std::count(v.begin(), v.end(), 3);  // 3
+```
 
 ---
 
 <a name="ch29"></a>
-## Chapter 29: Algorithms: `sort`, `find`, `transform`, and the rest
+# Chapter 29: Algorithms: `sort`, `find`, `transform`, and the Rest
 
-### The STL Algorithm Philosophy
+## Why Algorithms
 
-Instead of building algorithms into containers (like Python's `list.sort()`), the STL separates algorithms from data structures via iterators. Any algorithm works with any container that provides compatible iterators.
+The standard library provides ~100 generic algorithms in `<algorithm>` and `<numeric>`. They work on any container via iterators, are highly optimized, and eliminate common hand-written loop bugs.
 
-All algorithms live in `<algorithm>` (plus some in `<numeric>`).
-
-### Sorting
+```python
+# Python: built-in functions and list methods
+nums = [3, 1, 4, 1, 5, 9, 2]
+nums.sort()
+filtered = [x for x in nums if x > 3]
+doubled  = [x * 2 for x in nums]
+total    = sum(nums)
+```
 
 ```cpp
+// C++: algorithms from <algorithm> and <numeric>
 #include <algorithm>
-std::vector<int> v = {5, 3, 1, 4, 2};
+#include <numeric>
 
-std::sort(v.begin(), v.end());                         // ascending
-std::sort(v.begin(), v.end(), std::greater<int>());    // descending
-std::sort(v.begin(), v.end(), [](int a, int b) {       // custom comparator
-    return a > b;
-});
+std::vector<int> nums = {3, 1, 4, 1, 5, 9, 2};
 
-// Partial sort: put smallest 3 in sorted order
-std::partial_sort(v.begin(), v.begin() + 3, v.end());
+std::sort(nums.begin(), nums.end());
 
-// Stable sort: preserves relative order of equal elements
-std::stable_sort(v.begin(), v.end());
+std::vector<int> filtered;
+std::copy_if(nums.begin(), nums.end(),
+             std::back_inserter(filtered),
+             [](int x) { return x > 3; });   // lambda as predicate
+
+std::vector<int> doubled(nums.size());
+std::transform(nums.begin(), nums.end(), doubled.begin(),
+               [](int x) { return x * 2; });
+
+int total = std::accumulate(nums.begin(), nums.end(), 0);
 ```
+
+---
+
+## The Most Useful Algorithms
 
 ### Searching
 
 ```cpp
-std::vector<int> v = {1, 2, 3, 4, 5};
+std::vector<int> v = {1, 5, 2, 8, 3};
 
-// Linear search: O(n)
-auto it = std::find(v.begin(), v.end(), 3);
-bool found = (it != v.end());
+// Find first element equal to 8:
+auto it = std::find(v.begin(), v.end(), 8);
+if (it != v.end()) std::cout << "Found at index " << (it - v.begin()) << "\n";
 
-// Find first element matching predicate:
-auto it2 = std::find_if(v.begin(), v.end(), [](int x) { return x > 3; });
+// Find first element satisfying a predicate:
+auto it2 = std::find_if(v.begin(), v.end(), [](int x){ return x > 6; });
+// *it2 == 8
 
-// Binary search on sorted range: O(log n)
-bool has_3 = std::binary_search(v.begin(), v.end(), 3);
-auto pos   = std::lower_bound(v.begin(), v.end(), 3);  // first element >= 3
-auto pos2  = std::upper_bound(v.begin(), v.end(), 3);  // first element > 3
+// Check if any/all/none satisfy a predicate:
+bool any  = std::any_of(v.begin(), v.end(),  [](int x){ return x > 7; }); // true
+bool all  = std::all_of(v.begin(), v.end(),  [](int x){ return x > 0; }); // true
+bool none = std::none_of(v.begin(), v.end(), [](int x){ return x > 10;});  // true
+
+// Count elements satisfying predicate:
+int count = std::count_if(v.begin(), v.end(), [](int x){ return x % 2 == 0; }); // 1 (just 2)
+
+// Binary search (requires sorted range):
+std::vector<int> s = {1, 2, 3, 4, 5};
+bool found = std::binary_search(s.begin(), s.end(), 3);  // true
+```
+
+### Sorting and Ordering
+
+```cpp
+std::vector<int> v = {3, 1, 4, 1, 5, 9};
+
+// Sort ascending (default):
+std::sort(v.begin(), v.end());
+
+// Sort descending (custom comparator):
+std::sort(v.begin(), v.end(), std::greater<int>{});
+
+// Sort with lambda comparator:
+std::vector<std::string> words = {"banana", "apple", "cherry"};
+std::sort(words.begin(), words.end(),
+          [](const std::string& a, const std::string& b) {
+              return a.size() < b.size();   // sort by length
+          });
+// {"apple", "banana", "cherry"} (apple=5, banana=6, cherry=6)
+
+// Stable sort: preserves relative order of equal elements
+std::stable_sort(v.begin(), v.end());
+
+// Partial sort: get smallest 3 elements in sorted order
+std::partial_sort(v.begin(), v.begin() + 3, v.end());
+
+// nth_element: guarantees v[n] is what would be there if sorted
+// All elements before v[n] are ≤ v[n]; all after are ≥ v[n]
+std::nth_element(v.begin(), v.begin() + 3, v.end());
 ```
 
 ### Transforming
 
-```python
-# Python
-squares = list(map(lambda x: x*x, [1, 2, 3, 4, 5]))
-```
-
-```cpp
-// C++
-std::vector<int> src = {1, 2, 3, 4, 5};
-std::vector<int> dst(5);
-
-std::transform(src.begin(), src.end(), dst.begin(), [](int x) {
-    return x * x;
-});
-// dst = {1, 4, 9, 16, 25}
-
-// Transform two ranges into one:
-std::transform(a.begin(), a.end(), b.begin(), dst.begin(), std::plus<int>());
-// dst[i] = a[i] + b[i]
-```
-
-### Filtering: `copy_if` and `remove_if`
-
-```python
-# Python
-evens = list(filter(lambda x: x % 2 == 0, numbers))
-```
-
-```cpp
-// C++: copy elements matching predicate into another container
-std::vector<int> src = {1, 2, 3, 4, 5, 6};
-std::vector<int> evens;
-std::copy_if(src.begin(), src.end(), std::back_inserter(evens),
-             [](int x) { return x % 2 == 0; });
-// evens = {2, 4, 6}
-```
-
-Removing from a vector uses the erase-remove idiom:
-
-```cpp
-// Remove all even numbers from v:
-v.erase(std::remove_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }),
-        v.end());
-```
-
-`std::remove_if` moves elements to be kept to the front and returns an iterator to where "deleted" elements start. `erase` then removes the tail.
-
-### Counting and Checking
-
 ```cpp
 std::vector<int> v = {1, 2, 3, 4, 5};
+std::vector<int> result(v.size());
 
-int cnt   = std::count(v.begin(), v.end(), 3);              // count occurrences of 3
-int cnt2  = std::count_if(v.begin(), v.end(), [](int x) { return x > 3; }); // 2
+// Apply function to each element, write to result:
+std::transform(v.begin(), v.end(), result.begin(),
+               [](int x){ return x * x; });
+// result = {1, 4, 9, 16, 25}
 
-bool all  = std::all_of(v.begin(), v.end(), [](int x) { return x > 0; });  // true
-bool any  = std::any_of(v.begin(), v.end(), [](int x) { return x > 4; });  // true
-bool none = std::none_of(v.begin(), v.end(), [](int x) { return x > 10; }); // true
+// transform with two input ranges:
+std::vector<int> a = {1, 2, 3};
+std::vector<int> b = {10, 20, 30};
+std::vector<int> c(3);
+std::transform(a.begin(), a.end(), b.begin(), c.begin(),
+               [](int x, int y){ return x + y; });
+// c = {11, 22, 33}
+
+// Replace elements:
+std::replace(v.begin(), v.end(), 3, 99);    // replace all 3s with 99
+std::replace_if(v.begin(), v.end(),
+                [](int x){ return x > 3; },  // predicate
+                0);                           // replacement
+
+// Fill:
+std::fill(v.begin(), v.end(), 42);           // fill all with 42
+std::iota(v.begin(), v.end(), 1);            // fill with 1,2,3,4,5 (in <numeric>)
+```
+
+### The Erase-Remove Idiom
+
+Standard containers do not have a built-in "remove matching elements" operation. The pattern is:
+
+```cpp
+std::vector<int> v = {1, 2, 3, 2, 4, 2, 5};
+
+// std::remove moves non-matching elements to the front, returns new end:
+auto new_end = std::remove(v.begin(), v.end(), 2);
+// v = {1, 3, 4, 5, ?, ?, ?}   <- unspecified values after new_end
+// new_end points to the first '?'
+
+// Erase the "removed" elements:
+v.erase(new_end, v.end());
+// v = {1, 3, 4, 5}
+
+// C++20: std::erase / std::erase_if (cleaner):
+std::erase(v, 2);                                // remove all 2s
+std::erase_if(v, [](int x){ return x % 2 == 0; }); // remove all evens
 ```
 
 ### Numeric Algorithms (`<numeric>`)
 
 ```cpp
 #include <numeric>
-
 std::vector<int> v = {1, 2, 3, 4, 5};
 
-int sum     = std::accumulate(v.begin(), v.end(), 0);       // 15
-int product = std::accumulate(v.begin(), v.end(), 1, std::multiplies<int>()); // 120
+// Sum: accumulate with + (init=0)
+int sum = std::accumulate(v.begin(), v.end(), 0);    // 15
 
-// Prefix sums:
-std::vector<int> prefix(v.size());
-std::partial_sum(v.begin(), v.end(), prefix.begin());  // {1, 3, 6, 10, 15}
+// Product: accumulate with *
+int product = std::accumulate(v.begin(), v.end(), 1,
+                              std::multiplies<int>{}); // 120
+
+// Prefix sums: {1, 3, 6, 10, 15}
+std::vector<int> prefix(5);
+std::partial_sum(v.begin(), v.end(), prefix.begin());
+
+// Inner product (dot product):
+std::vector<int> w = {2, 3, 4, 5, 6};
+int dot = std::inner_product(v.begin(), v.end(), w.begin(), 0);
+// 1*2 + 2*3 + 3*4 + 4*5 + 5*6 = 2+6+12+20+30 = 70
 ```
 
-### Key Takeaways
+---
 
-- STL algorithms work on iterator ranges — they're container-agnostic.
-- `find`, `find_if` for search; `sort`, `stable_sort` for ordering; `transform` for mapping; `copy_if` for filtering.
-- The erase-remove idiom: `v.erase(remove_if(...), v.end())` — the canonical way to delete elements matching a condition.
-- `all_of`, `any_of`, `none_of` for predicate checks over a range.
-- `<numeric>` has `accumulate` (reduce/fold), `partial_sum`, `iota`, and more.
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting That `std::remove` Does Not Actually Remove
+
+**The bug:**
+```cpp
+std::remove(v.begin(), v.end(), 3);  // returns new_end, but v is unchanged in size
+std::cout << v.size();  // still original size -- elements not actually removed
+```
+**The fix:** Always pair with `.erase()`: `v.erase(std::remove(...), v.end());`
+
+### Mistake 2: Sorting Before a Linear Search (Mismatch of Algorithm)
+
+If you only search once, linear `std::find` (O(n)) is fine. If you search many times, sort first and use `std::binary_search` or a `set`. Sorting and then linear-searching every time is O(n log n + n) when you could do O(log n) per search after a one-time sort.
+
+---
+
+## Exercises
+
+**Exercise 29.1 -- Pipeline**
+
+Given `std::vector<int> v = {5, 3, 8, 1, 9, 2, 7, 4, 6}`:
+1. Sort it
+2. Remove all even numbers (use erase-remove or C++20 `std::erase_if`)
+3. Print the result
+
+*Answer:*
+```cpp
+std::sort(v.begin(), v.end());
+std::erase_if(v, [](int x){ return x % 2 == 0; });
+for (int n : v) std::cout << n << " ";   // 1 3 5 7 9
+```
+
+---
+
+**Exercise 29.2 -- Transform and accumulate**
+
+Given a vector of prices (doubles), apply a 10% discount to each, then compute the total.
+
+*Answer:*
+```cpp
+std::vector<double> prices = {10.0, 25.0, 8.5, 42.0};
+
+std::transform(prices.begin(), prices.end(), prices.begin(),
+               [](double p){ return p * 0.9; });
+
+double total = std::accumulate(prices.begin(), prices.end(), 0.0);
+std::cout << "Total after discount: " << total << "\n";  // 76.95
+```
 
 ---
 
 <a name="ch30"></a>
-## Chapter 30: Lambdas and Function Objects
+# Chapter 30: Lambdas and Function Objects
 
-### What Is a Lambda?
+## What Is a Lambda?
 
-A lambda is an anonymous function defined inline. Python has `lambda` too, but C++ lambdas are far more powerful.
+A lambda is an anonymous function defined inline at the point of use. In Python they are limited to single expressions; in C++ they are full functions.
 
 ```python
-# Python
+# Python lambda (expression only)
 square = lambda x: x * x
-result = square(5)  # 25
-
 nums = [1, 2, 3, 4, 5]
-evens = list(filter(lambda x: x % 2 == 0, nums))
+squared = list(map(lambda x: x*x, nums))
 ```
 
 ```cpp
-// C++
+// C++ lambda (full function, multiple statements allowed)
 auto square = [](int x) { return x * x; };
-int result = square(5);  // 25
-
 std::vector<int> nums = {1, 2, 3, 4, 5};
-std::vector<int> evens;
-std::copy_if(nums.begin(), nums.end(), std::back_inserter(evens),
-             [](int x) { return x % 2 == 0; });
+std::transform(nums.begin(), nums.end(), nums.begin(),
+               [](int x) { return x * x; });
 ```
 
-### Lambda Syntax
+---
+
+## Lambda Syntax
 
 ```
-[captures](parameters) -> return_type { body }
+[capture](parameters) -> return_type { body }
+
+  [capture]     -- what variables from the enclosing scope are accessible
+  (parameters)  -- function parameters (can be omitted if none)
+  -> return_type -- optional: compiler deduces it if omitted
+  { body }      -- function body (any C++ code)
 ```
 
-- **Captures**: variables from the enclosing scope the lambda can use.
-- **Parameters**: like a normal function.
-- **Return type**: usually deduced; specify with `->` if needed.
-- **Body**: the function body.
+Examples:
+
+```cpp
+auto greet = []() { std::cout << "Hello!\n"; };       // no capture, no params
+auto add   = [](int a, int b) { return a + b; };      // two params, deduced return
+auto mul   = [](int a, int b) -> int { return a*b; }; // explicit return type
+
+greet();          // "Hello!"
+add(3, 4);        // 7
+mul(3, 4);        // 12
+```
+
+---
+
+## Captures: Accessing the Enclosing Scope
+
+The capture clause controls which variables from the surrounding scope are accessible inside the lambda:
+
+```cpp
+int x = 10;
+int y = 20;
+
+// Capture by value (copy):
+auto f1 = [x]() { return x + 1; };   // x is copied into the lambda
+x = 99;
+f1();    // 11 -- uses the COPY made at capture time, not current x
+
+// Capture by reference:
+auto f2 = [&x]() { return x + 1; };
+x = 99;
+f2();    // 100 -- uses the CURRENT x (reference)
+
+// Capture all by value:
+auto f3 = [=]() { return x + y; };   // copies all used local variables
+
+// Capture all by reference:
+auto f4 = [&]() { return x + y; };   // references all used local variables
+
+// Mix: capture x by value, everything else by reference:
+auto f5 = [x, &]() { return x + y; };
+
+// Capture and modify (mutable lambda):
+int count = 0;
+auto counter = [count]() mutable { return ++count; };
+// 'mutable' allows modifying the captured copy
+counter();  // 1
+counter();  // 2
+// count is still 0 in the enclosing scope (captured by value)
+```
+
+---
+
+## Lambda Memory Model
+
+A lambda is syntactic sugar for a **function object** (a struct with `operator()`):
 
 ```cpp
 int threshold = 5;
+auto above = [threshold](int x) { return x > threshold; };
 
-auto greater_than_threshold = [threshold](int x) {   // captures threshold by value
-    return x > threshold;
+// The compiler generates something like:
+struct Lambda {
+    int threshold;  // captured variables become data members
+    Lambda(int t) : threshold{t} {}
+    bool operator()(int x) const { return x > threshold; }
 };
-
-int count = std::count_if(v.begin(), v.end(), greater_than_threshold);
+Lambda above{threshold};  // lambda = instance of this struct
+above(3);   // false
+above(7);   // true
 ```
 
-### Capture Modes
+This means lambdas are not magic -- they are just convenient syntax for creating small, local function objects.
+
+---
+
+## Generic Lambdas (C++14)
 
 ```cpp
-int x = 10, y = 20;
-
-auto f1 = [x]()    { return x; };         // capture x by value (copy)
-auto f2 = [&x]()   { return x; };         // capture x by reference
-auto f3 = [=]()    { return x + y; };     // capture ALL used vars by value
-auto f4 = [&]()    { x = 99; return y; }; // capture ALL used vars by reference
-auto f5 = [=, &y]() { return x + y; };    // all by value except y by reference
-```
-
-Capture by value: lambda has its own copy; changing it doesn't affect the original.
-Capture by reference: lambda sees changes to the original, and can modify it.
-
-**Danger**: capturing by reference can create dangling references if the lambda outlives the captured variables. When in doubt, capture by value.
-
-```cpp
-std::function<int()> make_adder(int base) {
-    return [base]() { return base + 1; };   // OK: captures by value
-    // return [&base]() { return base + 1; }; // DANGER: base is a local
-}
-```
-
-### Mutable Lambdas
-
-By default, captured-by-value variables are `const` inside the lambda. Use `mutable` to allow modification of the copy:
-
-```cpp
-int count = 0;
-auto counter = [count]() mutable { return ++count; };  // modifies the copy
-counter();  // 1
-counter();  // 2
-std::cout << count;  // still 0 — the original is unchanged
-```
-
-### Generic Lambdas (C++14)
-
-Parameters can be `auto`, making the lambda a template:
-
-```cpp
+// 'auto' in parameters makes the lambda a template:
 auto square = [](auto x) { return x * x; };
 
-square(3);     // int
-square(3.14);  // double
-square(2.0f);  // float
+square(3);      // int: 9
+square(3.14);   // double: 9.8596
+square(3.0f);   // float
 ```
 
-### Immediately Invoked Lambdas
+The compiler generates a different instantiation for each argument type. This is equivalent to a template `operator()`.
 
-Lambdas can be defined and called in one expression — useful for complex initialization:
+---
 
-```cpp
-const std::string name = []() -> std::string {
-    if (std::getenv("USER")) return std::getenv("USER");
-    return "unknown";
-}();
-```
+## Storing Lambdas: `std::function`
 
-### `std::function`
-
-`std::function<R(Args...)>` is a type-erased function wrapper — it holds any callable with the right signature:
+`std::function<return_type(param_types)>` can store any callable -- lambda, function pointer, functor:
 
 ```cpp
 #include <functional>
 
+// Store different callables in the same variable:
 std::function<int(int, int)> op;
 
 op = [](int a, int b) { return a + b; };
-std::cout << op(3, 4);  // 7
+op(3, 4);   // 7
 
 op = [](int a, int b) { return a * b; };
-std::cout << op(3, 4);  // 12
+op(3, 4);   // 12
+
+// Store in a vector of callbacks:
+std::vector<std::function<void()>> callbacks;
+callbacks.push_back([]{ std::cout << "first\n"; });
+callbacks.push_back([]{ std::cout << "second\n"; });
+for (auto& cb : callbacks) cb();
 ```
 
-`std::function` has overhead (heap allocation, virtual dispatch). For performance-critical code, prefer template parameters or `auto` to store lambdas directly.
+**Caveat:** `std::function` has overhead (type erasure, heap allocation for large lambdas). For performance-critical code, prefer `auto` or template parameters when the callable type is known.
 
-### Key Takeaways
+---
 
-- Lambdas are anonymous functions with `[capture](params) { body }` syntax.
-- Capture by value `[=]` for safety (no dangling refs), by reference `[&]` when you need to modify outer state.
-- `mutable` lets the lambda modify its captured-by-value copies.
-- C++14 generic lambdas use `auto` parameters — they're effectively function templates.
-- `std::function` is a type-erased wrapper for any callable — convenient but has overhead.
+## Immediately Invoked Lambdas
+
+```cpp
+// Call the lambda right away (useful for complex initialization):
+const int value = []() {
+    int result = 0;
+    for (int i = 1; i <= 100; ++i) result += i;
+    return result;
+}();   // <-- immediately invoked
+
+// value == 5050, computed at runtime (or at compile time if constexpr)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Capturing a Local Variable by Reference After It Goes Out of Scope
+
+**The bug:**
+```cpp
+std::function<int()> make_counter() {
+    int count = 0;
+    return [&count]() { return ++count; };   // DANGER: count is a local variable
+}   // count is destroyed here
+auto counter = make_counter();
+counter();   // undefined behavior: accesses destroyed 'count'
+```
+**The fix:** Capture by value `[count]` with `mutable`, or use a `shared_ptr<int>`:
+```cpp
+return [count]() mutable { return ++count; };  // captures a copy -- safe
+```
+
+### Mistake 2: `[=]` Capturing `this` by Value
+
+**The bug:**
+```cpp
+class Foo {
+    int x = 10;
+    auto make_lambda() {
+        return [=]() { return x; };   // captures 'this' by pointer, not x by value!
+        // 'x' inside a member function means 'this->x'
+        // [=] captures 'this' by value (the pointer), not the object
+    }
+};
+```
+**The fix:** In C++17+, use `[*this]` to capture the entire object by value, or `[x = this->x]` to capture the specific member.
+
+---
+
+## Exercises
+
+**Exercise 30.1 -- Sort with lambda**
+
+Sort `std::vector<std::string> words` by length (shortest first). Break ties alphabetically.
+
+*Answer:*
+```cpp
+std::sort(words.begin(), words.end(),
+    [](const std::string& a, const std::string& b) {
+        if (a.size() != b.size()) return a.size() < b.size();
+        return a < b;  // alphabetical for same length
+    });
+```
+
+---
+
+**Exercise 30.2 -- Closure counter**
+
+Write a function `make_counter(int start)` that returns a lambda. Each call to the lambda returns the next integer, starting from `start`.
+
+*Answer:*
+```cpp
+auto make_counter(int start) {
+    return [n = start]() mutable { return n++; };
+}
+
+auto c = make_counter(5);
+c();  // 5
+c();  // 6
+c();  // 7
+```
 
 ---
 
 <a name="ch31"></a>
-## Chapter 31: Ranges and Views (C++20)
+# Chapter 31: Ranges and Views (C++20)
 
-### The Problem with Iterator Pairs
+## The Problem With Iterator Pairs
 
-The traditional STL algorithm interface takes two iterators:
+The traditional algorithm interface requires two iterators:
 
 ```cpp
 std::sort(v.begin(), v.end());
-auto it = std::find(v.begin(), v.end(), 5);
+std::find(v.begin(), v.end(), 3);
 ```
 
-This is verbose and doesn't compose well. What if you want to filter, then transform, then sort? You need intermediary vectors.
-
-### Ranges
-
-C++20 ranges treat containers as single entities (not pairs of iterators):
+This is verbose and error-prone (mismatched iterators from different containers). You also cannot compose operations cleanly:
 
 ```cpp
-#include <algorithm>
+// Sort, then filter, then transform -- with traditional algorithms:
+std::sort(v.begin(), v.end());
+std::vector<int> filtered;
+std::copy_if(v.begin(), v.end(), std::back_inserter(filtered),
+             [](int x){ return x % 2 == 0; });
+std::transform(filtered.begin(), filtered.end(), filtered.begin(),
+               [](int x){ return x * x; });
+// Each step creates a new vector -- three allocations
+```
+
+---
+
+## Ranges: The C++20 Solution
+
+C++20 introduces `std::ranges`, which lets algorithms take entire containers directly, and `std::views`, which provides lazy composable transformations:
+
+```cpp
 #include <ranges>
+#include <algorithm>
 
 std::vector<int> v = {5, 3, 1, 4, 2};
 
-std::ranges::sort(v);                   // cleaner than sort(v.begin(), v.end())
-auto it = std::ranges::find(v, 3);      // cleaner than find(v.begin(), v.end(), 3)
+// Algorithms take the whole range:
+std::ranges::sort(v);                             // {1, 2, 3, 4, 5}
+auto it = std::ranges::find(v, 3);               // finds 3
+bool any = std::ranges::any_of(v, [](int x){ return x > 4; });  // true
 ```
 
-### Views — Lazy Pipelines
+No more `v.begin(), v.end()`. The algorithm accepts the container directly.
 
-Views are lightweight, lazy range adapters that transform ranges without allocating. They compose with `|`:
+---
+
+## Views: Lazy, Composable Transformations
+
+A **view** is a lightweight, lazy adapter over a range. It does not copy data -- it creates a "window" that transforms elements on demand:
 
 ```python
-# Python (equivalent)
-result = [x*x for x in range(10) if x % 2 == 0]
+# Python generators: lazy transformations
+nums = range(1, 11)
+evens = (x for x in nums if x % 2 == 0)
+squared = (x*x for x in evens)
+# Nothing computed yet -- all lazy
+list(squared)  # [4, 16, 36, 64, 100] -- computed here
 ```
 
 ```cpp
-// C++20 ranges
+// C++20 views: lazy transformations
 #include <ranges>
 
-auto result = std::views::iota(0, 10)        // 0, 1, 2, ... 9
-            | std::views::filter([](int x) { return x % 2 == 0; })  // 0, 2, 4, 6, 8
-            | std::views::transform([](int x) { return x * x; });   // 0, 4, 16, 36, 64
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-for (int v : result) std::cout << v << " ";
-// No intermediate vectors — values computed lazily on demand
+// Compose views with | (pipe operator):
+auto result = v
+    | std::views::filter([](int x){ return x % 2 == 0; })   // keep evens
+    | std::views::transform([](int x){ return x * x; });     // square them
+
+for (int n : result) {
+    std::cout << n << " ";   // 4 16 36 64 100
+}
+// Nothing computed until the loop iterates! Zero intermediate vectors.
 ```
 
-The `|` operator creates a pipeline. Each step is lazy: values flow through only when you actually iterate.
+The `|` operator chains views. Each view wraps the previous one lazily. When you iterate, each element is pulled through the chain one at a time -- no intermediate allocations.
 
-### Common Views
+---
+
+## Common Views
 
 ```cpp
-namespace sv = std::views;
+namespace sv = std::views;  // shorthand
 
-sv::filter(pred)           // keep elements matching pred
-sv::transform(fn)          // apply fn to each element
-sv::take(n)                // first n elements
-sv::drop(n)                // skip first n elements
-sv::take_while(pred)       // take while pred is true
-sv::drop_while(pred)       // drop while pred is true
-sv::reverse               // iterate in reverse
-sv::iota(start, end)      // generates start, start+1, ..., end-1
-sv::enumerate              // pairs of (index, value)  (C++23)
-sv::zip(r1, r2)           // pairs of elements from two ranges  (C++23)
-sv::keys                  // keys of a map-like range
-sv::values                // values of a map-like range
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+// filter: keep elements satisfying predicate
+auto evens = v | sv::filter([](int x){ return x%2 == 0; });
+
+// transform: apply function to each element
+auto doubled = v | sv::transform([](int x){ return x * 2; });
+
+// take: first N elements
+auto first3 = v | sv::take(3);         // {1, 2, 3}
+
+// drop: skip first N elements
+auto last3  = v | sv::drop(2);         // {3, 4, 5}
+
+// reverse: iterate backward
+auto rev    = v | sv::reverse;          // {5, 4, 3, 2, 1}
+
+// iota: generate integers
+auto nums   = sv::iota(1, 6);          // {1, 2, 3, 4, 5} (no vector needed)
+
+// zip (C++23): iterate two ranges together
+auto zipped = sv::zip(v, std::vector{10,20,30,40,50});
+for (auto [a, b] : zipped)
+    std::cout << a << "+" << b << " ";  // 1+10 2+20 3+30 4+40 5+50
 ```
 
-### Materializing a View into a Vector
+---
 
-Views are lazy — to get an actual `vector`, use `std::ranges::to` (C++23) or the copy idiom:
+## Materializing a View
+
+Since views are lazy, they produce values on demand. To get a concrete container, iterate into one:
 
 ```cpp
-// C++23:
-auto vec = sv::iota(0, 10) | sv::filter([](int x) { return x % 2 == 0; })
-         | std::ranges::to<std::vector>();
+auto result_view = v
+    | sv::filter([](int x){ return x > 2; })
+    | sv::transform([](int x){ return x * 10; });
 
-// C++20 (before std::ranges::to):
-std::vector<int> vec;
-auto view = sv::iota(0, 10) | sv::filter([](int x) { return x % 2 == 0; });
-std::ranges::copy(view, std::back_inserter(vec));
+// Materialize into a vector:
+std::vector<int> result(result_view.begin(), result_view.end());
+// or in C++23:
+std::vector<int> result2 = result_view | std::ranges::to<std::vector>();
 ```
 
-### Key Takeaways
+---
 
-- `std::ranges::sort(v)` is cleaner than `std::sort(v.begin(), v.end())`.
-- Views are lazy range adapters composed with `|`.
-- No intermediate containers — data flows through the pipeline only when consumed.
-- C++20 views: `filter`, `transform`, `take`, `drop`, `reverse`, `iota`.
-- C++23 adds `enumerate`, `zip`, `std::ranges::to`.
+## Common Mistakes in This Chapter
+
+### Mistake 1: Storing a View to a Destroyed Container
+
+**The bug:**
+```cpp
+auto get_view() {
+    std::vector<int> v = {1, 2, 3};
+    return v | std::views::filter([](int x){ return x > 1; });
+}  // v is destroyed here!
+
+auto view = get_view();
+for (int n : view) { ... }  // undefined behavior: iterating view over dead vector
+```
+**The fix:** Views are non-owning. The source must outlive the view. Materialize to a vector if you need to return data.
+
+---
+
+## Exercises
+
+**Exercise 31.1 -- Views pipeline**
+
+Using `std::views`, create a pipeline that: takes `{1..20}`, keeps multiples of 3, squares them, and takes the first 4 results. Print them.
+
+*Answer:*
+```cpp
+auto result = std::views::iota(1, 21)
+    | std::views::filter([](int x){ return x % 3 == 0; })
+    | std::views::transform([](int x){ return x * x; })
+    | std::views::take(4);
+
+for (int n : result) std::cout << n << " ";
+// multiples of 3: 3,6,9,12,... -> squared: 9,36,81,144 -> first 4: 9 36 81 144
+```
 
 ---
 
 <a name="ch32"></a>
-## Chapter 32: Utility Types: `optional`, `variant`, `any`, `tuple`
+# Chapter 32: Utility Types: `optional`, `variant`, `any`, `tuple`
 
-### `std::optional` — A Value That May Not Exist
+## `std::optional<T>` -- A Value That May Not Exist
+
+`optional<T>` holds either a `T` or nothing. It replaces the pattern of using a sentinel value (`-1`, `nullptr`, `""`) to mean "no value."
 
 ```python
-# Python: return None to signal absence
-def find_user(id):
-    if id in database:
-        return database[id]
+# Python: None means "no value"
+def find_user(id: int) -> dict | None:
+    if id in db: return db[id]
     return None
+
+user = find_user(42)
+if user is not None:
+    print(user["name"])
 ```
 
 ```cpp
-// C++: return std::optional<User>
+// C++: std::optional
 #include <optional>
 
-std::optional<User> find_user(int id) {
-    if (database.count(id)) return database[id];
-    return std::nullopt;   // nothing
+std::optional<std::string> find_user(int id) {
+    if (id == 42) return std::string{"Alice"};
+    return std::nullopt;    // no value
 }
 
 auto user = find_user(42);
-if (user.has_value()) {
-    std::cout << user->name;   // access with ->
-    std::cout << (*user).name; // or dereference
+if (user) {                         // bool conversion: true if has value
+    std::cout << *user << "\n";     // dereference like a pointer
+    std::cout << user.value() << "\n"; // or .value() (throws if empty)
 }
 
 // With default:
-std::string name = user.value_or(User{}).name;
-
-// Or use if directly:
-if (auto u = find_user(42)) {
-    std::cout << u->name;
-}
+std::string name = find_user(99).value_or("Unknown");  // "Unknown"
 ```
 
-`optional<T>` wraps a `T` and a boolean. It's a 1-element container. Use it instead of returning sentinel values (`-1`, `nullptr`, `""`) or throwing exceptions for "not found."
+Use `optional` instead of:
+- Sentinel values (`-1` for "not found")
+- `bool` out-parameter pairs
+- Pointers just to express "maybe no value"
 
-### `std::variant` — A Type-Safe Union
+---
 
-`variant<A, B, C>` holds exactly one value, which can be of type `A`, `B`, or `C`. Like a union, but safe — it knows which type it currently holds.
+## `std::variant<Types...>` -- Type-Safe Union
+
+`variant` holds exactly one value from a set of possible types. It is like a tagged union -- you always know which type is currently stored.
 
 ```python
-# Python: duck typing / isinstance checks
-def process(value):
-    if isinstance(value, int):
-        return value * 2
-    elif isinstance(value, str):
-        return value.upper()
+# Python: dynamic typing handles this naturally
+result = 42          # could be int
+result = "error"     # or str
+result = 3.14        # or float
 ```
 
 ```cpp
-// C++
+// C++: variant -- exactly one of the listed types
 #include <variant>
 
-std::variant<int, std::string, double> v = 42;
+std::variant<int, std::string, double> v;
 
-// Check type:
-if (std::holds_alternative<int>(v)) {
-    std::cout << std::get<int>(v) * 2;
+v = 42;
+v = "hello";    // now holds string
+v = 3.14;       // now holds double
+
+// Check which type:
+if (std::holds_alternative<double>(v)) {
+    std::cout << "double: " << std::get<double>(v) << "\n";
 }
 
-// Pattern match with std::visit:
-std::visit([](auto&& val) {
-    using T = std::decay_t<decltype(val)>;
-    if constexpr (std::is_same_v<T, int>)
-        std::cout << val * 2;
-    else if constexpr (std::is_same_v<T, std::string>)
-        std::cout << val.size();
-    else
-        std::cout << val;
+// Visit: apply a callable to whatever is stored
+std::visit([](auto& val) {
+    std::cout << val << "\n";  // works for all types (generic lambda)
 }, v);
+
+// Pattern matching with overloaded visitor:
+struct Visitor {
+    void operator()(int i)          { std::cout << "int: " << i << "\n"; }
+    void operator()(const std::string& s) { std::cout << "str: " << s << "\n"; }
+    void operator()(double d)       { std::cout << "dbl: " << d << "\n"; }
+};
+
+std::visit(Visitor{}, v);
 ```
 
-`std::visit` is the clean way to handle all cases. If you miss a type, the compiler warns (or errors with overloaded lambdas).
+### Practical Use: Error Handling
 
-### `std::any` — Any Type at All
+```cpp
+// Return either a value or an error message:
+std::variant<int, std::string> parse_int(const std::string& s) {
+    try {
+        return std::stoi(s);           // success: return int
+    } catch (...) {
+        return std::string{"parse error: "} + s;  // failure: return error
+    }
+}
 
-`std::any` stores a value of any type, with type erasure. Less safe than `variant` (no compile-time type checking):
+auto result = parse_int("42");
+if (auto val = std::get_if<int>(&result)) {
+    std::cout << "Parsed: " << *val << "\n";
+} else {
+    std::cout << "Error: " << std::get<std::string>(result) << "\n";
+}
+```
+
+---
+
+## `std::any` -- Type-Erased Storage
+
+`std::any` can hold a value of any copyable type. Unlike `variant`, the type is not fixed at compile time:
 
 ```cpp
 #include <any>
 
 std::any a = 42;
-a = std::string("hello");
+a = std::string{"hello"};
 a = 3.14;
 
-// Extract with std::any_cast:
-try {
-    double d = std::any_cast<double>(a);
-    std::cout << d;
-} catch (const std::bad_any_cast& e) {
-    std::cout << "wrong type\n";
+// Access requires knowing the type:
+std::cout << std::any_cast<double>(a) << "\n";    // 3.14
+std::any_cast<int>(a);   // throws std::bad_any_cast: stored type is double
+
+// Safe version:
+if (double* p = std::any_cast<double>(&a)) {
+    std::cout << *p << "\n";    // 3.14
 }
 ```
 
-Use `any` when the type truly can't be known at compile time. Prefer `variant` when the set of types is finite and known.
+Use `any` when the type is genuinely unknown at compile time (plugin systems, scripting interfaces). Prefer `variant` when the set of possible types is known.
 
-### `std::tuple` — Heterogeneous Fixed Collection
+---
 
-```python
-# Python: return multiple values
-def get_info():
-    return "Alice", 30, True
-name, age, active = get_info()
-```
+## `std::tuple` Revisited: Structured Bindings and Helpers
 
 ```cpp
-// C++
-#include <tuple>
+// Creating tuples:
+auto t = std::make_tuple(42, 3.14, std::string{"hi"});
 
-std::tuple<std::string, int, bool> get_info() {
-    return {"Alice", 30, true};
+// Access:
+auto& [n, d, s] = t;    // structured binding (C++17)
+std::get<0>(t);          // 42
+
+// std::tie: bind tuple elements to existing variables
+int x; double y; std::string z;
+std::tie(x, y, z) = t;
+
+// Return multiple values from a function:
+std::tuple<int, int> div_rem(int a, int b) {
+    return {a/b, a%b};
 }
-
-auto [name, age, active] = get_info();  // structured bindings (C++17)
-std::cout << name << " " << age << "\n";
-
-// Access by index:
-auto info = get_info();
-std::cout << std::get<0>(info);  // "Alice"
-std::cout << std::get<1>(info);  // 30
+auto [quotient, remainder] = div_rem(17, 5);
+std::cout << quotient << " r " << remainder << "\n";  // 3 r 2
 ```
 
-`std::pair<A, B>` is essentially `tuple<A, B>` — it's the return type of `std::map` iterators (`it->first`, `it->second`).
+---
 
-### Summary Table
+## `std::pair<A, B>` -- Two Values
 
-| Type | Use When |
-|------|----------|
-| `optional<T>` | Value may or may not exist (like Python's `None`) |
-| `variant<A,B>` | One of a known set of types |
-| `any` | Any type at all (runtime flexibility) |
-| `tuple<A,B,C>` | Fixed heterogeneous collection (multiple return values) |
+`pair` is `tuple` with exactly two elements, more readable names:
 
-### Key Takeaways
+```cpp
+std::pair<int, std::string> p{42, "hello"};
+std::cout << p.first << " " << p.second << "\n";
 
-- `optional<T>` replaces null/sentinel patterns. Check with `has_value()` or `if (opt)`.
-- `variant<A,B,C>` is a type-safe union. Use `std::visit` to pattern-match over types.
-- `any` is type erasure for truly dynamic values. Prefer `variant` when types are known.
-- `tuple` returns multiple values. C++17 structured bindings (`auto [a, b] = ...`) make it ergonomic.
+auto [num, str] = p;    // structured binding
+
+// Common with maps:
+for (const auto& [key, val] : my_map) {
+    std::cout << key << " -> " << val << "\n";
+}
+```
 
 ---
 
+## Choosing the Right Utility Type
+
+```
+A value that might not exist:
+  std::optional<T>       -- simple, clear, fast
+
+A value that is one of several known types:
+  std::variant<A,B,C>    -- type-safe, visit with pattern matching
+
+A value of unknown type (runtime):
+  std::any               -- flexible, slower, use sparingly
+
+Multiple values of known types, fixed number:
+  std::tuple<A,B,C>      -- heterogeneous, structured bindings make it clean
+
+Two values:
+  std::pair<A,B>         -- when two is the right number
+```
+
 ---
 
-# Part VII — Modern C++ (C++11 → C++23)
+## Common Mistakes in This Chapter
+
+### Mistake 1: Accessing Empty `optional`
+
+**The bug:**
+```cpp
+std::optional<int> opt;
+std::cout << *opt;        // undefined behavior -- opt has no value
+std::cout << opt.value(); // throws std::bad_optional_access
+```
+**The fix:** Check `if (opt)` or use `opt.value_or(default)`.
+
+### Mistake 2: `std::get` with Wrong Type on `variant`
+
+**The bug:**
+```cpp
+std::variant<int, std::string> v = 42;
+std::get<std::string>(v);   // throws std::bad_variant_access
+```
+**The fix:** Use `std::holds_alternative<T>(v)` to check, or `std::get_if<T>(&v)` which returns nullptr on mismatch.
+
+---
+
+## Exercises
+
+**Exercise 32.1 -- Safe division**
+
+Write `safe_divide(int a, int b)` returning `std::optional<double>`. Return `std::nullopt` if `b == 0`.
+
+*Answer:*
+```cpp
+std::optional<double> safe_divide(int a, int b) {
+    if (b == 0) return std::nullopt;
+    return static_cast<double>(a) / b;
+}
+
+auto r = safe_divide(10, 3);
+std::cout << r.value_or(0.0) << "\n";   // 3.333...
+
+auto r2 = safe_divide(10, 0);
+std::cout << r2.value_or(0.0) << "\n";  // 0.0
+```
+
+---
+
+**Exercise 32.2 -- Shape variant**
+
+Use `std::variant<Circle, Rectangle, Triangle>` (define these as simple structs with an `area()` method) and `std::visit` to compute and print the area of each shape in a vector.
+
+*Answer:*
+```cpp
+struct Circle    { double r;    double area() const { return 3.14159*r*r; } };
+struct Rectangle { double w, h; double area() const { return w*h; } };
+struct Triangle  { double b, h; double area() const { return 0.5*b*h; } };
+
+using Shape = std::variant<Circle, Rectangle, Triangle>;
+
+std::vector<Shape> shapes = {
+    Circle{5.0},
+    Rectangle{3.0, 4.0},
+    Triangle{6.0, 8.0}
+};
+
+for (const auto& shape : shapes) {
+    double area = std::visit([](const auto& s){ return s.area(); }, shape);
+    std::cout << "Area: " << area << "\n";
+}
+// Area: 78.5398
+// Area: 12
+// Area: 24
+```
+
+---
+
+**Exercise 32.3 -- Multiple return values**
+
+Write `parse_date(std::string)` that parses "YYYY-MM-DD" and returns a `std::tuple<int, int, int>` (year, month, day). Use structured bindings to unpack it.
+
+*Answer:*
+```cpp
+#include <tuple>
+#include <string>
+
+std::tuple<int,int,int> parse_date(const std::string& s) {
+    // Format: "YYYY-MM-DD"
+    int y = std::stoi(s.substr(0, 4));
+    int m = std::stoi(s.substr(5, 2));
+    int d = std::stoi(s.substr(8, 2));
+    return {y, m, d};
+}
+
+auto [year, month, day] = parse_date("2026-06-28");
+std::cout << year << "/" << month << "/" << day << "\n";  // 2026/6/28
+```
+
+---
+
+*Part VI is complete. You now know the standard library well enough to write real programs: choosing the right container for each job, using iterators correctly, composing algorithms and lambdas, building lazy data pipelines with ranges and views, and using the utility types that make C++ code expressive without sacrificing performance.*
+
+*Part VII covers modern C++ language features added since C++11 -- `auto`, `constexpr`, `std::format`, coroutines, and modules. Ask to continue.*
+
+---
+
+# Part VII -- Modern C++ (C++11 to C++23)
+
+This part covers language features added after C++03. These are not optional extras -- they are the vocabulary of contemporary C++ code. If you read any real C++ codebase written after 2015, you will encounter all of these.
 
 ---
 
 <a name="ch33"></a>
-## Chapter 33: `auto`, type deduction, and structured bindings
+# Chapter 33: `auto`, Type Deduction, and Structured Bindings
 
-### `auto` Type Deduction
+## Type Deduction: The Full Picture
 
-`auto` asks the compiler to deduce the type from the initializer. The type is still fixed at compile time — `auto` is not dynamic typing.
+`auto` was introduced in Chapter 2 for variable declarations. Here is the complete picture of how the deduction rules work -- they matter because surprises here cause bugs.
 
-```cpp
-auto x = 42;                    // int
-auto y = 3.14;                  // double
-auto s = std::string{"hello"};  // std::string
-auto v = std::vector<int>{1,2,3}; // std::vector<int>
-
-auto it = v.begin();            // std::vector<int>::iterator (ugly to write manually)
-auto [first, second] = make_pair(1, 2); // structured binding
-```
-
-The rules mirror function template deduction (Chapter 23). Key points:
+### `auto` Strips Top-Level Qualifiers
 
 ```cpp
-auto x = 5;       // int (not const int, not int&)
-const auto cx = 5; // const int
-auto& rx = x;     // int& — reference to x
-const auto& crx = x; // const int&
+const int x = 5;
+auto a = x;        // a is int, NOT const int
+                   // 'auto' strips top-level const
+
+int arr[3] = {1,2,3};
+auto b = arr;      // b is int* (pointer), NOT int[3]
+                   // arrays decay to pointers under auto
+
+int& ref = x;
+auto c = ref;      // c is int (a copy), NOT int&
+                   // 'auto' strips references
 ```
 
-`auto` strips top-level `const` and references. If you want them, add them explicitly.
+To preserve qualifiers, add them explicitly:
 
-### `decltype`
+```cpp
+const auto& d = x;  // const int&
+auto& e       = x;  // const int& (deduced as const because x is const)
+auto* f       = &x; // const int* (pointer to const, because x is const)
+```
 
-`decltype(expr)` gives you the type of an expression without evaluating it:
+### `decltype` -- Deduce the Type of an Expression
+
+`auto` deduces the type of the initializer. `decltype` deduces the type of any expression without evaluating it:
 
 ```cpp
 int x = 5;
-decltype(x)  y = 10;      // int (same type as x)
-decltype(x+1.0) z = 3.0;  // double (type of x+1.0)
+decltype(x)    a = 10;     // int    (type of x)
+decltype(x+1)  b = 10;     // int    (type of x+1, an rvalue)
+decltype((x))  c = x;      // int&   (type of (x), an lvalue expression -- parentheses matter!)
 
-// Useful in templates:
-template<typename A, typename B>
-auto add(A a, B b) -> decltype(a + b) {  // trailing return type
-    return a + b;
-}
+// Useful when you need the return type of something complex:
+std::vector<int> v = {1,2,3};
+decltype(v[0]) front = v[0];   // int& (v[0] returns int&)
 ```
 
-C++14 simplifies this: return type deduction works without the trailing type:
+`decltype((x))` with double parentheses gives you the "lvalue expression type" -- always a reference if the expression is an lvalue. `decltype(x)` without double parentheses gives the declared type. This asymmetry trips everyone up once.
+
+### `decltype(auto)` -- Perfect Return Type Deduction
+
+Used when you want to forward a return type exactly, preserving value category:
 
 ```cpp
-template<typename A, typename B>
-auto add(A a, B b) {  // compiler deduces return type
+int x = 5;
+
+auto        f() { return x; }            // returns int (copy -- auto strips &)
+decltype(auto) g() { return x; }         // returns int (decltype(x) = int)
+decltype(auto) h() { return (x); }       // returns int& (decltype((x)) = int&)
+// h() returns a reference to local x -- dangling reference!
+```
+
+The main use is perfect-forwarding wrappers that must return exactly what the wrapped function returns:
+
+```cpp
+template <typename F, typename... Args>
+decltype(auto) call(F&& func, Args&&... args) {
+    return std::forward<F>(func)(std::forward<Args>(args)...);
+}
+```
+
+---
+
+## `auto` for Function Return Types
+
+```cpp
+// Deduced return type (C++14):
+auto add(int a, int b) { return a + b; }    // returns int
+
+// Trailing return type (C++11, useful for dependent types):
+template <typename T, typename U>
+auto add(T a, U b) -> decltype(a + b) {     // return type depends on T and U
     return a + b;
 }
 ```
 
-### Structured Bindings (C++17)
+Trailing return types (`-> type` after parameter list) were necessary before C++14 allowed deduced return types. You still see them when the return type cannot be determined until after the parameters are named.
 
-Structured bindings destructure aggregates, pairs, tuples, and arrays:
+---
+
+## Structured Bindings (C++17)
+
+Structured bindings decompose aggregates (arrays, pairs, tuples, structs) into named variables:
 
 ```python
-# Python
-a, b, c = (1, 2, 3)
-first, *rest = [1, 2, 3, 4]
+# Python: tuple unpacking
+x, y = (1, 2)
+key, value = ("Alice", 95)
+a, b, *rest = [1, 2, 3, 4, 5]
 ```
 
 ```cpp
-// C++17
-auto [a, b, c] = std::tuple{1, 2.0, "three"};
+// C++17: structured bindings
+auto [x, y] = std::pair{1, 2};
+auto [key, value] = std::pair{"Alice", 95};
 
-// With pairs (map iteration is idiomatic with this):
-std::map<std::string, int> scores = {{"Alice", 95}, {"Bob", 87}};
-for (auto& [name, score] : scores) {
+// Works on arrays:
+int arr[3] = {1, 2, 3};
+auto [a, b, c] = arr;
+
+// Works on structs (without user-defined code):
+struct Point { double x, y, z; };
+Point p{1.0, 2.0, 3.0};
+auto [px, py, pz] = p;
+
+// Works on std::tuple:
+auto t = std::make_tuple(42, 3.14, std::string{"hi"});
+auto [num, flt, str] = t;
+
+// By reference (to avoid copy AND to allow modification):
+auto& [rx, ry] = p;
+rx = 10.0;   // modifies p.x
+```
+
+The most common use is iterating over maps cleanly:
+
+```cpp
+std::map<std::string, int> scores = {{"Alice",95}, {"Bob",87}};
+
+// Old style:
+for (const std::pair<const std::string, int>& entry : scores) {
+    std::cout << entry.first << ": " << entry.second << "\n";
+}
+
+// Modern style with structured bindings:
+for (const auto& [name, score] : scores) {
     std::cout << name << ": " << score << "\n";
 }
-
-// With structs:
-struct Point { int x, y, z; };
-Point p{1, 2, 3};
-auto [x, y, z] = p;
-
-// With arrays:
-int arr[3] = {10, 20, 30};
-auto [a, b, c] = arr;
 ```
 
-Structured bindings bind by value by default. Use `auto&` to bind by reference (and modify the original):
+---
+
+## `if` and `switch` With Initializers (C++17)
+
+Declare a variable scoped to the `if`/`switch` block:
 
 ```cpp
-for (auto& [name, score] : scores) {
-    score += 5;  // bumps every score in the map
+// Pattern: init; condition
+if (auto it = map.find("key"); it != map.end()) {
+    std::cout << it->second << "\n";
+}
+// 'it' is NOT accessible here -- scoped to the if/else
+
+// Without initializer (old style): 'it' pollutes the enclosing scope
+auto it = map.find("key");
+if (it != map.end()) { ... }
+// 'it' still accessible here (even though you're done with it)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: `auto` Dropping `const` or Reference
+
+**The bug:**
+```cpp
+const std::string& get_name() const { return name; }
+auto n = obj.get_name();   // n is std::string (copy), not const std::string&
+                           // Large string copied unnecessarily
+```
+**The fix:** `const auto& n = obj.get_name();`
+
+### Mistake 2: `decltype((x))` Returning Reference to Local
+
+```cpp
+decltype(auto) bad() {
+    int x = 5;
+    return (x);   // decltype((x)) = int& -- returns reference to local!
+}                 // x destroyed here, reference is dangling
+```
+**The fix:** `return x;` (without extra parentheses) for `decltype(auto)` return.
+
+---
+
+## Exercises
+
+**Exercise 33.1 -- Deduce the types**
+
+For each, what is the type of `x`?
+
+```cpp
+int         a = 5;
+const int   b = 10;
+int&        r = a;
+int         arr[3] = {1,2,3};
+
+auto x1 = a;     // (a)
+auto x2 = b;     // (b)
+auto x3 = r;     // (c)
+auto x4 = arr;   // (d)
+const auto& x5 = a;  // (e)
+```
+
+*Answer:*
+- (a) `int` -- plain copy
+- (b) `int` -- `auto` strips `const`
+- (c) `int` -- `auto` strips reference (copy)
+- (d) `int*` -- array decays to pointer
+- (e) `const int&` -- explicitly added back
+
+---
+
+**Exercise 33.2 -- Structured bindings in practice**
+
+Rewrite this using structured bindings:
+
+```cpp
+std::map<int, std::string> months = {{1,"Jan"},{2,"Feb"},{3,"Mar"}};
+for (const std::pair<const int, std::string>& p : months) {
+    std::cout << p.first << ": " << p.second << "\n";
 }
 ```
 
-### `auto` in Function Parameters (C++20)
-
+*Answer:*
 ```cpp
-// C++20: auto parameters make functions implicitly templated
-void print(auto x) {
-    std::cout << x << "\n";
+for (const auto& [num, name] : months) {
+    std::cout << num << ": " << name << "\n";
 }
-
-print(42);      // instantiated for int
-print("hello"); // instantiated for const char*
-print(3.14);    // instantiated for double
 ```
-
-This is equivalent to:
-
-```cpp
-template<typename T>
-void print(T x) { std::cout << x << "\n"; }
-```
-
-### Key Takeaways
-
-- `auto` deduces the type from the initializer — still statically typed, determined at compile time.
-- `auto` strips const and references. Add them explicitly: `const auto&`.
-- `decltype(expr)` queries the type of an expression without evaluating it.
-- Structured bindings (`auto [a, b] = ...`) destructure pairs, tuples, arrays, and structs.
-- C++20 `auto` parameters create implicitly templated functions.
 
 ---
 
 <a name="ch34"></a>
-## Chapter 34: `constexpr` and compile-time computation
+# Chapter 34: `constexpr` and Compile-Time Computation
 
-### The Motivation
+## Beyond Simple Constants
 
-Computations done at compile time are "free" at runtime — the result is baked directly into the executable. C++ uses `constexpr` to mark values and functions that must (or can) be evaluated at compile time.
+`constexpr` in C++11 was limited to single-expression functions. C++14 and later removed most restrictions: `constexpr` functions can now contain loops, local variables, conditionals, and recursion.
 
 ```cpp
+// C++14 and later: full constexpr functions
 constexpr int factorial(int n) {
-    return n <= 1 ? 1 : n * factorial(n - 1);
+    int result = 1;
+    for (int i = 2; i <= n; ++i)
+        result *= i;
+    return result;
 }
 
-constexpr int f5 = factorial(5);  // 120 — computed at compile time
-int arr[factorial(5)];            // array size must be compile-time constant
+constexpr int f10 = factorial(10);  // 3628800, zero runtime cost
 ```
 
-### `constexpr` Variables
+The rule: a `constexpr` function is evaluated at compile time when:
+1. All its arguments are compile-time constants, AND
+2. The result is used in a context requiring a compile-time constant
 
-A `constexpr` variable is initialized at compile time and is implicitly `const`:
+Otherwise it runs at runtime like a normal function.
 
 ```cpp
-constexpr double PI = 3.14159265358979;
-constexpr int CACHE_LINE = 64;
-constexpr std::size_t MAX_PLAYERS = 8;
+constexpr int square(int n) { return n * n; }
+
+constexpr int a = square(5);    // compile time: a = 25 baked into binary
+int           n = 7;
+int           b = square(n);    // runtime: n is not a compile-time constant
 ```
 
-### `constexpr` Functions (C++11–C++23 evolution)
+---
 
-C++11 constexpr functions were very limited (single return statement only). Each standard relaxed the restrictions:
+## `constexpr` Variables
 
 ```cpp
-// C++14+: loops, local variables, conditionals all allowed
-constexpr int gcd(int a, int b) {
-    while (b != 0) {
-        int t = b;
-        b = a % b;
-        a = t;
+constexpr double PI       = 3.14159265358979323846;
+constexpr double TAU      = 2.0 * PI;
+constexpr int    MAX_SIZE = 256;
+
+// Use as array size (must be compile-time):
+int buffer[MAX_SIZE];
+
+// Use in template arguments (must be compile-time):
+std::array<double, MAX_SIZE> arr;
+```
+
+---
+
+## `consteval` -- Must Be Compile-Time (C++20)
+
+`consteval` functions are called **immediate functions** -- they MUST be evaluated at compile time. Calling them with a runtime argument is a compile error:
+
+```cpp
+consteval int double_it(int n) { return n * 2; }
+
+constexpr int a = double_it(5);    // OK: compile time
+int n = 7;
+int b = double_it(n);              // COMPILE ERROR: n is not a constant
+```
+
+Use `consteval` when a function makes no sense at runtime (e.g., generating code, computing type properties).
+
+---
+
+## `constinit` -- Initialized at Compile Time, Mutable After (C++20)
+
+```cpp
+constinit int counter = 0;    // initialized at compile time (no static init order fiasco)
+counter = 5;                  // but can be changed at runtime (unlike constexpr)
+```
+
+`constinit` solves the **static initialization order fiasco**: global variables may be initialized in an unspecified order. `constinit` guarantees initialization happens at compile time (constant initialization), avoiding the dependency problem.
+
+---
+
+## `if constexpr` -- Compile-Time Branch Selection
+
+Already covered in Chapter 24. The key point: only the selected branch is compiled. The other branch can contain code that would fail to compile for this type:
+
+```cpp
+template <typename T>
+std::string to_str(T val) {
+    if constexpr (std::is_same_v<T, std::string>) {
+        return val;                     // only compiled when T is string
+    } else if constexpr (std::is_arithmetic_v<T>) {
+        return std::to_string(val);     // only compiled when T is numeric
+    } else {
+        return "[unknown type]";
     }
-    return a;
 }
 
-constexpr int g = gcd(48, 18);  // 6 — at compile time
+to_str(42);                             // "42"
+to_str(3.14);                           // "3.140000"
+to_str(std::string{"hello"});           // "hello"
 ```
 
-C++20 allows `constexpr` functions to use `try/catch`, `dynamic_cast`, virtual functions, and even allocate memory (though allocations must be freed before the expression completes).
+---
 
-### `consteval` (C++20) — Must Be Compile-Time
+## Compile-Time Strings and Algorithms (C++20)
 
-`consteval` functions *must* be evaluated at compile time. Calling them with runtime arguments is a compile error:
+`std::string` and many algorithms became `constexpr` in C++20:
 
 ```cpp
-consteval int compile_time_square(int x) {
-    return x * x;
+constexpr std::string_view greeting = "Hello, World!";
+constexpr auto len = greeting.size();       // 13, compile time
+constexpr auto pos = greeting.find(',');    // 5,  compile time
+
+constexpr bool starts_with_hello = greeting.starts_with("Hello");  // true
+
+// std::array algorithms are constexpr:
+constexpr std::array<int, 5> arr = {5, 3, 1, 4, 2};
+constexpr int min_val = *std::min_element(arr.begin(), arr.end());  // 1
+constexpr int max_val = *std::max_element(arr.begin(), arr.end());  // 5
+```
+
+---
+
+## `static_assert` -- Compile-Time Assertions
+
+```cpp
+static_assert(sizeof(int) == 4, "Assumes 32-bit int");
+static_assert(sizeof(void*) >= 8, "Requires 64-bit pointers");
+
+template <typename T>
+void process(T val) {
+    static_assert(std::is_arithmetic_v<T>, "T must be numeric");
+    // ...
+}
+```
+
+`static_assert` is evaluated at compile time. A failing `static_assert` is a compile error with the given message. Use it to document and enforce assumptions.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Calling `constexpr` With a Runtime Argument and Expecting Compile-Time
+
+**The bug:**
+```cpp
+constexpr int square(int n) { return n*n; }
+std::vector<int> v(square(n), 0);  // n is a runtime variable
+                                   // square(n) runs at runtime -- that's fine
+int arr[square(n)];                // ERROR: array size must be compile-time constant
+```
+**The fix:** Use `std::vector` for runtime-sized arrays.
+
+### Mistake 2: `constexpr` Function That Cannot Actually Be Evaluated at Compile Time
+
+**The bug:**
+```cpp
+constexpr int read_file() {    // ERROR: file I/O cannot be done at compile time
+    FILE* f = fopen("data.txt", "r");  // not constexpr
+    ...
+}
+```
+**The fix:** `constexpr` functions cannot call non-`constexpr` functions. The compiler will tell you.
+
+---
+
+## Exercises
+
+**Exercise 34.1 -- Compile-time primes**
+
+Write a `constexpr` function `is_prime(int n)` and use it to build a `constexpr std::array<bool, 20>` marking which numbers 0..19 are prime.
+
+*Answer:*
+```cpp
+constexpr bool is_prime(int n) {
+    if (n < 2) return false;
+    for (int i = 2; i * i <= n; ++i)
+        if (n % i == 0) return false;
+    return true;
 }
 
-constexpr int a = compile_time_square(5);  // OK — 25 at compile time
-// int n = 5; compile_time_square(n);       // ERROR — n is runtime
+constexpr std::array<bool, 20> primes = []() {
+    std::array<bool, 20> arr{};
+    for (int i = 0; i < 20; ++i) arr[i] = is_prime(i);
+    return arr;
+}();
+
+// primes[2]=true, primes[4]=false, primes[7]=true, etc.
+// All computed at compile time -- zero runtime cost
+static_assert(primes[2]  == true);
+static_assert(primes[4]  == false);
+static_assert(primes[17] == true);
 ```
 
-Use `consteval` for functions that only make sense at compile time (e.g., parsing format strings, generating lookup tables).
+---
 
-### `constinit` (C++20) — Guaranteed Initialization Order
+**Exercise 34.2 -- `static_assert` contract**
 
-Static variables with dynamic initialization have a dreaded "static initialization order fiasco." `constinit` ensures a variable is initialized at compile time (avoiding this problem) but doesn't make it `const`:
+Write a template `sum_array<T, N>(std::array<T,N>)` with a `static_assert` that `T` must be arithmetic, and verify it rejects `std::array<std::string, 3>`.
 
+*Answer:*
 ```cpp
-constinit int counter = 0;  // initialized at compile time, can be modified later
-++counter;  // OK — not const
-```
-
-### Compile-Time Data Structures
-
-C++20 made many standard library components `constexpr`, including `std::vector` and `std::string` (within constant expressions):
-
-```cpp
-constexpr int sum_of_first_n(int n) {
-    std::vector<int> v;  // vector in constexpr context (C++20)
-    for (int i = 1; i <= n; ++i) v.push_back(i);
-    int s = 0;
-    for (int x : v) s += x;
-    return s;
+template <typename T, std::size_t N>
+T sum_array(const std::array<T, N>& arr) {
+    static_assert(std::is_arithmetic_v<T>, "sum_array requires numeric type");
+    T total{};
+    for (const T& x : arr) total += x;
+    return total;
 }
 
-constexpr int s = sum_of_first_n(100);  // 5050 — computed at compile time
+sum_array(std::array{1,2,3,4,5});    // 15
+sum_array(std::array{1.0,2.5,0.5});  // 4.0
+// sum_array(std::array{std::string{"a"},...}); // Compile error: not arithmetic
 ```
-
-### Key Takeaways
-
-- `constexpr` variables are initialized at compile time, embedded in the executable.
-- `constexpr` functions can be evaluated at compile time (when given constant arguments) or at runtime.
-- `consteval` (C++20) forces compile-time evaluation — a runtime call is a compile error.
-- `constinit` (C++20) guarantees compile-time initialization of mutable statics.
-- C++20 made `vector` and `string` usable in `constexpr` contexts.
 
 ---
 
 <a name="ch35"></a>
-## Chapter 35: `std::format` and modern string handling
+# Chapter 35: `std::format` and Modern String Handling
 
-### The Evolution of String Formatting
+## The String Formatting History in C++
 
-C: `printf("Hello, %s! You are %d years old.\n", name, age);` — fast but unsafe (no type checking).
+C++ has had three generations of string formatting:
 
-Old C++: `std::cout << "Hello, " << name << "! You are " << age << " years old.\n";` — verbose.
+```cpp
+// Generation 1: printf (from C) -- fast but unsafe, no type checking
+printf("Name: %s, Score: %d\n", name.c_str(), score);  // crash if type wrong
 
-C++20: `std::format` — Python-style, type-safe, and fast.
+// Generation 2: iostream -- type-safe but verbose and stateful
+std::cout << "Name: " << name << ", Score: " << score << "\n";
+
+// Generation 3: std::format (C++20) -- type-safe, readable, fast
+std::cout << std::format("Name: {}, Score: {}\n", name, score);
+```
+
+`std::format` is modeled after Python's `str.format()` and f-strings. If you know Python string formatting, `std::format` will feel immediately familiar.
+
+---
+
+## `std::format` Basics
 
 ```python
 # Python f-string
-name, age = "Alice", 30
-msg = f"Hello, {name}! You are {age} years old."
+name, score = "Alice", 95
+print(f"Name: {name}, Score: {score}")
+print(f"Score: {score:05d}")  # "Score: 00095"
+print(f"Pi: {3.14159:.2f}")  # "Pi: 3.14"
 ```
 
 ```cpp
 // C++20 std::format
 #include <format>
+
 std::string name = "Alice";
-int age = 30;
-std::string msg = std::format("Hello, {}! You are {} years old.", name, age);
+int score = 95;
+
+std::cout << std::format("Name: {}, Score: {}\n", name, score);
+std::cout << std::format("Score: {:05d}\n", score);     // "Score: 00095"
+std::cout << std::format("Pi: {:.2f}\n", 3.14159);      // "Pi: 3.14"
 ```
 
-### Format Specifiers
+The `{}` placeholder takes the next argument. `{:format_spec}` applies formatting options.
 
-The syntax is nearly identical to Python's format strings:
+---
+
+## Format Specifiers
 
 ```cpp
-// Width and alignment
-std::format("{:10}", "left");    // "left      " (left-aligned in 10 chars)
-std::format("{:>10}", "right");  // "     right" (right-aligned)
-std::format("{:^10}", "center"); // "  center  " (centered)
+// Width and fill:
+std::format("{:10}", 42);          // "        42"  (right-aligned, width 10)
+std::format("{:<10}", 42);         // "42        "  (left-aligned)
+std::format("{:^10}", 42);         // "    42    "  (centered)
+std::format("{:0>10}", 42);        // "0000000042"  (fill with 0, right-aligned)
 
-// Numbers
-std::format("{:05d}", 42);       // "00042" (zero-padded)
-std::format("{:.2f}", 3.14159);  // "3.14" (2 decimal places)
-std::format("{:e}", 12345.678);  // "1.234568e+04" (scientific)
-std::format("{:x}", 255);        // "ff" (hex lowercase)
-std::format("{:X}", 255);        // "FF" (hex uppercase)
-std::format("{:b}", 10);         // "1010" (binary)
+// Integer bases:
+std::format("{:d}", 255);          // "255"   decimal
+std::format("{:x}", 255);          // "ff"    hex lowercase
+std::format("{:X}", 255);          // "FF"    hex uppercase
+std::format("{:#x}", 255);         // "0xff"  hex with prefix
+std::format("{:b}", 255);          // "11111111" binary
+std::format("{:o}", 255);          // "377"   octal
 
-// Positional arguments
-std::format("{0} + {1} = {0}", 1, 2);  // "1 + 2 = 1"
+// Floating point:
+std::format("{:.2f}", 3.14159);    // "3.14"  fixed, 2 decimal places
+std::format("{:.4e}", 12345.678);  // "1.2346e+04" scientific
+std::format("{:.3g}", 0.000123);   // "0.000123" general (chooses f or e)
+std::format("{:10.3f}", 3.14);     // "     3.140" width + precision
+
+// Strings:
+std::format("{:>20}", "hello");    // "               hello" right-aligned
+std::format("{:.5}", "hello world"); // "hello" (truncate to 5 chars)
+
+// Named arguments (from a position):
+std::format("{0} and {1} and {0}", "A", "B");  // "A and B and A"
 ```
 
-### `std::print` (C++23)
+---
 
-C++23 adds `std::print` — formats and prints in one call without constructing an intermediate string:
+## `std::format` vs `std::to_string` vs `std::stringstream`
 
 ```cpp
-#include <print>
-std::print("Hello, {}! You are {} years old.\n", name, age);
-std::println("This appends a newline automatically.");
+// std::to_string: simple, no formatting control
+std::string s1 = std::to_string(3.14159);     // "3.141590" (6 decimal places always)
+
+// std::stringstream: full control but verbose
+std::ostringstream oss;
+oss << std::fixed << std::setprecision(2) << 3.14159;
+std::string s2 = oss.str();                   // "3.14"
+
+// std::format: clean, explicit, composable
+std::string s3 = std::format("{:.2f}", 3.14159);  // "3.14"
 ```
 
-### Formatting Custom Types
+Use `std::format` for anything where you care about the format. Use `std::to_string` only for quick-and-dirty number-to-string conversion.
 
-Specialize `std::formatter<T>` to make your types formattable:
+---
+
+## `std::format` for Building Strings
 
 ```cpp
-struct Point { double x, y; };
+// Building a log line:
+auto log_line = std::format("[{:%H:%M:%S}] {:>8} | {}\n",
+                             std::chrono::system_clock::now(),
+                             "INFO",
+                             "Server started");
 
-template<>
-struct std::formatter<Point> {
-    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
-    
-    auto format(const Point& p, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "({}, {})", p.x, p.y);
-    }
-};
+// Building SQL (demonstration -- use a real SQL library for actual queries):
+auto query = std::format("SELECT * FROM users WHERE id = {}", user_id);
 
-Point p{3.0, 4.0};
-std::string s = std::format("Point: {}", p);  // "Point: (3, 4)"
+// Building error messages:
+throw std::runtime_error(
+    std::format("Index {} out of range [0, {})", index, size));
 ```
 
-### String Manipulation
+---
+
+## `std::string_view` -- Non-Owning String Reference
+
+`std::string_view` is a non-owning reference to a string (or substring) -- like a read-only `string&` that also works for string literals, substrings, and other char buffers:
 
 ```cpp
-#include <string>
-#include <algorithm>
+#include <string_view>
 
-std::string s = "  Hello, World!  ";
-
-// Python: s.strip() / lstrip() / rstrip()
-// C++: manual or use std::string algorithms
-auto start = s.find_first_not_of(" \t\n");
-auto end   = s.find_last_not_of(" \t\n");
-std::string trimmed = s.substr(start, end - start + 1);
-
-// Python: s.split(',')
-// C++: manual or use std::views::split (C++20)
-#include <ranges>
-for (auto word : s | std::views::split(',')) {
-    std::cout << std::string_view(word) << "\n";
+void print(std::string_view sv) {   // accepts string, string literal, char array
+    std::cout << sv << "\n";
 }
 
-// Python: s.replace('l', 'L')
-// C++:
-std::string replaced = s;
-std::replace(replaced.begin(), replaced.end(), 'l', 'L');
+std::string s = "hello world";
+print(s);                      // works: string -> string_view (no copy)
+print("hello world");          // works: literal -> string_view (no copy)
+print(s.substr(0, 5));         // works: substr returns string, then converts
 
-// Convert to upper/lower:
-std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+// Substring WITHOUT copying:
+std::string_view first5{s.data(), 5};   // "hello" -- no allocation
 ```
 
-### Key Takeaways
+`string_view` is faster than `const std::string&` for function parameters because it avoids the `std::string` constructor for string literals:
 
-- `std::format` (C++20) is Python-style type-safe string formatting.
-- `std::print` (C++23) formats and writes without an intermediate string.
-- Format specifiers: `{:05d}`, `{:.2f}`, `{:x}`, `{:>10}` — nearly identical to Python.
-- Specialize `std::formatter<T>` to make custom types formattable.
-- `std::string` manipulation uses `substr`, `find`, `replace`, and `<algorithm>` functions.
+```cpp
+void bad(const std::string& s)  { ... }   // "hello" creates a std::string object
+void good(std::string_view sv)  { ... }   // "hello" is just a pointer+length, no alloc
+```
+
+**Danger:** `string_view` does not own the data. The underlying string must outlive the view:
+
+```cpp
+std::string_view dangling() {
+    std::string s = "hello";
+    return s;      // s is destroyed -- returned view is dangling!
+}
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using `std::format` But Forgetting to `#include <format>`
+
+```
+error: 'format' is not a member of 'std'
+```
+Add `#include <format>`.
+
+### Mistake 2: `string_view` Outliving the Source String
+
+**The bug:**
+```cpp
+std::string_view sv;
+{
+    std::string s = "hello";
+    sv = s;         // sv points to s's internal buffer
+}                   // s destroyed -- sv is dangling
+std::cout << sv;    // undefined behavior
+```
+**The fix:** Store `std::string` if ownership is needed. Use `string_view` only as a parameter type or within a known lifetime scope.
+
+---
+
+## Exercises
+
+**Exercise 35.1 -- Format table**
+
+Format this data as a right-aligned table with columns of width 12:
+
+```
+Name           Score   Grade
+Alice             95       A
+Bob               72       C
+Carol             88       B
+```
+
+*Answer:*
+```cpp
+struct Student { std::string name; int score; char grade; };
+std::vector<Student> students = {{"Alice",95,'A'},{"Bob",72,'C'},{"Carol",88,'B'}};
+
+std::cout << std::format("{:<12} {:>8} {:>8}\n", "Name", "Score", "Grade");
+for (const auto& s : students) {
+    std::cout << std::format("{:<12} {:>8} {:>8}\n", s.name, s.score, s.grade);
+}
+```
+
+---
+
+**Exercise 35.2 -- Hex dump**
+
+Given `std::vector<uint8_t> data = {0x48, 0x65, 0x6C, 0x6C, 0x6F}`, print each byte as two-digit uppercase hex separated by spaces, followed by the ASCII interpretation.
+
+*Answer:*
+```cpp
+std::string hex_part, ascii_part;
+for (uint8_t b : data) {
+    hex_part   += std::format("{:02X} ", b);
+    ascii_part += std::format("{}", (b >= 32 && b < 127) ? (char)b : '.');
+}
+std::cout << hex_part << " | " << ascii_part << "\n";
+// 48 65 6C 6C 6F  | Hello
+```
 
 ---
 
 <a name="ch36"></a>
-## Chapter 36: Coroutines and Generators
+# Chapter 36: Coroutines and Generators
 
-### What Is a Coroutine?
+## What Is a Coroutine?
 
-A coroutine is a function that can suspend its execution and later resume. Python has had them since 3.5 (`async def`, `yield`). C++20 added native coroutine support.
+A coroutine is a function that can **suspend** its execution midway and **resume** later, preserving all its local state. It picks up exactly where it left off.
 
 ```python
-# Python generator
-def count_up(n):
-    for i in range(n):
-        yield i
+# Python generator: a coroutine
+def count_up(start, stop):
+    n = start
+    while n < stop:
+        yield n        # suspend here, return n to caller
+        n += 1         # resume here next time
 
-for x in count_up(5):
-    print(x)  # 0, 1, 2, 3, 4
+for x in count_up(0, 5):
+    print(x)   # 0, 1, 2, 3, 4
 ```
 
-```cpp
-// C++20 generator (using a library — standard generator comes in C++23)
-#include <generator>  // C++23
+C++20 introduced coroutines with three keywords: `co_yield`, `co_return`, and `co_await`.
 
-std::generator<int> count_up(int n) {
-    for (int i = 0; i < n; ++i)
-        co_yield i;
+---
+
+## How Coroutines Work (Conceptually)
+
+```
+Normal function:
+  Caller calls f() --> f runs to completion --> returns to caller
+  State: lives on the stack while running, gone when returned
+
+Coroutine:
+  Caller calls f() --> f runs until co_yield --> suspends
+  State: moved to the HEAP (coroutine frame), persists
+  Caller resumes f() --> f continues from suspension point
+  This repeats until co_return
+```
+
+```
+Coroutine frame (on heap):
++---------------------------+
+| local variables           |   preserved across suspensions
+| current suspension point  |   where to resume
+| promise object            |   communication with caller
++---------------------------+
+```
+
+The coroutine's local state lives in a heap-allocated frame. This is what makes it resumable -- the stack frame is gone, but the heap frame persists.
+
+---
+
+## Generators With `co_yield`
+
+The most common coroutine use: generating sequences lazily.
+
+C++20 does not provide a ready-made `Generator` type (it was added in C++23). Here is the C++23 version:
+
+```cpp
+#include <generator>   // C++23
+
+std::generator<int> count_up(int start, int stop) {
+    for (int i = start; i < stop; ++i) {
+        co_yield i;    // suspend, return i to the caller
+    }
+    // co_return implicit at end of function
 }
 
-for (int x : count_up(5)) {
-    std::cout << x << "\n";
+for (int n : count_up(0, 5)) {
+    std::cout << n << " ";   // 0 1 2 3 4
 }
 ```
 
-### Coroutine Keywords
+Each iteration of the `for` loop resumes the coroutine until the next `co_yield`. When the coroutine function ends, the range is exhausted.
 
-C++20 coroutines use three keywords:
-
-- `co_yield expr` — suspend the coroutine and yield a value (like Python's `yield`)
-- `co_return expr` — complete the coroutine (like `return` in a regular function)
-- `co_await expr` — suspend waiting for another async operation (like Python's `await`)
-
-A function containing any of these becomes a coroutine.
-
-### The Coroutine Machinery
-
-Unlike Python (where the runtime handles coroutines), C++ coroutines require you to provide a *promise type* — a class that controls suspension, resumption, and value transfer. This is complex but gives total control over memory allocation and scheduling.
-
-The standard library's `std::generator<T>` (C++23) wraps all this machinery for the generator use case:
+### Infinite Sequences
 
 ```cpp
-#include <generator>
-#include <ranges>
-
 std::generator<int> fibonacci() {
     int a = 0, b = 1;
-    while (true) {
+    while (true) {          // infinite -- coroutine suspends each iteration
         co_yield a;
         auto tmp = a + b;
         a = b;
@@ -4825,474 +11392,1177 @@ std::generator<int> fibonacci() {
     }
 }
 
-// Take the first 10 Fibonacci numbers:
-for (int x : fibonacci() | std::views::take(10)) {
-    std::cout << x << " ";  // 0 1 1 2 3 5 8 13 21 34
+auto fib = fibonacci();
+for (int i = 0; i < 10; ++i) {
+    std::cout << *fib.begin() << " ";
+    ++fib.begin();   // advance to next
+}
+// Better: use take view
+for (int n : fibonacci() | std::views::take(10)) {
+    std::cout << n << " ";   // 0 1 1 2 3 5 8 13 21 34
 }
 ```
 
-### Async Coroutines
+---
 
-For async I/O (network requests, file operations), coroutines avoid blocking threads. This is the same use case as Python's `asyncio`:
+## `co_await` -- Asynchronous Operations
+
+`co_await` suspends the coroutine until an asynchronous operation completes:
+
+```python
+# Python async/await:
+async def fetch_data(url):
+    response = await http_client.get(url)  # suspend until response arrives
+    return response.json()
+```
 
 ```cpp
-// Pseudocode — actual async requires a framework (ASIO, cppcoro, etc.)
-Task<std::string> fetch_url(std::string url) {
-    auto connection = co_await open_connection(url);
-    auto data       = co_await read_all(connection);
-    co_return data;
+// C++20 co_await (with a networking library that provides awaitables):
+Task<std::string> fetch_data(std::string url) {
+    auto response = co_await http_get(url);    // suspend until response
+    co_return response.body();
 }
 ```
 
-The C++ standard doesn't ship an async runtime (unlike Python's asyncio). You need a library. Popular choices: Asio (Boost.Asio or standalone Asio), cppcoro, libunifex.
+The machinery for `co_await` requires either a library (Asio, CPP-Coro, etc.) or your own promise type. Chapter 45 covers async patterns in depth.
 
-### Key Takeaways
+---
 
-- C++20 coroutines use `co_yield`, `co_return`, `co_await`.
-- `std::generator<T>` (C++23) is the simple generator type — equivalent to Python's `yield`.
-- Coroutines suspend without blocking a thread — ideal for lazy sequences and async I/O.
-- The coroutine machinery (promise types) is complex but customizable — giving C++ more power than Python's fixed runtime model.
-- For async I/O, pair with a library like Asio.
+## `co_return` -- Returning a Value
+
+```cpp
+Task<int> compute_async(int n) {
+    co_await some_async_work();
+    co_return n * n;    // like 'return', but for coroutines
+}
+```
+
+A coroutine that uses `co_return` (or any other `co_` keyword) must have a matching **promise type** associated with it. The promise type defines how values are transmitted to the caller. C++23's `std::generator` handles this automatically for generator coroutines.
+
+---
+
+## When to Use Coroutines
+
+```
+Use coroutines for:
+  - Lazy sequence generation (generators): co_yield
+  - Async I/O without callback hell: co_await
+  - State machines that are simpler to write as coroutines
+  - Cooperative multitasking (cooperative concurrency)
+
+Do NOT use for:
+  - CPU-heavy parallel work (use std::thread or std::async, Chapter 42)
+  - Simple synchronous code (unnecessary overhead)
+  - Cases where iterators or callbacks are clearer
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using a Coroutine Return Value as a Regular Value
+
+**The bug:**
+```cpp
+std::generator<int> gen = count_up(0, 10);
+int first = gen;   // ERROR: generator is not convertible to int
+```
+**The fix:** Iterate over the generator, or use `*gen.begin()` for the first element.
+
+### Mistake 2: Dangling References in Coroutine Locals
+
+**The bug:**
+```cpp
+std::generator<std::string&> bad_gen() {
+    std::string s = "hello";
+    co_yield s;     // yields a reference to local s
+}   // s is in the coroutine frame and lives as long as the generator -- this is fine
+    // BUT: if the generator is destroyed before the reference is used: dangling
+```
+**The fix:** Yield values, not references, when in doubt. Or ensure the generator outlives all yielded references.
+
+---
+
+## Exercises
+
+**Exercise 36.1 -- Range generator**
+
+Using `std::generator<int>`, write `range(int start, int stop, int step = 1)` that works like Python's `range()`.
+
+*Answer:*
+```cpp
+#include <generator>
+
+std::generator<int> range(int start, int stop, int step = 1) {
+    for (int i = start; step > 0 ? i < stop : i > stop; i += step) {
+        co_yield i;
+    }
+}
+
+// Test:
+for (int n : range(0, 10, 2))  std::cout << n << " ";  // 0 2 4 6 8
+for (int n : range(10, 0, -2)) std::cout << n << " ";  // 10 8 6 4 2
+```
+
+---
+
+**Exercise 36.2 -- Powers generator**
+
+Write a generator `powers_of(int base)` that yields 1, base, base^2, base^3, ... indefinitely. Use it with `std::views::take(5)` to get the first 5 powers of 3.
+
+*Answer:*
+```cpp
+std::generator<long long> powers_of(int base) {
+    long long val = 1;
+    while (true) {
+        co_yield val;
+        val *= base;
+    }
+}
+
+for (long long n : powers_of(3) | std::views::take(5)) {
+    std::cout << n << " ";   // 1 3 9 27 81
+}
+```
 
 ---
 
 <a name="ch37"></a>
-## Chapter 37: Modules (C++20)
+# Chapter 37: Modules (C++20)
 
-### The Problem with Headers
+## The Problem With Headers
 
-The `#include` preprocessor is 50 years old. Its problems:
-- **Slow**: headers are pasted textually into every file that includes them. The standard library headers are huge.
-- **Order-dependent**: symbols depend on include order.
-- **Macro leakage**: `#define` in one header pollutes every file that includes it.
-- **Redundant work**: every translation unit re-parses every included header.
+The header/source split from Chapter 11 has been C++'s compilation model since the 1970s. It works but has significant problems:
 
-### Modules: The Solution
+```
+Problems with #include:
+  1. Slow: every .cpp re-reads and re-parses every header it includes
+     A single #include <iostream> adds ~45,000 lines to every file
+  2. Order-dependent: headers must be included in the right order
+  3. Macro leakage: #defines in headers affect all subsequent code
+  4. ODR violations: accidentally defining something twice across headers
+  5. No true encapsulation: private impl details still visible in headers
+```
 
-C++20 modules precompile to binary module interface units (BMI). They're included once, not re-parsed. Macros don't leak.
+Modules solve all of these problems.
+
+---
+
+## Writing a Module
 
 ```cpp
-// math.cppm — a module (note the .cppm extension)
-export module math;  // declares this file as module 'math'
+// math_utils.cppm  (module implementation unit, .cppm extension by convention)
+export module math_utils;   // declare this is a module named 'math_utils'
 
-export int add(int a, int b) {    // 'export' makes it visible to importers
-    return a + b;
+// These are NOT exported -- module-private (not visible to importers)
+namespace {
+    double pi_approx() { return 3.14159265358979; }
 }
 
-int helper(int x) { return x * 2; }  // NOT exported — internal to the module
+// 'export' makes these visible to importers:
+export double circle_area(double r) {
+    return pi_approx() * r * r;
+}
+
+export int factorial(int n) {
+    return n <= 1 ? 1 : n * factorial(n - 1);
+}
+
+// Export a whole namespace:
+export namespace geometry {
+    double hypotenuse(double a, double b) {
+        return std::sqrt(a*a + b*b);
+    }
+}
 ```
 
 ```cpp
-// main.cpp — importing a module
-import math;      // import the module (not #include)
-import <iostream>; // import standard library (much faster than #include)
+// main.cpp
+import math_utils;          // import the module (not #include)
+import <iostream>;          // standard library modules (C++23)
 
 int main() {
-    std::cout << add(3, 4) << "\n";  // 7
-    // helper(5);  // ERROR — not exported
+    std::cout << circle_area(5.0) << "\n";          // 78.5398
+    std::cout << factorial(10) << "\n";              // 3628800
+    std::cout << geometry::hypotenuse(3, 4) << "\n"; // 5
 }
 ```
 
-### Standard Library Modules (C++23)
+No angle brackets, no header files. `import math_utils` gives `main.cpp` access to everything marked `export` in the module.
 
-C++23 standardizes importing the entire standard library:
+---
 
-```cpp
-import std;         // everything in the standard library
-import std.compat;  // + C compatibility headers (printf, etc.)
-```
-
-This replaces dozens of `#include <...>` headers and compiles dramatically faster.
-
-### Module Partitions
+## Module Partitions
 
 Large modules can be split into partitions:
 
 ```cpp
-// geometry-shapes.cppm
-export module geometry:shapes;  // module 'geometry', partition 'shapes'
+// math_utils-trig.cppm  (partition: math_utils:trig)
+export module math_utils:trig;
+export double sin_deg(double deg) { return std::sin(deg * 3.14159/180); }
+export double cos_deg(double deg) { return std::cos(deg * 3.14159/180); }
 
-export struct Circle { double radius; };
-export struct Rectangle { double width, height; };
+// math_utils.cppm  (primary module interface)
+export module math_utils;
+export import :trig;         // re-export the trig partition
 
-// geometry-algorithms.cppm
-export module geometry:algorithms;
-
-import geometry:shapes;  // import another partition
-export double area(const Circle& c);
-export double area(const Rectangle& r);
-
-// geometry.cppm — the primary module interface
-export module geometry;
-export import :shapes;      // re-export the shapes partition
-export import :algorithms;  // re-export the algorithms partition
+export double circle_area(double r) { ... }
 ```
 
-### Build System Support
+---
 
-Modules require build system support because the dependency order of compilation matters (a module must be compiled before its importers). Support as of 2024:
+## Modules vs Headers: Side-by-Side
 
-- **CMake 3.28+**: native modules support
-- **MSVC**: first-class support
-- **GCC 14+**: mostly supported
-- **Clang 16+**: mostly supported
-
-Adoption is growing. New projects should use modules. Legacy code continues with headers.
-
-### Key Takeaways
-
-- Modules replace `#include` with a precompiled binary interface.
-- `export module name;` declares a module. `export` on a declaration makes it visible to importers.
-- `import name;` imports a module — no macro leakage, no re-parsing.
-- C++23's `import std;` replaces all standard library includes.
-- Modules dramatically improve compile times for large projects.
+```
+Headers (#include):                    Modules (import):
+  Parse every time                       Parsed once, binary interface cached
+  Macros leak out                        No macro leakage
+  Textual inclusion (fragile)            Semantic interface
+  Order-dependent                        Order-independent
+  Private impl visible in header         Private impl truly private
+  Works with all compilers (C++98+)      Requires C++20 + toolchain support
+```
 
 ---
 
+## Toolchain Support (as of 2025/2026)
+
+Modules are supported in:
+- **GCC 14+** with `-std=c++20`
+- **Clang 16+** with `-std=c++20`
+- **MSVC** (Visual Studio 2019 v16.8+)
+
+Build system support is still maturing. CMake 3.28+ supports modules natively. For new projects, modules are ready to use. For existing projects, incremental adoption is possible -- modules and headers can coexist.
+
 ---
 
-# Part VIII — The Cost Model & Performance
+## Common Mistakes in This Chapter
+
+### Mistake 1: Including Headers Inside a Module That Leaks Macros
+
+**The bug:**
+```cpp
+export module mylib;
+#include <windows.h>   // defines hundreds of macros (min, max, BOOL, etc.)
+                       // These macros DO NOT leak to importers (good)
+                       // But they affect everything INSIDE the module
+```
+**Better:** Use `import <windows.h>` as a header unit if your toolchain supports it, or wrap the include in a translation unit that doesn't export the macros.
+
+### Mistake 2: Exporting Everything
+
+Modules encourage thinking about your API surface. Do not put `export` on internal helper functions. Keep implementation details module-private.
+
+---
+
+## Exercises
+
+**Exercise 37.1 -- Write a module**
+
+Convert this header/source pair into a module:
+
+```cpp
+// geometry.h
+double circle_area(double r);
+double rectangle_area(double w, double h);
+
+// geometry.cpp
+double circle_area(double r)          { return 3.14159 * r * r; }
+double rectangle_area(double w, double h) { return w * h; }
+```
+
+*Answer:*
+```cpp
+// geometry.cppm
+export module geometry;
+import <numbers>;  // C++20: std::numbers::pi
+
+export double circle_area(double r) {
+    return std::numbers::pi * r * r;
+}
+
+export double rectangle_area(double w, double h) {
+    return w * h;
+}
+
+// main.cpp
+import geometry;
+import <iostream>;
+
+int main() {
+    std::cout << circle_area(5.0)          << "\n";   // 78.5398
+    std::cout << rectangle_area(3.0, 4.0)  << "\n";   // 12
+}
+```
+
+---
+
+*Part VII is complete. You now know the modern C++ language features that distinguish contemporary code from older C++: precise type deduction, full compile-time computation, expressive string formatting, coroutines for generators and async, and the module system that will eventually replace headers.*
+
+*Part VIII covers performance -- value vs reference semantics, memory layout and cache effects, data-oriented design, and profiling. These are what separate C++ programs that are fast from C++ programs that are merely correct. Ask to continue.*
+
+---
+
+# Part VIII -- Performance
+
+C++ is fast because it gives you direct control over where data lives and how it moves. Python hides these decisions behind an abstraction layer. This part covers the mental model you need to write C++ that is not just correct but genuinely fast.
+
+The central insight: **modern CPUs are not limited by computation speed -- they are limited by memory bandwidth.** Code that moves less data, keeps data contiguous, and avoids indirection runs faster regardless of how many instructions it executes.
 
 ---
 
 <a name="ch38"></a>
-## Chapter 38: Value vs Reference Semantics
+# Chapter 38: Value vs Reference Semantics
 
-### Python Is All Reference Semantics
+## The Two Semantic Models
 
-In Python, variables hold references (pointers) to objects. Assignment copies the reference:
+**Value semantics:** copying an object gives you a fully independent copy. Modifying the copy does not affect the original.
+
+**Reference semantics:** "copying" an object gives you another reference to the same underlying data. Modifying one reference affects all others.
+
+Python uses reference semantics for all mutable objects:
 
 ```python
+# Python: reference semantics for lists
 a = [1, 2, 3]
-b = a         # b and a point to the same list
+b = a           # b is a reference to the SAME list
 b.append(4)
-print(a)      # [1, 2, 3, 4] — a was modified through b
+print(a)        # [1, 2, 3, 4] -- a was affected
+
+# Only immutable types (int, str, tuple) behave like values in Python
+x = 5
+y = x
+y += 1
+print(x)        # 5 -- x unchanged (int is immutable)
 ```
 
-Everything is a reference. Mutation is the default. This is easy to reason about for simple cases but leads to surprising aliasing in complex programs.
-
-### C++ Defaults to Value Semantics
-
-In C++, assignment copies the value. Objects are independent by default:
+C++ defaults to value semantics for all types:
 
 ```cpp
+// C++: value semantics by default
 std::vector<int> a = {1, 2, 3};
-std::vector<int> b = a;    // b is a COPY of a
+std::vector<int> b = a;         // FULL COPY of the data
 b.push_back(4);
-std::cout << a.size();     // 3 — a unchanged
+std::cout << a.size() << "\n";  // 3 -- a is unchanged
+
+// Reference semantics: explicit opt-in with & or pointer
+std::vector<int>& ref = a;      // ref IS a (alias)
+ref.push_back(4);
+std::cout << a.size() << "\n";  // 4 -- a was affected through ref
 ```
 
-This is *value semantics*: objects are values, copying creates independent objects. It's the safe default.
+---
 
-### Opting Into Reference Semantics
-
-When you want sharing or aliasing, you're explicit about it:
+## Why Value Semantics Makes Reasoning Easier
 
 ```cpp
-std::vector<int> a = {1, 2, 3};
-std::vector<int>& b = a;   // b is a reference (alias) to a
-b.push_back(4);
-std::cout << a.size();     // 4 — a was modified through b
+void process(std::vector<int> v) {  // v is a copy
+    v.push_back(99);
+    sort(v.begin(), v.end());
+}
+
+std::vector<int> data = {5, 3, 1, 4};
+process(data);
+// data is guaranteed unchanged -- no aliasing possible
 ```
 
-This is *reference semantics* — you say explicitly "b is an alias."
+When you pass by value, a function cannot surprise you by modifying your data. The function receives its own independent copy. This is the reason the standard library returns by value -- it is easier to reason about.
 
-### Why Value Semantics Is Better (Usually)
+---
 
-With value semantics:
-- Function arguments can't surprise you by modifying your data (unless you pass by reference).
-- You can reason about code locally — no need to track who else holds a reference.
-- No aliasing bugs.
-- Move semantics make "copying" cheap for large objects when the source won't be used again.
+## When Value Semantics Is Expensive
+
+Copying large objects is expensive. A `std::vector<int>` with a million elements takes ~4 MB to copy. When reading is all you need, pass by `const&` instead:
 
 ```cpp
-void process(std::vector<int> data) {  // takes by VALUE — safe
-    data.sort();  // sorts local copy
-    // caller's data is unaffected
+// Expensive: copies the entire vector (4 MB)
+double average(std::vector<int> v) {
+    double sum = 0;
+    for (int x : v) sum += x;
+    return sum / v.size();
+}
+
+// Free: passes a reference (8 bytes on a 64-bit system)
+double average(const std::vector<int>& v) {
+    double sum = 0;
+    for (int x : v) sum += x;
+    return sum / v.size();
 }
 ```
 
-### When to Use Reference Semantics
+The parameter-passing decision table from Chapter 6, with performance context:
 
-- **`const T&`**: pass large objects cheaply for read-only access.
-- **`T&`**: pass for write access (rare — prefer returning values or using return values).
-- **`T&&` / `std::move`**: transfer ownership without copying.
-- **`shared_ptr<T>`**: when multiple owners genuinely need to share the same object.
+```
+Small trivially-copyable type (int, double, pointer, small struct <= 16 bytes):
+  Pass by value:  T x
+  Cost: cheap copy, may allow more compiler optimizations (no aliasing)
 
-The guideline: start with value semantics. Opt into reference semantics only when performance requires it or sharing is the correct model.
+Large or non-trivial type (string, vector, custom class):
+  Read only:      const T& x        -- 8 bytes (pointer), no copy
+  Must modify:    T& x              -- 8 bytes (pointer), modifies caller's object
+  Take ownership: T x (+ std::move) -- one move (usually free)
 
-### The Performance Angle
-
-Value semantics isn't slower — it's often faster:
-
-```cpp
-// Reference semantics (Python-style) — pointer chasing:
-struct NodeRef {
-    std::shared_ptr<int> data;  // heap allocation + pointer hop
-};
-
-// Value semantics — data is inline:
-struct NodeVal {
-    int data;                   // directly in the struct — one contiguous access
-};
+Return values:
+  Always return by value -- NRVO/move makes it free in practice
+  Never return references to locals
 ```
 
-A `vector<int>` is contiguous integers in memory. Iterating it is fast because the CPU's cache prefetcher works perfectly. A `vector<shared_ptr<int>>` is a vector of pointers — each `*` hop is a potential cache miss.
+---
 
-### Key Takeaways
+## The Slice Problem and Polymorphism
 
-- C++ defaults to value semantics: assignment copies. Reference semantics require explicit `&` or smart pointers.
-- Value semantics prevent aliasing bugs and enable local reasoning.
-- Use `const T&` for cheap read access, `T&&` for transfer of ownership.
-- Containers of values (`vector<T>`) are cache-friendly and fast. Containers of pointers (`vector<T*>`) cause pointer chasing and cache misses.
+Value semantics and polymorphism conflict. If you have a base-class value, you can only store a base-class object:
+
+```cpp
+std::vector<Shape> shapes;         // value semantics
+shapes.push_back(Circle{5.0});     // Circle is SLICED to Shape
+shapes.push_back(Rectangle{3,4});  // Rectangle is SLICED to Shape
+
+for (const Shape& s : shapes) {
+    s.area();    // always calls Shape::area, never Circle::area
+}
+```
+
+For polymorphism, you need reference semantics -- pointers or references:
+
+```cpp
+std::vector<std::unique_ptr<Shape>> shapes;  // reference semantics
+shapes.push_back(std::make_unique<Circle>(5.0));
+shapes.push_back(std::make_unique<Rectangle>(3,4));
+
+for (const auto& s : shapes) {
+    s->area();   // dynamic dispatch -- calls Circle::area, Rectangle::area
+}
+```
+
+---
+
+## Small Object Optimization (SOO)
+
+Modern standard library types use **small object optimization**: for small values, they store the data inline (in the object itself) instead of on the heap, avoiding a heap allocation.
+
+`std::string` typically stores strings up to 15 characters inline:
+
+```
+Small string (<= 15 chars):            Large string (> 15 chars):
++--------------------------+           +--------------------------+
+| chars[16]: "hello\0..."  |           | ptr  -> [heap: "long..."]|
+| size: 5                  |           | size: 100                |
+| (no heap allocation)     |           | capacity: 128            |
++--------------------------+           +--------------------------+
+
+sizeof(std::string) == 24 in both cases
+```
+
+`std::function` similarly stores small callables inline. `std::any` also has SOO. This means small types often cost no more than raw values even when wrapped in standard library types.
+
+---
+
+## `std::span<T>` -- Non-Owning View Over Contiguous Data
+
+`std::span<T>` (C++20) is to arrays and vectors what `std::string_view` is to strings: a non-owning view over a contiguous sequence.
+
+```cpp
+#include <span>
+
+void print_first_n(std::span<const int> data, int n) {
+    for (int i = 0; i < n && i < (int)data.size(); ++i)
+        std::cout << data[i] << " ";
+}
+
+int arr[5]         = {1, 2, 3, 4, 5};
+std::vector<int> v = {10, 20, 30};
+
+print_first_n(arr, 3);   // works: C array -> span
+print_first_n(v, 2);     // works: vector -> span
+print_first_n({arr+1, 3}, 3);  // works: subrange {2,3,4}
+```
+
+Use `std::span` for functions that operate on any contiguous sequence -- avoids template proliferation and still has zero overhead.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Passing Large Objects by Value When Only Reading
+
+**The bug:**
+```cpp
+void log(std::string message) {        // copies the entire string
+    std::cout << message << "\n";
+}
+log("This is a very long log message that gets copied unnecessarily");
+```
+**The fix:** `void log(std::string_view message)` or `void log(const std::string& message)`
+
+### Mistake 2: Returning `const` Value (Disables Move)
+
+**The bug:**
+```cpp
+const std::vector<int> compute() {   // const return value
+    std::vector<int> v = {1,2,3};
+    return v;
+}
+std::vector<int> result = compute(); // cannot move! const prevents moving
+```
+**The fix:** Return by non-const value: `std::vector<int> compute()`
+
+---
+
+## Exercises
+
+**Exercise 38.1 -- Identify the semantics**
+
+For each statement, say whether C++ uses value or reference semantics and whether a copy occurs:
+
+```cpp
+std::string s = "hello";
+std::string t = s;                    // (a)
+std::string& r = s;                   // (b)
+void f(std::string x);   f(s);        // (c)
+void g(const std::string& x); g(s);   // (d)
+std::string u = std::move(s);         // (e)
+```
+
+*Answer:*
+- (a) Value semantics -- copy: `t` is a new independent string
+- (b) Reference semantics -- no copy: `r` is an alias for `s`
+- (c) Value semantics -- copy: `x` in `f` is a full copy of `s`
+- (d) Reference semantics -- no copy: `x` in `g` is a const reference to `s`
+- (e) Move semantics -- no copy: `s` is moved into `u` (s is now empty)
+
+---
+
+**Exercise 38.2 -- Fix the signature**
+
+This function does not modify its argument. It only needs to read it. Fix the signature to avoid an unnecessary copy.
+
+```cpp
+int count_vowels(std::string text) {
+    int count = 0;
+    for (char c : text)
+        if (std::string{"aeiouAEIOU"}.find(c) != std::string::npos) ++count;
+    return count;
+}
+```
+
+*Answer:*
+```cpp
+int count_vowels(std::string_view text) {
+    int count = 0;
+    for (char c : text)
+        if (std::string_view{"aeiouAEIOU"}.find(c) != std::string_view::npos)
+            ++count;
+    return count;
+}
+```
 
 ---
 
 <a name="ch39"></a>
-## Chapter 39: How Memory Layout Affects Speed (cache, locality)
+# Chapter 39: How Memory Layout Affects Speed
 
-### The Memory Hierarchy
+## The CPU and the Memory Hierarchy
 
-Modern CPUs are orders of magnitude faster than RAM. To bridge the gap, the CPU has a hierarchy of caches:
+Modern CPUs do not read from RAM one byte at a time. They read in **cache lines** -- typically 64 bytes at a time. If you access one byte, the CPU fetches all 64 surrounding bytes and caches them. The next access to nearby data is satisfied from cache (fast); access to distant data causes a **cache miss** and a round-trip to RAM (slow).
 
 ```
-CPU registers    ~0.3 ns    ~256 bytes
-L1 cache         ~1 ns      ~32 KB
-L2 cache         ~4 ns      ~256 KB
-L3 cache         ~10-50 ns  ~8-32 MB
-RAM              ~60-100 ns ~GB
+Memory hierarchy (approximate latencies on a modern x86-64):
+
+Level         Size        Latency
+L1 cache      32-64 KB    ~1 ns    (4-5 CPU cycles)
+L2 cache      256 KB-1 MB ~4 ns    (12-15 cycles)
+L3 cache      4-32 MB     ~15 ns   (40-50 cycles)
+RAM           4-64 GB     ~60 ns   (200+ cycles)
+SSD           1+ TB       ~100 µs  (300,000+ cycles)
+HDD           1+ TB       ~10 ms   (30,000,000+ cycles)
 ```
 
-A cache miss — needing data that's not in the cache — causes the CPU to stall for 60-100 ns while it fetches from RAM. At 3 GHz, 100 ns is ~300 cycles — 300 operations that could have happened.
+A cache miss costs ~200x the price of a cache hit. Algorithms that access memory randomly (linked lists, hash maps with many collisions, pointer chasing through class hierarchies) pay this penalty constantly. Algorithms that access memory sequentially (arrays, vectors) pre-fetch into cache and pay it rarely.
 
-The key insight: **spatial locality** and **temporal locality** determine cache behavior.
+---
 
-- **Spatial locality**: accessing nearby memory is cheap (hardware prefetches cache lines of 64 bytes).
-- **Temporal locality**: recently accessed data is likely cached.
+## Contiguous Arrays vs Linked Structures
 
-### Array of Structs vs Struct of Arrays
+```
+std::vector<int>:              std::list<int>:
 
-This is the most impactful layout decision in systems programming.
+[1][2][3][4][5][6][7][8]       [1]->[2]->[3]->[4]->[5]
+ sequential, one cache line     each node: value + two pointers
+                                scattered across heap, many cache misses
+```
 
-**Array of Structs (AoS)** — natural OOP layout:
+Iterating over a `std::vector<int>` of 1 million elements: the CPU pre-fetches ahead, and most accesses hit the cache. Iterating over a `std::list<int>` of the same elements: each `.next` pointer jump may land anywhere in RAM, causing cache misses for most accesses.
+
+Measured difference: vector iteration is typically **10-50x faster** than list iteration for integer elements on modern hardware.
+
+---
+
+## Array of Structs vs Struct of Arrays
+
+A classic performance pattern. Consider particles with position, velocity, and mass:
+
+**Array of Structs (AoS) -- the natural OOP layout:**
 
 ```cpp
 struct Particle {
-    float x, y, z;     // position
-    float vx, vy, vz;  // velocity
+    float x, y, z;      // position
+    float vx, vy, vz;   // velocity
     float mass;
-    int   type;
-    // 32 bytes total
 };
-std::vector<Particle> particles(1'000'000);
 
-// Updating positions:
-for (auto& p : particles) {
-    p.x += p.vx;  // reads x, vx, writes x — but also loads y, z, vy, vz, mass, type
-    p.y += p.vy;  // already in cache
-    p.z += p.vz;  // already in cache
-}
+std::vector<Particle> particles(N);
 ```
 
-**Struct of Arrays (SoA)** — data-oriented layout:
+```
+Memory layout:
+[x0 y0 z0 vx0 vy0 vz0 m0][x1 y1 z1 vx1 vy1 vz1 m1][x2 ...]
+ <--  particle 0  -->      <-- particle 1 -->
+```
+
+**Struct of Arrays (SoA) -- cache-friendly for SIMD/batch operations:**
 
 ```cpp
 struct Particles {
-    std::vector<float> x, y, z;
-    std::vector<float> vx, vy, vz;
+    std::vector<float> x, y, z;    // all positions
+    std::vector<float> vx, vy, vz; // all velocities
     std::vector<float> mass;
-    std::vector<int>   type;
 };
+
 Particles particles;
-// resize each to 1'000'000
+particles.x.resize(N);
+// ...
+```
 
-// Updating positions:
-for (int i = 0; i < n; ++i) {
-    particles.x[i] += particles.vx[i];
+```
+Memory layout:
+x:  [x0][x1][x2][x3][x4][x5][x6][x7]...
+y:  [y0][y1][y2][y3][y4][y5][y6][y7]...
+vx: [vx0][vx1][vx2][vx3]...
+```
+
+**When does layout matter?**
+
+```cpp
+// Gravity update: only reads/writes x, y, z, vx, vy, vz -- NOT mass
+// AoS: loads a full Particle (28 bytes) but only uses 24 bytes
+//      Every 3rd cache line contains mass data you don't need
+
+// SoA: loads x[], y[], z[], vx[], vy[], vz[] sequentially
+//      100% of loaded cache lines contain useful data
+//      Also: SIMD can process 8 floats at once from contiguous x[] array
+
+// Benchmark: 1M particles, gravity update
+// AoS: ~8ms
+// SoA: ~1.5ms  (5x speedup -- same computation, different layout)
+```
+
+Use SoA when you frequently access a subset of fields across all objects. Use AoS when you typically access all fields of one object at a time.
+
+---
+
+## False Sharing: The Multi-Core Cache Problem
+
+When two CPU cores write to different variables that happen to share a cache line, the cores fight over the cache line -- even though they are writing to different variables.
+
+```cpp
+// These two ints share a cache line (they are adjacent):
+struct Counters {
+    int counter_a;  // core 1 writes here
+    int counter_b;  // core 2 writes here
+};
+
+// Both cores must invalidate and re-fetch the cache line on each other's write
+// Performance: similar to a single-threaded program, no parallelism gained
+```
+
+Fix: pad to force each variable onto its own cache line:
+
+```cpp
+struct alignas(64) PaddedCounter {   // 64 = typical cache line size
+    int value;
+    char padding[60];   // explicit padding, OR use alignas(64)
+};
+
+PaddedCounter counter_a;   // on its own cache line
+PaddedCounter counter_b;   // on a different cache line
+// cores can now update independently -- true parallelism
+```
+
+---
+
+## Memory Alignment
+
+Data types have **alignment requirements** -- they must be stored at addresses that are multiples of their size (usually). The CPU fetches aligned data in one operation; misaligned data may require two fetches.
+
+```cpp
+struct Packed {
+    char  a;     // 1 byte
+    int   b;     // 4 bytes -- alignment requires padding!
+    char  c;     // 1 byte
+    double d;    // 8 bytes -- alignment requires padding!
+};
+
+// Actual layout:
+// a: 1 byte
+// padding: 3 bytes (to align b to 4-byte boundary)
+// b: 4 bytes
+// c: 1 byte
+// padding: 7 bytes (to align d to 8-byte boundary)
+// d: 8 bytes
+// sizeof(Packed) = 24 bytes (not 14!)
+
+struct Reordered {
+    double d;    // 8 bytes
+    int    b;    // 4 bytes
+    char   a;    // 1 byte
+    char   c;    // 1 byte
+    // padding: 2 bytes
+};
+// sizeof(Reordered) = 16 bytes  -- 8 bytes smaller!
+```
+
+**Rule: order struct members from largest to smallest to minimize padding.**
+
+Check with:
+```cpp
+#include <iostream>
+std::cout << sizeof(Packed)    << "\n";  // 24
+std::cout << sizeof(Reordered) << "\n";  // 16
+static_assert(offsetof(Packed, d) == 16);  // d starts at byte 16, not 8
+```
+
+---
+
+## Branch Prediction
+
+Modern CPUs execute instructions speculatively, guessing which branch an `if` will take. If the guess is right (branch prediction hit), it is nearly free. If wrong (misprediction), the CPU must flush the pipeline and restart: ~15-20 cycles wasted.
+
+```cpp
+// Unpredictable branch: random 50/50 data
+// CPU cannot predict: many mispredictions
+std::vector<int> v(1'000'000);
+std::generate(v.begin(), v.end(), []{ return rand() % 2; });
+int sum = 0;
+for (int x : v) {
+    if (x > 0) sum += x;  // branch is 50% unpredictable
 }
-// When we access x[0], the cache loads x[0..15] (64 bytes / 4 bytes per float).
-// The next 15 iterations are cache hits — no stalls.
+
+// Branchless version: no branch to mispredict
+for (int x : v) {
+    sum += x * (x > 0);   // multiply by 0 or 1 -- no branch
+}
+// Or:
+for (int x : v) {
+    sum += (x > 0) ? x : 0;  // ternary often compiles branchless (cmov instruction)
+}
 ```
 
-For operations that only access *some* fields, SoA is faster because you only load the data you actually need.
-
-### Linked Lists Are Slow
-
-Textbooks use linked lists for teaching algorithms. In practice, they're often the wrong choice:
+Pre-sorting data makes the branch predictable:
 
 ```cpp
-std::list<int> vs. std::vector<int>
+std::sort(v.begin(), v.end());
+// Now: all 0s come first, then all 1s -- branch is perfectly predictable
+for (int x : v) {
+    if (x > 0) sum += x;  // CPU always predicts correctly after the first few
+}
 ```
 
-A `std::list` node has a value, and two pointers (`next`, `prev`). These nodes are scattered throughout the heap. Traversing the list means following a pointer to a random memory address for each node — every step is likely a cache miss.
+This is the famous "sorted array is faster" phenomenon.
 
-A `std::vector` is contiguous. Iterating it streams through sequential memory — the prefetcher loads ahead and you almost never miss.
+---
 
-Real-world benchmark: iterating and summing 1 million ints, vector vs list. Vector is typically 10-50x faster.
+## `[[likely]]` and `[[unlikely]]` (C++20)
 
-### False Sharing
-
-On multi-core CPUs, each core has its own L1/L2 cache. Cache lines (64 bytes) are the unit of transfer. If two threads modify different variables that happen to be on the same cache line, they thrash each other's caches:
+Hint to the compiler about which branch is more probable:
 
 ```cpp
-struct Counters {
-    int counter_a;  // thread 1 writes this
-    int counter_b;  // thread 2 writes this
-    // both on the same cache line — false sharing!
-};
-
-// Fix: align to cache line boundaries
-struct Counters {
-    alignas(64) int counter_a;
-    alignas(64) int counter_b;
-};
+if (cache_hit) [[likely]] {
+    return cached_result;   // fast path: tell compiler this is common
+} else [[unlikely]] {
+    return recompute();     // slow path: compiler places this away from hot path
+}
 ```
 
-### Key Takeaways
+---
 
-- Cache misses cost ~100 CPU cycles each. Minimizing them is the #1 performance tool.
-- Contiguous containers (`vector`, `array`) are fast because they exploit spatial locality.
-- Array of Structs (AoS) vs Struct of Arrays (SoA): choose SoA when processing subsets of fields in tight loops.
-- Linked lists are cache-unfriendly. Prefer `vector` unless you truly need O(1) mid-insertion.
-- False sharing: keep data written by different threads on separate cache lines.
+## Common Mistakes in This Chapter
+
+### Mistake 1: Using `std::list` When `std::vector` Would Do
+
+**The misconception:** "I need O(1) insertion in the middle -- use `std::list`."
+**The reality:** For small numbers of elements (< a few thousand), a `std::vector` with O(n) insertion is faster than a `std::list` with O(1) insertion because the vector's cache efficiency dominates. Only use `std::list` when:
+- Elements must not be invalidated by insertions (stable iterators)
+- The list is very large AND insertions dominate over iteration
+
+### Mistake 2: Struct Members Ordered Arbitrarily
+
+Always check `sizeof(YourStruct)`. If it is larger than the sum of member sizes, there is padding. Reorder fields to eliminate waste.
+
+---
+
+## Exercises
+
+**Exercise 39.1 -- Struct padding**
+
+Calculate `sizeof` for each struct without running the code. Assume typical x86-64 alignment rules.
+
+```cpp
+struct A { char a; int b; char c; };
+struct B { int b; char a; char c; };
+struct C { double d; int i; char c; };
+struct D { char c; double d; int i; };
+```
+
+*Answer:*
+- `A`: char(1)+pad(3)+int(4)+char(1)+pad(3) = **12**
+- `B`: int(4)+char(1)+char(1)+pad(2) = **8**
+- `C`: double(8)+int(4)+char(1)+pad(3) = **16**
+- `D`: char(1)+pad(7)+double(8)+int(4)+pad(4) = **24**
+
+Lesson: reordering B saves 4 bytes vs A; C saves 8 bytes vs D.
+
+---
+
+**Exercise 39.2 -- AoS to SoA conversion**
+
+Convert this AoS to SoA and write an `update_positions(float dt)` function that adds velocity*dt to each position:
+
+```cpp
+struct Particle { float x, y; float vx, vy; };
+std::vector<Particle> particles(1000);
+```
+
+*Answer:*
+```cpp
+struct Particles {
+    std::vector<float> x, y;    // positions
+    std::vector<float> vx, vy;  // velocities
+
+    Particles(int n) : x(n), y(n), vx(n), vy(n) {}
+};
+
+void update_positions(Particles& p, float dt) {
+    for (size_t i = 0; i < p.x.size(); ++i) {
+        p.x[i] += p.vx[i] * dt;
+        p.y[i] += p.vy[i] * dt;
+    }
+    // Cache friendly: reads x[], vx[] sequentially -- full cache line utilization
+    // SIMD-friendly: compiler can vectorize this loop (4 or 8 floats at once)
+}
+```
 
 ---
 
 <a name="ch40"></a>
-## Chapter 40: Data-Oriented Design
+# Chapter 40: Data-Oriented Design
 
-### The Problem with OOP for Performance
+## What Is Data-Oriented Design?
 
-Object-oriented design groups data and behavior by object type:
+**Object-Oriented Design (OOD)** organizes code around objects and their behaviors. The primary question is "what does this thing do?"
+
+**Data-Oriented Design (DOD)** organizes code around data and transformations. The primary question is "what data do I have, and how does it need to change?"
+
+DOD produces code that is faster because it:
+1. Keeps hot data contiguous (cache-friendly)
+2. Separates frequently-accessed data from rarely-accessed data
+3. Eliminates virtual dispatch and indirection where it is not needed
+4. Enables SIMD and auto-vectorization
+
+The game engine industry pioneered DOD because frame-rate performance is non-negotiable. The Entity-Component-System (ECS) architecture is the canonical DOD pattern.
+
+---
+
+## The OOP Game Entity Problem
+
+Classic OOP game design:
 
 ```cpp
-class Enemy {
-    Vector3 position;
-    Vector3 velocity;
-    float   health;
-    float   damage;
-    AI*     ai_controller;
-    Mesh*   mesh;
-    Sound*  sound_emitter;
-    // 10 more fields...
+class Entity {
+    std::string  name;           // rarely accessed (debug only)
+    Transform    transform;      // position, rotation, scale -- hot
+    Renderer     renderer;       // mesh, material -- medium
+    Physics      physics;        // mass, velocity, collider -- hot
+    AIController ai;             // behavior tree -- cold (most entities have none)
+    AudioSource  audio;          // sound clips -- cold
+    HealthComponent health;      // HP, etc -- medium
+    // ...
 };
-std::vector<Enemy*> enemies;  // vector of pointers — heap fragmentation + cache misses
+std::vector<std::unique_ptr<Entity>> entities;
 ```
 
-For 10,000 enemies, the game loop updates position (reads position and velocity), then renders (reads position and mesh). Each enemy's data is scattered in a large struct across random heap addresses.
+```
+Problems:
+1. Large, fat objects: even if you only update position and velocity,
+   you load the entire Entity into cache (including name, AI, audio...)
 
-### Data-Oriented Design (DOD)
+2. Virtual dispatch everywhere: polymorphic updates walk vtables
 
-DOD organizes data around *transformation patterns* — how the data is actually accessed and processed:
+3. Heterogeneous data: entities with different components are stored
+   uniformly, wasting space for components they don't have
 
-```cpp
-// Separate the data accessed together from data accessed separately
-struct EnemySystem {
-    // Accessed together in the movement update:
-    std::vector<Vector3> positions;
-    std::vector<Vector3> velocities;
-    
-    // Accessed separately in the AI update:
-    std::vector<float>   health;
-    std::vector<float>   damage;
-    
-    // Accessed separately in the render:
-    std::vector<MeshID>  mesh_ids;
-    std::vector<SoundID> sound_ids;
-    
-    void update_movement() {
-        for (int i = 0; i < positions.size(); ++i) {
-            positions[i] += velocities[i];  // touches only positions and velocities
-        }
-        // Only 2 * n * sizeof(Vector3) loaded from memory — nothing else
-    }
-};
+4. Poor SIMD potential: transform data is scattered, not contiguous
 ```
 
-### Entity Component System (ECS)
+---
 
-ECS is a common DOD architecture in game engines (Unity, Entt, Bevy):
+## Entity-Component-System (ECS)
+
+ECS separates:
+- **Entities**: just IDs (integers)
+- **Components**: plain data (SoA or packed arrays)
+- **Systems**: functions that transform component data
 
 ```cpp
-// Each entity is just an ID
+// Entity is just an ID:
 using EntityID = uint32_t;
 
-// Components are plain data
-struct Position  { float x, y, z; };
-struct Velocity  { float x, y, z; };
-struct Health    { float hp, max_hp; };
+// Components are plain data -- no methods, no virtual:
+struct Position  { float x, y; };
+struct Velocity  { float vx, vy; };
+struct Health    { int current, max; };
+struct Renderable{ int mesh_id, material_id; };
 
-// Systems operate on component arrays
-class MovementSystem {
-    std::vector<Position>& positions;
-    std::vector<Velocity>& velocities;
-public:
-    void update(float dt) {
-        for (int i = 0; i < positions.size(); ++i) {
-            positions[i].x += velocities[i].x * dt;
-            positions[i].y += velocities[i].y * dt;
-        }
-    }
+// Component storage: one contiguous array per component type
+struct World {
+    std::vector<EntityID> entities;
+    std::vector<Position>   positions;   // dense, contiguous
+    std::vector<Velocity>   velocities;
+    std::vector<Health>     healths;
+    // ...
 };
+
+// Systems: operate on arrays of components -- cache friendly
+void physics_system(World& world, float dt) {
+    for (size_t i = 0; i < world.positions.size(); ++i) {
+        world.positions[i].x += world.velocities[i].vx * dt;
+        world.positions[i].y += world.velocities[i].vy * dt;
+    }
+    // Reads positions[] and velocities[] -- both contiguous
+    // CPU prefetcher works perfectly
+}
+
+void render_system(const World& world) {
+    for (size_t i = 0; i < world.entities.size(); ++i) {
+        if (has_component<Renderable>(world, i))
+            draw(world.positions[i], world.renderables[i]);
+    }
+}
 ```
 
-We cover ECS in detail in Chapter 50.
+The physics system touches only `Position` and `Velocity`. In the OOP version, every cache line loaded also contained `name`, `AI`, `audio` etc. In ECS, every cache line loaded is 100% useful data.
 
-### Hot/Cold Data Splitting
+---
 
-Separate frequently accessed "hot" data from rarely accessed "cold" data:
+## Hot/Cold Data Splitting
+
+Even without full ECS, separating frequently-accessed "hot" data from rarely-accessed "cold" data helps:
 
 ```cpp
-// BAD: every access to 'name' loads everything into cache
-struct Player {
-    // Hot (accessed every frame):
-    Vector3 position;  // 12 bytes
-    float   health;    // 4 bytes
-    
-    // Cold (accessed rarely):
-    std::string name;               // 32+ bytes
-    std::vector<Item> inventory;    // 24+ bytes
-    AchievementBitset achievements; // 128 bytes
+// OOP (bad cache behavior for the hot loop):
+struct Enemy {
+    // Hot data (accessed every frame):
+    float x, y;
+    float hp;
+    // Cold data (accessed rarely, e.g., on death):
+    std::string name;
+    std::string death_sound_path;
+    std::vector<std::string> drop_table;
+    int sprite_id;
 };
 
-// GOOD: split hot and cold
-struct PlayerHot {
-    Vector3 position;
-    float   health;
+// DOD hot/cold split (good cache behavior):
+struct EnemyHot {   // 12 bytes -- 5+ fit per cache line
+    float x, y;
+    float hp;
 };
-struct PlayerCold {
+struct EnemyCold {  // large -- accessed rarely
     std::string name;
-    std::vector<Item> inventory;
-    AchievementBitset achievements;
+    std::string death_sound_path;
+    std::vector<std::string> drop_table;
+    int sprite_id;
 };
-std::vector<PlayerHot>  hot;   // tight loop touches only this
-std::vector<PlayerCold> cold;  // only accessed when needed
+
+std::vector<EnemyHot>  enemies_hot;   // main update loop touches this
+std::vector<EnemyCold> enemies_cold;  // index matches enemies_hot
 ```
 
-### Key Takeaways
+---
 
-- Traditional OOP groups data by entity. DOD groups data by access pattern.
-- Organize data so that a tight loop accesses contiguous, minimal data.
-- Struct of Arrays is DOD's signature pattern — separate fields processed independently.
-- ECS is DOD applied to game engines: entities are IDs, components are pure data, systems process component arrays.
-- Hot/cold splitting: keep frequently accessed fields tight, put rarely accessed data elsewhere.
+## The Cost of Indirection
+
+Every level of indirection (pointer, virtual call, `shared_ptr`) potentially causes a cache miss:
+
+```cpp
+// OOP with virtual + shared_ptr (3 levels of indirection):
+std::vector<std::shared_ptr<Shape>> shapes;
+for (auto& s : shapes) {
+    s->area();   // 1: follow shared_ptr to control block
+                 // 2: follow control block to object
+                 // 3: follow vptr to vtable, then to function
+}
+
+// DOD: process same-type shapes together (no indirection):
+std::vector<Circle>    circles;
+std::vector<Rectangle> rectangles;
+for (const auto& c : circles)    process_circle(c);
+for (const auto& r : rectangles) process_rectangle(r);
+```
+
+Processing shapes sorted by type eliminates virtual dispatch and pointer chasing. The tradeoff: less flexibility (cannot interleave types), requires knowing types at compile time.
+
+---
+
+## SIMD: Processing Multiple Values at Once
+
+Modern CPUs can operate on 4, 8, or 16 floats simultaneously with a single instruction (SIMD: Single Instruction Multiple Data). The compiler auto-vectorizes tight loops over contiguous data:
+
+```cpp
+// This loop is auto-vectorizable:
+void add_arrays(float* a, const float* b, const float* c, int n) {
+    for (int i = 0; i < n; ++i)
+        a[i] = b[i] + c[i];    // 4 or 8 additions per instruction with AVX
+}
+
+// This loop is NOT auto-vectorizable (data dependency):
+void prefix_sum(float* a, int n) {
+    for (int i = 1; i < n; ++i)
+        a[i] += a[i-1];    // a[i] depends on a[i-1] -- cannot parallelize
+}
+```
+
+Enabling auto-vectorization:
+- Compile with `-O2` or `-O3`
+- Use `-march=native` to enable CPU-specific instructions
+- Keep loops simple: no function calls, no complex conditions, contiguous memory access
+- Use `std::assume_aligned` or `__builtin_assume_aligned` to help the compiler
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Premature DOD
+
+DOD adds complexity. Apply it where profiling shows the bottleneck:
+
+```
+Wrong approach: restructure all code as DOD from the start
+Right approach: write clear OOP code → profile → find hot path → DOD the hot path
+```
+
+### Mistake 2: Pointer-to-Pointer Collections for "Flexibility"
+
+**The bug:**
+```cpp
+std::vector<std::vector<int>*> grid;   // vector of pointers to vectors
+                                       // two levels of indirection, two heap allocs
+```
+**Better:** `std::vector<std::vector<int>> grid;` -- or, if the inner size is fixed, `std::vector<std::array<int, N>> grid;`
+
+---
+
+## Exercises
+
+**Exercise 40.1 -- Hot/cold split**
+
+Given this struct used in a game simulation loop (10,000 entities, 60fps):
+
+```cpp
+struct NPC {
+    float x, y, z;             // position -- updated every frame
+    float health;              // checked every frame
+    std::string name;          // displayed only on hover
+    std::string dialogue;      // played only on interact
+    int  texture_id;           // used for rendering
+    bool visible;              // checked every frame
+};
+```
+
+Split into hot and cold structs.
+
+*Answer:*
+```cpp
+struct NPCHot {                 // 17 bytes (+ 1 padding = 20 total)
+    float x, y, z;             // 12 bytes -- checked/modified every frame
+    float health;              // 4 bytes
+    bool  visible;             // 1 byte
+};
+
+struct NPCCold {               // accessed rarely
+    std::string name;
+    std::string dialogue;
+    int  texture_id;
+};
+
+std::vector<NPCHot>  npcs_hot;   // tightly packed, cache friendly
+std::vector<NPCCold> npcs_cold;  // same index, loaded only when needed
+```
+
+---
+
+**Exercise 40.2 -- Why is this slow?**
+
+Explain why this code is likely to have poor cache performance:
+
+```cpp
+std::list<std::unique_ptr<int>> numbers;
+for (int i = 0; i < 1'000'000; ++i)
+    numbers.push_back(std::make_unique<int>(i));
+
+long long sum = 0;
+for (const auto& p : numbers)
+    sum += *p;
+```
+
+*Answer:* Two levels of indirection, both cache-unfriendly:
+1. `std::list` nodes are scattered across the heap -- iterating the list pointer-chases through random memory addresses, causing a cache miss at each node.
+2. `std::unique_ptr<int>` each point to a separately heap-allocated `int` -- dereferencing `*p` causes another cache miss per element.
+
+Fix: `std::vector<int> numbers(1'000'000); std::iota(numbers.begin(), numbers.end(), 0);` -- contiguous, cache-perfect.
 
 ---
 
 <a name="ch41"></a>
-## Chapter 41: Profiling and Flamegraphs
+# Chapter 41: Profiling and Flamegraphs
 
-### Don't Guess — Measure
+## Measure First, Optimize Second
 
-The cardinal rule of optimization: *never optimize without profiling first.* Intuition about where time is spent is almost always wrong. Modern hardware is complex; the bottleneck is rarely where you think.
+The cardinal rule of performance optimization:
+
+> **Never guess where the bottleneck is. Measure.**
+
+Human intuition about performance is reliably wrong. The bottleneck is almost always somewhere unexpected. Optimizing the wrong thing wastes time and adds complexity for zero benefit.
 
 ```
-Profile → Find the bottleneck → Optimize → Measure → Repeat
+The process:
+1. Write correct code
+2. Profile to find the actual bottleneck
+3. Optimize the bottleneck
+4. Measure again to confirm improvement
+5. Repeat from 2
+
+Never skip step 2.
 ```
 
-### Timing Code
+---
 
-The simplest profiling: time a section of code:
+## Compiler Optimization Levels
+
+First, make sure you are profiling optimized code:
+
+```bash
+# Profile build: optimized but with debug info for symbol names
+g++ -std=c++23 -O2 -g -o myapp src/*.cpp
+
+# Never profile debug builds (-O0): they are 5-50x slower than optimized
+# and the bottleneck is often in the debug overhead, not your code
+```
+
+---
+
+## Quick Timing With `std::chrono`
+
+For macro-benchmarks (timing large operations):
 
 ```cpp
 #include <chrono>
@@ -5302,116 +12572,286 @@ auto start = std::chrono::high_resolution_clock::now();
 // ... code to measure ...
 
 auto end = std::chrono::high_resolution_clock::now();
-auto ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-std::cout << "Elapsed: " << ms.count() << " μs\n";
+auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+std::cout << "Time: " << duration.count() << " µs\n";
 ```
-
-### Profilers
-
-A profiler samples the call stack at regular intervals, building a statistical picture of where time is spent.
-
-**Linux/Mac:**
-- `perf` — Linux kernel profiler. Samples at hardware performance counters.
-- `gprof` — older, compile with `-pg`.
-- `Instruments` — macOS GUI profiler (Time Profiler).
-- `Valgrind/Callgrind` — instruction-level simulation, very accurate but very slow.
-
-**Windows:**
-- Visual Studio profiler
-- Intel VTune
-
-**Cross-platform:**
-- `Tracy` — real-time profiler popular in game development.
-- `Google Benchmark` — microbenchmarking library.
-
-### Flamegraphs
-
-A flamegraph visualizes the call stack over time. The x-axis is time (widths proportional to CPU time spent), the y-axis is stack depth.
-
-```bash
-# With perf on Linux:
-g++ -O2 -g -o my_program main.cpp   # -g preserves debug symbols
-perf record ./my_program
-perf script | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > flame.svg
-```
-
-Reading a flamegraph: find wide towers — they represent functions spending a lot of CPU time. The wider the bar, the more time in that function. The child bars are what that function calls.
-
-### Compile with Optimizations When Profiling
-
-Always profile with optimizations enabled (`-O2` or `-O3`). Debug builds (`-O0`) have no inlining, redundant stores, and loads that will never appear in release — profiling them gives wrong information.
-
-But keep debug symbols (`-g`) so the profiler can show function names.
-
-### `perf stat` — Hardware Counters
-
-```bash
-perf stat ./my_program
-
-# Outputs:
-# cycles:             2,345,678,901
-# instructions:       5,678,901,234   # instructions per cycle (IPC) = 2.42
-# cache-misses:         234,567       # cache misses
-# branch-mispredictions:  12,345
-```
-
-**Instructions per cycle (IPC)**: modern CPUs can execute 3-4 instructions per cycle. Low IPC means the CPU is stalling (cache misses, branch mispredictions, dependencies).
-
-**Cache miss rate**: if a significant fraction of memory accesses miss the cache, data layout is the problem (Chapter 39-40).
-
-### Google Benchmark
-
-For microbenchmarks — measuring a specific function in isolation:
 
 ```cpp
-#include <benchmark/benchmark.h>
-
-static void BM_VectorSum(benchmark::State& state) {
-    std::vector<int> v(1000);
-    std::iota(v.begin(), v.end(), 0);
-    
-    for (auto _ : state) {
-        int sum = 0;
-        for (int x : v) sum += x;
-        benchmark::DoNotOptimize(sum);  // prevent optimization away
-    }
+// Utility wrapper:
+template <typename F>
+auto time_it(F&& func) {
+    auto start = std::chrono::high_resolution_clock::now();
+    func();
+    auto end   = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 }
-BENCHMARK(BM_VectorSum);
 
-BENCHMARK_MAIN();
+auto ns = time_it([&]{ sort(v.begin(), v.end()); });
+std::cout << ns << " ns\n";
 ```
 
-```bash
-g++ -O2 -o bench bench.cpp -lbenchmark
-./bench
-# BM_VectorSum    234 ns
-```
-
-### Key Takeaways
-
-- Always profile before optimizing. You will be wrong about where the bottleneck is.
-- Profile with optimizations enabled (`-O2`) and debug symbols (`-g`).
-- Flamegraphs show the statistical call-stack profile — find the widest bars.
-- `perf stat` shows hardware counters: IPC, cache miss rate, branch mispredictions.
-- Google Benchmark is the standard for reproducible microbenchmarks.
-
+**Pitfalls:**
+- Run the function multiple times and take the minimum (cold-start effects)
+- Warm up the cache before measuring (first run is slower)
+- Prevent dead-code elimination: use the output (e.g., `volatile` or print it)
+- Use `--benchmark` libraries for rigorous micro-benchmarks
 
 ---
 
-# Part IX — Concurrency
+## Google Benchmark
+
+For micro-benchmarks, use the Google Benchmark library:
+
+```cpp
+#include <benchmark/benchmark.h>
+#include <vector>
+#include <algorithm>
+
+// Benchmark sort on vector of random ints:
+static void BM_VectorSort(benchmark::State& state) {
+    std::vector<int> v(state.range(0));
+    std::iota(v.begin(), v.end(), 0);
+
+    for (auto _ : state) {
+        std::shuffle(v.begin(), v.end(), std::mt19937{});
+        std::sort(v.begin(), v.end());
+        benchmark::DoNotOptimize(v);   // prevent dead-code elimination
+    }
+}
+BENCHMARK(BM_VectorSort)->Range(8, 8<<10);  // test sizes 8, 64, 512, ...
+BENCHMARK_MAIN();
+```
+
+Output:
+```
+BM_VectorSort/8        96 ns     96 ns  7282143
+BM_VectorSort/64      853 ns    853 ns   821055
+BM_VectorSort/512    9232 ns   9232 ns    75932
+BM_VectorSort/8192  175839 ns 175839 ns    3989
+```
+
+---
+
+## `perf` -- Linux System Profiler
+
+`perf` samples the call stack at high frequency to show where CPU time is spent:
+
+```bash
+# Compile with debug symbols and optimization:
+g++ -std=c++23 -O2 -g -o myapp main.cpp
+
+# Profile:
+perf record -g ./myapp
+
+# View results:
+perf report
+```
+
+Output (simplified):
+```
+Overhead  Command  Shared Object     Symbol
+  42.31%   myapp   myapp             [.] update_physics
+  28.17%   myapp   myapp             [.] render_scene
+  15.44%   myapp   libc-2.35.so      [.] malloc
+   8.22%   myapp   myapp             [.] process_ai
+```
+
+`update_physics` takes 42% of CPU time -- that is where to focus.
+
+---
+
+## Flamegraphs
+
+A flamegraph is a visualization of call-stack samples. The X-axis is proportion of time spent, the Y-axis is call depth. Each "flame" is a function; wider = more time.
+
+```bash
+# Generate flamegraph (using Brendan Gregg's FlameGraph scripts):
+perf record -F 99 -g ./myapp -- your-workload
+perf script | stackcollapse-perf.pl | flamegraph.pl > profile.svg
+```
+
+Reading a flamegraph:
+- Wide plateau at the bottom = function that uses most CPU time
+- Tall narrow spikes = deep call chains (possibly recursive)
+- Look for unexpectedly wide functions you did not expect to be hot
+
+---
+
+## `valgrind --tool=callgrind` -- Instruction-Level Profiling
+
+```bash
+valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./myapp
+kcachegrind callgrind.out   # GUI viewer
+```
+
+`callgrind` counts every instruction executed and every cache miss. More accurate than sampling but 10-100x slower -- use for profiling, not for production.
+
+---
+
+## Address Sanitizer, UBSan, and ThreadSanitizer
+
+These are not performance tools -- they find bugs. Always run them during development before profiling performance:
+
+```bash
+# Find memory bugs (use-after-free, buffer overflow, leaks):
+g++ -fsanitize=address,undefined -g -o myapp main.cpp
+./myapp
+
+# Find data races:
+g++ -fsanitize=thread -g -o myapp main.cpp
+./myapp
+```
+
+ASan adds ~2x runtime overhead. TSan adds ~5-20x. Use them in CI, not in profiling.
+
+---
+
+## The Optimization Checklist
+
+```
+Before profiling:
+  [ ] Build with -O2 (or -O3 for float-heavy code)
+  [ ] Run all sanitizers to ensure correctness first
+  [ ] Make sure the benchmark reflects real workload
+
+After profiling finds the hot path:
+  [ ] Eliminate unnecessary allocations (avoid new in hot loops)
+  [ ] Use contiguous data structures (vector, array over list, map)
+  [ ] Move large objects instead of copying
+  [ ] Reduce virtual dispatch in inner loops
+  [ ] Separate hot/cold data (struct splitting)
+  [ ] Enable auto-vectorization (SoA layout, simple loops)
+  [ ] Reserve containers when size is known
+  [ ] Avoid string construction in hot loops (use string_view)
+  [ ] Profile again to confirm improvement
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Optimizing Before Profiling
+
+"I think this function is slow" is almost always wrong. Profile first. Optimize what perf shows.
+
+### Mistake 2: Benchmarking Debug Builds
+
+Benchmark results from `-O0` builds are meaningless for production performance. The bottleneck in debug mode is often the debug runtime overhead.
+
+### Mistake 3: Letting the Compiler Optimize Away the Benchmark
+
+```cpp
+int result = heavy_computation(data);
+// If result is never used, compiler may eliminate heavy_computation entirely!
+// Benchmark shows 0 ns -- not what you wanted.
+```
+Use `benchmark::DoNotOptimize(result)` or `volatile` to prevent dead-code elimination.
+
+---
+
+## Exercises
+
+**Exercise 41.1 -- Time a sort**
+
+Using `std::chrono`, measure the time to sort a `std::vector<int>` of 1 million random elements. Run it 5 times and print each measurement.
+
+*Answer:*
+```cpp
+#include <chrono>
+#include <vector>
+#include <algorithm>
+#include <random>
+#include <iostream>
+
+int main() {
+    std::mt19937 rng{42};
+    for (int run = 0; run < 5; ++run) {
+        std::vector<int> v(1'000'000);
+        std::generate(v.begin(), v.end(), rng);
+
+        auto t0 = std::chrono::high_resolution_clock::now();
+        std::sort(v.begin(), v.end());
+        auto t1 = std::chrono::high_resolution_clock::now();
+
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
+        std::cout << "Run " << run+1 << ": " << ms << " ms\n";
+    }
+}
+// Typical output on modern hardware: 60-80 ms per sort of 1M ints
+```
+
+---
+
+**Exercise 41.2 -- Compare list vs vector**
+
+Measure the time to sum 1 million integers stored in `std::vector<int>` vs `std::list<int>`. Explain the difference.
+
+*Answer:*
+```cpp
+// Fill both:
+std::vector<int> vec(1'000'000);
+std::list<int>   lst(vec.begin(), vec.end());
+std::iota(vec.begin(), vec.end(), 0);
+
+// Time vector sum:
+auto t0 = std::chrono::high_resolution_clock::now();
+long long sum_v = std::accumulate(vec.begin(), vec.end(), 0LL);
+auto t1 = std::chrono::high_resolution_clock::now();
+
+// Time list sum:
+auto t2 = std::chrono::high_resolution_clock::now();
+long long sum_l = std::accumulate(lst.begin(), lst.end(), 0LL);
+auto t3 = std::chrono::high_resolution_clock::now();
+
+// Typical: vector ~0.3ms, list ~10ms (30-50x slower)
+```
+
+*Explanation:* Vector stores integers contiguously -- the CPU prefetches entire cache lines of useful data, achieving near-peak memory bandwidth. List nodes are scattered throughout the heap -- each `++iterator` dereferences a `.next` pointer that may land anywhere in RAM, causing a cache miss (~60ns each) for most of the 1 million iterations.
+
+---
+
+*Part VIII is complete. You now understand the performance mental model that separates C++ that is fast from C++ that is merely correct: value semantics avoids aliasing overhead; cache-line awareness determines whether loops are fast or slow; data-oriented design keeps hot data contiguous; and profiling tells you where to actually spend optimization effort.*
+
+*Part IX covers concurrency -- threads, mutexes, atomics, and async patterns. Ask to continue.*
+
+---
+
+# Part IX -- Concurrency
+
+Concurrency is one of the hardest topics in all of programming. C++ gives you the tools to write genuinely parallel code that runs on multiple CPU cores simultaneously. The power comes with responsibility: race conditions, deadlocks, and memory ordering bugs are silent, non-deterministic, and sometimes impossible to reproduce in a debugger.
+
+This part builds the mental model carefully -- from how threads work at the hardware level, through the synchronization primitives, to the higher-level abstractions that make concurrency manageable.
 
 ---
 
 <a name="ch42"></a>
-## Chapter 42: Threads and `std::jthread`
+# Chapter 42: Threads and `std::jthread`
 
-### Python's GIL vs C++ Threads
+## What Is a Thread?
 
-Python threads are real OS threads, but the Global Interpreter Lock (GIL) prevents more than one thread from executing Python bytecode simultaneously. Python threads excel at I/O concurrency (waiting for network, disk) but can't parallelize CPU-bound Python code.
+A **thread** is an independent sequence of execution within a process. All threads in a process share the same address space (heap, globals, code), but each thread has its own stack and its own program counter (which instruction it is currently executing).
 
-C++ has no GIL. Multiple threads can execute simultaneously on multiple CPU cores. This enables real parallelism but also real data races.
+```
+Process memory:
++------------------------------------------+
+| Code (.text)        -- shared by all threads
+| Read-only data (.rodata) -- shared
+| Global/static data  -- shared (careful!)
+| Heap                -- shared (careful!)
++------------------------------------------+
+| Thread 1 stack      -- private to thread 1
++------------------------------------------+
+| Thread 2 stack      -- private to thread 2
++------------------------------------------+
+```
 
-### Creating Threads
+On a multi-core CPU, threads genuinely run at the same time on different cores. On a single-core CPU, the OS time-slices them -- switching rapidly to give the illusion of parallelism.
+
+Python has threads too, but the GIL (Global Interpreter Lock) prevents true parallel execution of Python bytecode. C++ has no GIL -- threads run fully in parallel.
+
+---
+
+## `std::thread` -- Creating a Thread
 
 ```cpp
 #include <thread>
@@ -5422,115 +12862,273 @@ void worker(int id) {
 }
 
 int main() {
-    std::thread t1(worker, 1);  // create thread, run worker(1)
-    std::thread t2(worker, 2);  // create thread, run worker(2)
-    
-    t1.join();  // wait for t1 to finish
-    t2.join();  // wait for t2 to finish
+    std::thread t1{worker, 1};   // launch thread running worker(1)
+    std::thread t2{worker, 2};   // launch thread running worker(2)
+
+    // Main thread continues here -- three threads running simultaneously
+
+    t1.join();   // wait for t1 to finish
+    t2.join();   // wait for t2 to finish
+    // If you reach this point, both threads have completed
 }
 ```
 
-`std::thread` launches a new OS thread immediately. `join()` blocks until the thread finishes. If a `thread` is destroyed without joining or detaching, the program terminates (std::terminate is called).
+**`join()`** blocks the calling thread until the target thread finishes.
 
-### `std::jthread` (C++20) — RAII Thread
+**`detach()`** lets the thread run independently (the `std::thread` object no longer manages it):
 
-`std::jthread` ("joining thread") auto-joins in its destructor — no need to manually call `join()`:
+```cpp
+std::thread t{worker, 3};
+t.detach();   // t is now "detached" -- fire and forget
+// Do NOT call t.join() after detach()
+// The thread continues running even after t is destroyed
+```
+
+**If a `std::thread` object is destroyed without being joined or detached, `std::terminate()` is called** -- the program crashes. This is a common beginner mistake.
+
+---
+
+## `std::jthread` -- The Safe Thread (C++20)
+
+`std::jthread` ("joining thread") automatically joins in its destructor, making it impossible to forget:
 
 ```cpp
 #include <thread>
 
+void worker(int id) {
+    std::cout << "Thread " << id << "\n";
+}
+
 int main() {
-    std::jthread t1(worker, 1);
-    std::jthread t2(worker, 2);
-    // t1 and t2 join automatically when they go out of scope
+    std::jthread t1{worker, 1};
+    std::jthread t2{worker, 2};
+    // When t1 and t2 go out of scope, they automatically join
+    // No need to call t1.join() -- cannot forget
 }
 ```
 
-It also supports cooperative cancellation via `std::stop_token`:
+`std::jthread` also supports **cooperative cancellation** via `std::stop_token`:
 
 ```cpp
-void long_task(std::stop_token stop) {
-    while (!stop.stop_requested()) {
-        do_work();
+void cancellable_worker(std::stop_token stop, int id) {
+    while (!stop.stop_requested()) {   // check if cancellation was requested
+        std::cout << "Thread " << id << " working\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
     }
+    std::cout << "Thread " << id << " cancelled\n";
 }
 
-std::jthread t(long_task);
-// later:
-t.request_stop();   // signals the thread to stop
-// t.join() called automatically on destruction
+std::jthread t{cancellable_worker, 1};
+std::this_thread::sleep_for(std::chrono::seconds{1});
+t.request_stop();   // signal the thread to stop
+// t's destructor joins -- waits for the thread to actually stop
 ```
 
-### Passing Data to Threads
+Prefer `std::jthread` over `std::thread` for all new code. The automatic join and stop-token support make it safer and more ergonomic.
 
-Use lambdas to capture data:
+---
+
+## Thread Arguments and Return Values
 
 ```cpp
-std::vector<int> data(1000);
+// Passing arguments: additional constructor arguments are forwarded to the function
+std::jthread t{worker, 42, "hello"};
+
+// Returning values: threads cannot return values directly
+// Use a shared variable (protected by mutex -- next chapter)
+// or std::future (Chapter 45)
+
 int result = 0;
-
-std::jthread t([&data, &result]() {
-    for (int x : data) result += x;
-});
-// DANGER: data and result must outlive the thread!
+std::jthread t{[&result]() {
+    result = heavy_computation();   // writes to shared result
+}};
+// After t joins, result is valid
+std::cout << result << "\n";
 ```
 
-### Parallel Algorithms (C++17)
+---
 
-The easiest way to parallelize standard algorithms:
+## Thread Local Storage
+
+Each thread can have its own copy of a variable with `thread_local`:
 
 ```cpp
-#include <algorithm>
-#include <execution>
+thread_local int error_code = 0;   // each thread has its own error_code
 
-std::vector<int> v(10'000'000);
+void worker() {
+    error_code = 42;              // only affects THIS thread's copy
+    std::cout << error_code;      // 42
+}
 
-// Sequential:
-std::sort(v.begin(), v.end());
-
-// Parallel:
-std::sort(std::execution::par, v.begin(), v.end());
-
-// Parallel + unsequenced (SIMD):
-std::sort(std::execution::par_unseq, v.begin(), v.end());
+void other_worker() {
+    std::cout << error_code;      // 0 -- other thread's copy is unmodified
+}
 ```
 
-Parallel execution policies work with most STL algorithms. The implementation automatically uses a thread pool. This is the cleanest entry point for data parallelism.
+`thread_local` variables are initialized once per thread (not once per program). Useful for per-thread caches, random number generators, and error codes.
 
-### Key Takeaways
+---
 
-- C++ threads are real threads with true parallelism — no GIL.
-- `std::jthread` (C++20) joins automatically on destruction — prefer it over `std::thread`.
-- Cooperative cancellation via `std::stop_token`.
-- C++17 parallel execution policies (`std::execution::par`) parallelize STL algorithms with minimal code changes.
+## Common Thread Patterns
+
+### Parallel For (Manual)
+
+```cpp
+#include <thread>
+#include <vector>
+
+void parallel_fill(std::vector<int>& v, int val, int start, int end) {
+    for (int i = start; i < end; ++i) v[i] = val;
+}
+
+std::vector<int> v(1'000'000);
+int hardware_threads = std::thread::hardware_concurrency();  // number of CPU cores
+int chunk = v.size() / hardware_threads;
+
+std::vector<std::jthread> threads;
+for (int i = 0; i < hardware_threads; ++i) {
+    int start = i * chunk;
+    int end   = (i == hardware_threads-1) ? v.size() : start + chunk;
+    threads.emplace_back(parallel_fill, std::ref(v), 0, start, end);
+}
+// All threads join when 'threads' vector goes out of scope (jthread RAII)
+```
+
+In practice, use `std::for_each(std::execution::par, ...)` (parallel STL, Chapter 45) or a library like TBB rather than managing threads manually.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Destroying a Joined/Unjoined `std::thread`
+
+**The bug:**
+```cpp
+{
+    std::thread t{worker};
+    // forgot to join or detach!
+}   // t destructs without join/detach -> std::terminate() -> program crash
+```
+**The fix:** Always join or detach. Or use `std::jthread` which joins automatically.
+
+### Mistake 2: Accessing Shared Data Without Synchronization
+
+**The bug:**
+```cpp
+int counter = 0;
+std::jthread t1{[&]{ for(int i=0; i<1000; ++i) ++counter; }};
+std::jthread t2{[&]{ for(int i=0; i<1000; ++i) ++counter; }};
+// counter is NOT 2000 -- data race! undefined behavior
+```
+**The fix:** Use a mutex (Chapter 43) or atomic (Chapter 44).
+
+### Mistake 3: Capturing Local Variables by Reference in a Detached Thread
+
+**The bug:**
+```cpp
+void launch() {
+    int local = 42;
+    std::thread t{[&local]{ std::cout << local; }};
+    t.detach();
+}   // local is destroyed when launch() returns
+    // the thread may still be running, reading destroyed memory
+```
+**The fix:** Capture by value, or pass via `shared_ptr`, or use `jthread` (which joins before the local is destroyed).
+
+---
+
+## Exercises
+
+**Exercise 42.1 -- Parallel sum**
+
+Divide `std::vector<int> v(1'000'000)` (filled with 1s) into two halves and sum each half in a separate `jthread`. Combine the partial sums in the main thread.
+
+*Answer:*
+```cpp
+std::vector<int> v(1'000'000, 1);
+long long sum1 = 0, sum2 = 0;
+
+{
+    std::jthread t1{[&]{
+        for (int i = 0; i < 500'000; ++i) sum1 += v[i];
+    }};
+    std::jthread t2{[&]{
+        for (int i = 500'000; i < 1'000'000; ++i) sum2 += v[i];
+    }};
+}  // both jthreads join here
+
+std::cout << sum1 + sum2 << "\n";  // 1000000
+// Note: sum1 and sum2 are written by separate threads to separate variables
+// (no sharing of the same variable) -- this is safe without a mutex
+```
+
+---
+
+**Exercise 42.2 -- hardware_concurrency**
+
+Write a program that prints the number of hardware threads and launches that many `jthread`s, each printing its thread index.
+
+*Answer:*
+```cpp
+int n = std::thread::hardware_concurrency();
+std::cout << "Hardware threads: " << n << "\n";
+
+std::vector<std::jthread> threads;
+for (int i = 0; i < n; ++i) {
+    threads.emplace_back([i]{
+        std::cout << "Thread " << i << "\n";
+    });
+}
+// All join when threads vector is destroyed
+```
 
 ---
 
 <a name="ch43"></a>
-## Chapter 43: Mutexes, Locks, and Race Conditions
+# Chapter 43: Mutexes, Locks, and Race Conditions
 
-### What Is a Race Condition?
+## What Is a Race Condition?
 
-A race condition occurs when two threads access shared data concurrently and at least one access is a write, with no synchronization.
+A **race condition** occurs when two threads access the same memory simultaneously and at least one access is a write. The result depends on which thread "wins the race" -- it is non-deterministic.
 
 ```cpp
-int counter = 0;
+int counter = 0;    // shared variable
 
-void increment() {
-    for (int i = 0; i < 1'000'000; ++i)
-        ++counter;   // RACE CONDITION — not atomic!
-}
-
-std::jthread t1(increment);
-std::jthread t2(increment);
-// Expected: 2,000,000. Actual: somewhere between 1,000,000 and 2,000,000.
+// Thread 1:                      Thread 2:
+++counter;                        ++counter;
 ```
 
-`++counter` compiles to three instructions: load, add, store. Two threads can interleave these, losing increments.
+`++counter` is NOT atomic. It compiles to three machine instructions:
 
-### `std::mutex`
+```
+Thread 1:                   Thread 2:
+LOAD  counter -> reg1       LOAD  counter -> reg2
+ADD   reg1, 1  -> reg1      ADD   reg2, 1  -> reg2
+STORE reg1 -> counter       STORE reg2 -> counter
+```
 
-A mutex ("mutual exclusion") ensures only one thread executes a critical section at a time:
+Possible interleaving:
+
+```
+T1: LOAD  counter(0) -> reg1=0
+T2: LOAD  counter(0) -> reg2=0   <- both read 0!
+T1: ADD   reg1+1 -> reg1=1
+T2: ADD   reg2+1 -> reg2=1
+T1: STORE reg1(1) -> counter=1
+T2: STORE reg2(1) -> counter=1   <- overwrites T1's write!
+
+Final counter = 1, expected 2
+```
+
+This is the lost-update problem. In C++, a data race is **undefined behavior** -- anything can happen, including corrupted data, crashes, or apparently correct results that mask the bug.
+
+**Detection:** Compile and run with `-fsanitize=thread` (ThreadSanitizer). It reports data races with a full report of which threads accessed which memory.
+
+---
+
+## `std::mutex` -- Mutual Exclusion
+
+A mutex (mutual exclusion) allows only one thread to hold the lock at a time. Other threads trying to lock it will block until it is released.
 
 ```cpp
 #include <mutex>
@@ -5538,961 +13136,2102 @@ A mutex ("mutual exclusion") ensures only one thread executes a critical section
 int counter = 0;
 std::mutex mtx;
 
-void increment() {
-    for (int i = 0; i < 1'000'000; ++i) {
-        mtx.lock();
-        ++counter;  // protected — only one thread here at a time
-        mtx.unlock();
+void increment(int n) {
+    for (int i = 0; i < n; ++i) {
+        mtx.lock();     // acquire the lock (blocks if another thread holds it)
+        ++counter;      // critical section: only one thread here at a time
+        mtx.unlock();   // release the lock
     }
 }
+
+std::jthread t1{increment, 1000};
+std::jthread t2{increment, 1000};
+// After both join: counter == 2000, guaranteed
 ```
 
-But never call `lock()` / `unlock()` directly — exceptions between them leave the mutex locked forever.
+---
 
-### `std::lock_guard` and `std::unique_lock`
+## RAII Mutex Locking: `std::lock_guard` and `std::unique_lock`
 
-RAII wrappers that unlock on destruction:
+Never call `mutex.lock()` / `mutex.unlock()` manually -- if an exception is thrown between them, the mutex is never released (deadlock).
+
+Use RAII wrappers:
 
 ```cpp
-void increment() {
-    for (int i = 0; i < 1'000'000; ++i) {
-        std::lock_guard<std::mutex> lock(mtx);  // locks on construction
+// std::lock_guard: simplest -- locks in constructor, unlocks in destructor
+void increment_safe(int n) {
+    for (int i = 0; i < n; ++i) {
+        std::lock_guard<std::mutex> lock{mtx};  // locks here
         ++counter;
-    }   // lock_guard destructs here — mutex unlocked even if exception thrown
+    }   // lock destructor: unlocks here, even if exception thrown
 }
 
-// unique_lock is more flexible (can unlock early, works with condition variables):
-void safe_update() {
-    std::unique_lock<std::mutex> lock(mtx);
-    // ... do protected work ...
-    lock.unlock();  // manually unlock early if needed
-    // ... do unprotected work ...
+// std::unique_lock: like lock_guard but more flexible (can unlock early, defer, etc.)
+void increment_flexible(int n) {
+    for (int i = 0; i < n; ++i) {
+        std::unique_lock<std::mutex> lock{mtx};
+        ++counter;
+        lock.unlock();   // can unlock before end of scope
+        do_other_work(); // runs without holding the lock
+    }
+}
+
+// C++17: class template argument deduction -- drop the <std::mutex>:
+std::lock_guard lock{mtx};   // type deduced as std::lock_guard<std::mutex>
+```
+
+---
+
+## `std::shared_mutex` -- Multiple Readers, One Writer
+
+When multiple threads can safely read simultaneously but writes require exclusive access:
+
+```cpp
+#include <shared_mutex>
+
+class ThreadSafeCache {
+    std::unordered_map<std::string, int> data;
+    mutable std::shared_mutex mtx;   // mutable: can be locked in const methods
+
+public:
+    // Multiple threads can read simultaneously:
+    int get(const std::string& key) const {
+        std::shared_lock lock{mtx};   // shared (read) lock -- non-exclusive
+        auto it = data.find(key);
+        return it != data.end() ? it->second : -1;
+    }
+
+    // Only one thread can write at a time:
+    void set(const std::string& key, int value) {
+        std::unique_lock lock{mtx};   // exclusive (write) lock
+        data[key] = value;
+    }
+};
+```
+
+`std::shared_lock` is a read lock -- many can be held simultaneously.
+`std::unique_lock` is a write lock -- exclusive.
+
+---
+
+## Deadlocks
+
+A **deadlock** occurs when two (or more) threads each hold a lock that the other needs:
+
+```
+Thread 1:                       Thread 2:
+lock(mutex_A)                   lock(mutex_B)
+... waiting for mutex_B ...     ... waiting for mutex_A ...
+(blocked -- will never proceed) (blocked -- will never proceed)
+```
+
+```cpp
+// Classic deadlock:
+std::mutex mtx_a, mtx_b;
+
+void thread1() {
+    std::lock_guard lock_a{mtx_a};
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});  // let thread2 run
+    std::lock_guard lock_b{mtx_b};  // DEADLOCK: thread2 holds mtx_b
+}
+
+void thread2() {
+    std::lock_guard lock_b{mtx_b};
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});  // let thread1 run
+    std::lock_guard lock_a{mtx_a};  // DEADLOCK: thread1 holds mtx_a
 }
 ```
 
-C++17: `std::scoped_lock` can lock multiple mutexes at once (deadlock-safe):
+### Deadlock Prevention
+
+**Rule 1: Always acquire multiple locks in the same order.**
+
+If both threads lock `mtx_a` then `mtx_b`, no circular dependency can form.
+
+**Rule 2: Use `std::lock()` to lock multiple mutexes simultaneously.**
 
 ```cpp
-std::scoped_lock lock(mtx1, mtx2);  // locks both, avoids deadlock
+// std::lock acquires all locks atomically (no deadlock possible):
+void transfer(Account& from, Account& to, double amount) {
+    std::unique_lock lock_a{from.mtx, std::defer_lock};
+    std::unique_lock lock_b{to.mtx,   std::defer_lock};
+    std::lock(lock_a, lock_b);   // locks both without deadlock
+    from.balance -= amount;
+    to.balance   += amount;
+}
+
+// C++17: std::scoped_lock does this in one step:
+std::scoped_lock lock{from.mtx, to.mtx};  // acquires both, no deadlock
 ```
 
-### Deadlock
+**Rule 3: Minimize the time you hold a lock.**
 
-Deadlock occurs when two threads each hold a lock the other needs:
+Do only what is necessary inside the critical section. Never do I/O, network calls, or user interaction while holding a lock.
 
-```cpp
-// Thread 1:          // Thread 2:
-mtx1.lock();          mtx2.lock();
-mtx2.lock();  // wait mtx1.lock();  // wait → DEADLOCK
+---
+
+## Condition Variables -- Waiting for a Condition
+
+A **condition variable** lets a thread wait until some condition becomes true, without busy-waiting (spinning in a loop):
+
+```python
+# Python equivalent: threading.Condition
+import threading
+cond = threading.Condition()
 ```
-
-Rules to avoid deadlock:
-1. Always lock multiple mutexes in the same order, OR
-2. Use `std::scoped_lock` which handles this automatically.
-3. Minimize the time locks are held.
-
-### Condition Variables
-
-Condition variables let threads wait for a condition without polling:
 
 ```cpp
 #include <condition_variable>
+#include <queue>
 
-std::queue<int> queue;
-std::mutex mtx;
+// Classic producer-consumer queue:
+std::queue<int>       work_queue;
+std::mutex            queue_mtx;
 std::condition_variable cv;
 
-// Producer:
+// Producer thread:
 void producer() {
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 100; ++i) {
         {
-            std::lock_guard lock(mtx);
-            queue.push(i);
+            std::lock_guard lock{queue_mtx};
+            work_queue.push(i);
         }
-        cv.notify_one();  // wake up one waiting consumer
+        cv.notify_one();   // wake one waiting consumer
     }
 }
 
-// Consumer:
+// Consumer thread:
 void consumer() {
     while (true) {
-        std::unique_lock lock(mtx);
-        cv.wait(lock, []{ return !queue.empty(); });  // wait until queue non-empty
-        int val = queue.front(); queue.pop();
-        lock.unlock();
-        process(val);
+        std::unique_lock lock{queue_mtx};
+        cv.wait(lock, []{ return !work_queue.empty(); });
+        // cv.wait: atomically releases the lock and waits
+        // When notified: re-acquires the lock, checks predicate
+        // If predicate is true: continues; if false: waits again
+        // (the predicate check handles spurious wakeups)
+
+        int item = work_queue.front();
+        work_queue.pop();
+        lock.unlock();   // release before processing
+
+        process(item);
     }
 }
 ```
 
-### Key Takeaways
+The predicate in `cv.wait(lock, predicate)` handles **spurious wakeups** -- condition variables can wake up even when not notified, so always re-check the condition.
 
-- Race conditions occur when threads share data without synchronization — leads to undefined behavior.
-- `std::mutex` protects critical sections. Always use RAII wrappers (`lock_guard`, `scoped_lock`).
-- `std::scoped_lock` locks multiple mutexes safely — prevents deadlock from inconsistent ordering.
-- `std::condition_variable` enables efficient wait-notify between threads.
-- Keep critical sections as short as possible — lock only what's necessary for as little time as possible.
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting to Lock Before Checking a Shared Variable
+
+**The bug:**
+```cpp
+if (!work_queue.empty()) {         // no lock -- race condition!
+    std::lock_guard lock{mtx};
+    int item = work_queue.front(); // queue might be empty now!
+    work_queue.pop();
+}
+```
+**The fix:** Lock before checking, or use a single `lock_guard` around the entire check-and-use block.
+
+### Mistake 2: Deadlock From Recursive Locking
+
+**The bug:**
+```cpp
+std::mutex mtx;
+void foo() {
+    std::lock_guard lock{mtx};
+    bar();   // bar also tries to lock mtx -- deadlock!
+}
+void bar() {
+    std::lock_guard lock{mtx};  // DEADLOCK: mtx already held by this thread
+    // ...
+}
+```
+**The fix:** Use `std::recursive_mutex` if you genuinely need recursive locking. Or redesign to avoid calling locked functions from locked functions.
+
+### Mistake 3: Condition Variable Without a Predicate
+
+**The bug:**
+```cpp
+cv.wait(lock);   // no predicate -- susceptible to spurious wakeups
+// May wake up when queue is still empty!
+```
+**The fix:** Always provide a predicate: `cv.wait(lock, []{ return !queue.empty(); });`
+
+---
+
+## Exercises
+
+**Exercise 43.1 -- Thread-safe counter**
+
+Implement a `ThreadSafeCounter` class with `increment()`, `decrement()`, and `get() const` methods. Verify that incrementing from 2 threads 1000 times each gives 2000.
+
+*Answer:*
+```cpp
+class ThreadSafeCounter {
+    int value{0};
+    mutable std::mutex mtx;
+public:
+    void increment() { std::lock_guard lock{mtx}; ++value; }
+    void decrement() { std::lock_guard lock{mtx}; --value; }
+    int  get() const { std::lock_guard lock{mtx}; return value; }
+};
+
+ThreadSafeCounter c;
+std::jthread t1{[&]{ for(int i=0;i<1000;++i) c.increment(); }};
+std::jthread t2{[&]{ for(int i=0;i<1000;++i) c.increment(); }};
+// After join: c.get() == 2000, always
+```
+
+---
+
+**Exercise 43.2 -- Bounded producer-consumer queue**
+
+Implement a thread-safe queue with a maximum size. `push` blocks when full; `pop` blocks when empty. Use a mutex and condition variable.
+
+*Answer:*
+```cpp
+template <typename T>
+class BoundedQueue {
+    std::queue<T>           q;
+    std::mutex              mtx;
+    std::condition_variable not_full, not_empty;
+    const int               max_size;
+public:
+    BoundedQueue(int max) : max_size{max} {}
+
+    void push(T val) {
+        std::unique_lock lock{mtx};
+        not_full.wait(lock, [&]{ return (int)q.size() < max_size; });
+        q.push(std::move(val));
+        not_empty.notify_one();
+    }
+
+    T pop() {
+        std::unique_lock lock{mtx};
+        not_empty.wait(lock, [&]{ return !q.empty(); });
+        T val = std::move(q.front());
+        q.pop();
+        not_full.notify_one();
+        return val;
+    }
+};
+```
 
 ---
 
 <a name="ch44"></a>
-## Chapter 44: Atomics and the C++ Memory Model
+# Chapter 44: Atomics and the C++ Memory Model
 
-### Lock-Free Programming
+## When Mutexes Are Too Heavy
 
-Mutexes are simple but have overhead: kernel calls, context switches, cache invalidation. For simple operations on single variables, *atomics* are faster — they use CPU hardware guarantees instead of OS-level locking.
+A mutex involves OS-level operations -- locking, unlocking, and thread scheduling. For simple operations on single values (incrementing a counter, setting a flag), this is overkill. **Atomics** provide lock-free synchronization for single-variable operations.
 
 ```cpp
 #include <atomic>
 
-std::atomic<int> counter = 0;
+std::atomic<int> counter{0};
 
-void increment() {
-    for (int i = 0; i < 1'000'000; ++i)
-        ++counter;   // atomic: guaranteed to be race-free, no mutex needed
+void increment(int n) {
+    for (int i = 0; i < n; ++i) {
+        ++counter;         // atomic increment -- indivisible, thread-safe
+        // equivalent to: counter.fetch_add(1);
+    }
+}
+
+std::jthread t1{increment, 1000};
+std::jthread t2{increment, 1000};
+// After join: counter == 2000, always -- no mutex needed
+```
+
+`std::atomic<int>` wraps an `int` and makes its operations **atomic** -- indivisible. An atomic operation either completes fully or has not started yet. There is no intermediate state visible to other threads.
+
+---
+
+## What Operations Are Atomic?
+
+```cpp
+std::atomic<int> a{0};
+
+a.load();            // read the current value
+a.store(5);          // write a new value
+a.fetch_add(1);      // add 1, return OLD value
+a.fetch_sub(1);      // subtract 1, return OLD value
+a.fetch_and(mask);   // bitwise AND
+a.fetch_or(mask);    // bitwise OR
+a.fetch_xor(mask);   // bitwise XOR
+++a;                 // increment (like fetch_add(1))
+a++;                 // post-increment
+--a;
+a--;
+
+// Compare-and-swap (CAS): the fundamental building block of lock-free algorithms
+int expected = 5;
+bool swapped = a.compare_exchange_strong(expected, 10);
+// If a == expected: atomically set a = 10, return true
+// If a != expected: set expected = current a, return false
+```
+
+---
+
+## `std::atomic<bool>` -- Flags and Stop Signals
+
+```cpp
+std::atomic<bool> running{true};
+
+void server_loop() {
+    while (running.load()) {   // read atomically
+        handle_request();
+    }
+    std::cout << "Server stopped\n";
+}
+
+std::jthread server{server_loop};
+
+// From another thread or signal handler:
+running.store(false);   // write atomically -- server loop will see this
+```
+
+---
+
+## The C++ Memory Model: Why It Matters
+
+Memory ordering is the most subtle aspect of concurrent programming. Even without data races, modern CPUs and compilers may reorder memory operations for performance. Two threads may see operations in different orders.
+
+Consider:
+
+```cpp
+int x = 0, y = 0;    // shared variables, not atomic
+
+// Thread 1:          // Thread 2:
+x = 1;               y = 1;
+int r1 = y;           int r2 = x;
+```
+
+Intuitively you might think at least one of `r1` or `r2` must be 1 (if x=1 happened before r2=x, r2 is 1; if y=1 happened before r1=y, r1 is 1). But the CPU and compiler may reorder reads and writes, producing `r1 == 0 && r2 == 0`. This seems impossible but is legal.
+
+**C++ memory orders** control how atomic operations interact with memory reordering:
+
+```cpp
+std::atomic<int> a{0};
+
+// Relaxed: no ordering guarantees -- fastest
+a.load(std::memory_order_relaxed);
+a.store(1, std::memory_order_relaxed);
+
+// Acquire-release: the most common useful pair
+// acquire: no reads/writes in this thread can be reordered BEFORE this load
+a.load(std::memory_order_acquire);
+// release: no reads/writes in this thread can be reordered AFTER this store
+a.store(1, std::memory_order_release);
+
+// Sequential consistency (default): strongest, most intuitive, slowest
+a.load(std::memory_order_seq_cst);  // default
+a.store(1, std::memory_order_seq_cst);
+a.store(1);                         // same as seq_cst
+```
+
+---
+
+## The Acquire-Release Pattern (Publish-Subscribe)
+
+The most important memory ordering pattern: one thread **publishes** data by writing to an atomic flag with `release`; another thread **subscribes** by loading the same flag with `acquire`.
+
+```cpp
+std::atomic<bool>  ready{false};
+int                data = 0;      // not atomic -- protected by the flag
+
+// Producer thread:
+void producer() {
+    data = 42;                              // (1) write data
+    ready.store(true, memory_order_release); // (2) publish: "data is ready"
+    // Release ensures (1) is visible before (2)
+}
+
+// Consumer thread:
+void consumer() {
+    while (!ready.load(memory_order_acquire)) {}  // (3) spin until ready
+    // Acquire ensures: once (3) sees true, (1) is also visible
+    std::cout << data << "\n";   // (4) safely reads 42
 }
 ```
 
-`++counter` on an `std::atomic<int>` is a single atomic CPU instruction (like `LOCK XADD` on x86). No interleaving possible.
+The acquire-release pair creates a **happens-before** relationship:
+- All operations before `store(release)` are visible to the thread that sees the matching `load(acquire)` return true.
 
-### Atomic Operations
+This is the fundamental pattern for lock-free data publication.
 
-```cpp
-std::atomic<int> a = 0;
+---
 
-a.store(42);                // atomic write
-int v = a.load();           // atomic read
-int old = a.exchange(100);  // atomic swap: sets to 100, returns old value
-a.fetch_add(5);             // atomic add, returns old value
-a.fetch_sub(3);             // atomic subtract
-++a; --a;                   // shorthand
+## `std::atomic_flag` -- The Simplest Atomic
 
-// Compare-and-swap (CAS) — the foundation of lock-free algorithms:
-int expected = 5;
-bool swapped = a.compare_exchange_strong(expected, 10);
-// if a == expected (5), sets a = 10 and returns true
-// if a != expected, sets expected = a's current value and returns false
-```
-
-### Memory Ordering
-
-This is the hardest part of C++ concurrency. The compiler and CPU are allowed to reorder instructions for performance, as long as the behavior of a single thread is unchanged. With multiple threads, reordering can break correctness.
-
-`std::atomic` operations accept a memory order parameter:
+`std::atomic_flag` is guaranteed to be lock-free (other atomics are usually lock-free but not guaranteed):
 
 ```cpp
-a.store(1, std::memory_order_relaxed);    // no ordering guarantee — just atomicity
-a.store(1, std::memory_order_release);    // all writes before this are visible when a read with acquire sees this value
-int v = a.load(std::memory_order_acquire); // all reads after this see writes from the paired release
-a.store(1, std::memory_order_seq_cst);    // sequential consistency — default, safest, most expensive
-```
-
-The default (`seq_cst`) is safe for all cases but is the most expensive. For advanced optimization:
-
-- `relaxed`: just atomicity, no ordering. Good for statistics counters.
-- `release`/`acquire` pair: a write-then-read handoff — the release "publishes" data, the acquire "consumes" it. Used in lock-free queues.
-- `seq_cst`: total global order across all atomic operations.
-
-### `std::atomic_flag` — The Simplest Atomic
-
-`atomic_flag` is guaranteed lock-free and is the building block for spinlocks:
-
-```cpp
-std::atomic_flag flag = ATOMIC_FLAG_INIT;
+std::atomic_flag flag = ATOMIC_FLAG_INIT;  // cleared
 
 // Spinlock using atomic_flag:
 class Spinlock {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
 public:
-    void lock()   { while (flag.test_and_set(std::memory_order_acquire)); }
-    void unlock() { flag.clear(std::memory_order_release); }
+    void lock()   { while (flag.test_and_set(memory_order_acquire)) {} }
+    void unlock() { flag.clear(memory_order_release); }
 };
+
+// Spinlocks are efficient when contention is rare and lock time is very short.
+// For longer critical sections, use std::mutex (the OS can put waiting threads to sleep).
 ```
 
-Use spinlocks only when lock hold time is very short (microseconds) and contention is rare. Otherwise, `std::mutex` (which yields the CPU when waiting) is better.
+---
 
-### Key Takeaways
+## When to Use Atomic vs Mutex
 
-- Atomics provide lock-free, race-free operations on single values via hardware instructions.
-- `atomic<T>` works for integral types and pointers. Operations: `store`, `load`, `exchange`, `fetch_add`, `compare_exchange_strong`.
-- Memory ordering controls instruction reordering visibility across threads. Default (`seq_cst`) is safe; `relaxed` is fastest but only correct for specific patterns.
-- `compare_exchange_strong` (CAS) is the foundation of lock-free algorithms.
-- Use atomics for simple counters and flags; use mutexes for protecting compound operations on multiple variables.
+```
+Use std::atomic when:
+  - Single variable (int, bool, pointer)
+  - Operations are simple (load, store, add, compare-and-swap)
+  - You need maximum performance with low contention
+  - Implementing lock-free algorithms
+
+Use std::mutex when:
+  - Multiple variables must be updated together atomically
+  - Operations are complex (check-then-act patterns)
+  - Lock-free would require complex CAS loops
+  - When in doubt (mutex errors are easier to diagnose)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Thinking Non-Atomic Operations on `std::atomic` Are Atomic
+
+**The bug:**
+```cpp
+std::atomic<int> a{0};
+if (a == 0) a = 1;   // NOT atomic! Load and store are two separate atomic ops
+                      // Another thread can change a between the load and store
+```
+**The fix:** Use `compare_exchange_strong(expected, new_val)` for check-then-set.
+
+### Mistake 2: Using `memory_order_relaxed` When Order Matters
+
+```cpp
+// WRONG: producer publishes with relaxed -- consumer may not see data before ready
+ready.store(true, memory_order_relaxed);
+// data may not be visible even after ready == true
+
+// CORRECT: release ensures preceding writes are visible
+ready.store(true, memory_order_release);
+```
+
+### Mistake 3: Busy-Waiting With Atomics in a Long Wait
+
+```cpp
+while (!ready.load()) {}  // spinlock: burns 100% of one CPU core while waiting
+```
+For short waits (microseconds), spinning is fine. For long waits (milliseconds or more), use a condition variable instead -- it puts the thread to sleep.
+
+---
+
+## Exercises
+
+**Exercise 44.1 -- Lock-free stack push**
+
+Implement a lock-free stack `push` using `compare_exchange_strong`. The head node pointer should be `std::atomic<Node*>`.
+
+*Answer:*
+```cpp
+struct Node {
+    int   value;
+    Node* next;
+};
+
+std::atomic<Node*> head{nullptr};
+
+void push(int val) {
+    Node* new_node = new Node{val, nullptr};
+    new_node->next = head.load(memory_order_relaxed);
+    // CAS loop: keep trying until we successfully update head
+    while (!head.compare_exchange_weak(new_node->next, new_node,
+                                       memory_order_release,
+                                       memory_order_relaxed)) {
+        // If head changed between our load and CAS attempt,
+        // compare_exchange_weak updates new_node->next to current head
+        // and returns false -- we loop and try again
+    }
+}
+```
+
+---
+
+**Exercise 44.2 -- Atomic statistics**
+
+Use `std::atomic<long long>` to count: total operations, total errors, and total bytes processed across multiple threads. Show that you get correct counts even under high contention.
+
+*Answer:*
+```cpp
+std::atomic<long long> ops{0}, errors{0}, bytes{0};
+
+void worker(int id) {
+    for (int i = 0; i < 10'000; ++i) {
+        ops.fetch_add(1, memory_order_relaxed);
+        if (i % 100 == 0) errors.fetch_add(1, memory_order_relaxed);
+        bytes.fetch_add(512, memory_order_relaxed);
+    }
+}
+
+std::vector<std::jthread> threads;
+for (int i = 0; i < 4; ++i) threads.emplace_back(worker, i);
+// After join:
+// ops == 40000, errors == 400, bytes == 20480000
+```
 
 ---
 
 <a name="ch45"></a>
-## Chapter 45: Async, Futures, and Tasks
+# Chapter 45: Async, Futures, and Tasks
 
-### The Problem with Raw Threads
+## The Problem With Raw Threads for Result Delivery
 
-Threads are low-level. For "run this function asynchronously and get the result," you'd need to set up shared state, mutexes, condition variables — boilerplate.
+Getting a result back from a thread is awkward with `std::thread`:
 
-```python
-# Python: simple async pattern
-import concurrent.futures
-with concurrent.futures.ThreadPoolExecutor() as ex:
-    future = ex.submit(compute, args)
-    result = future.result()
+```cpp
+int result = 0;
+std::jthread t{[&result]{
+    result = heavy_computation();
+}};
+// result is available ONLY after t joins -- but when do we join?
+// We might want to do other work in the meantime
 ```
 
-C++ has `std::async` and `std::future` for the same pattern.
+`std::async`, `std::future`, and `std::promise` provide a higher-level abstraction: **futures** -- a handle to a value that will be computed asynchronously.
 
-### `std::async` and `std::future`
+---
+
+## `std::async` -- The Easiest Async Pattern
 
 ```cpp
 #include <future>
 
-int compute(int x) {
-    return x * x;
-}
+// Launch heavy_computation asynchronously:
+auto future = std::async(std::launch::async, heavy_computation, arg1, arg2);
 
-// Launch async task:
-std::future<int> fut = std::async(std::launch::async, compute, 5);
+// Do other work here -- heavy_computation runs in a separate thread
+do_other_work();
 
-// Do other work while compute() runs in another thread...
-
-// Get the result (blocks if not yet done):
-int result = fut.get();  // 25
+// Get the result (blocks until it is ready):
+int result = future.get();
+std::cout << result << "\n";
 ```
 
-`std::future<T>` represents a value that will be computed asynchronously. `.get()` blocks until the value is ready. It can only be called once.
+`std::async` returns a `std::future<T>`. `future.get()` blocks until the result is available and returns it. If the function threw an exception, `get()` rethrows it.
 
 ### Launch Policies
 
 ```cpp
-// Always run in a new thread:
-auto f1 = std::async(std::launch::async, fn, args...);
+// std::launch::async: run in a new thread immediately
+auto f1 = std::async(std::launch::async, compute);
 
-// Run lazily in the calling thread when .get() is called:
-auto f2 = std::async(std::launch::deferred, fn, args...);
+// std::launch::deferred: run lazily when .get() or .wait() is called (NOT a new thread)
+auto f2 = std::async(std::launch::deferred, compute);
 
-// Implementation decides (may or may not create a thread):
-auto f3 = std::async(fn, args...);  // default — avoid in production code
+// default (policy unspecified): implementation chooses -- avoid for predictability
+auto f3 = std::async(compute);
 ```
 
-`std::launch::async` is the reliable option — it always runs in a separate thread.
+Always use `std::launch::async` explicitly if you need parallel execution.
 
-### `std::promise` — Manual Future Control
+---
 
-`promise<T>` / `future<T>` is a producer/consumer pair:
+## Parallel Async Example
 
 ```cpp
-std::promise<int> promise;
-std::future<int>  fut = promise.get_future();
+#include <future>
+#include <numeric>
+#include <vector>
 
-std::jthread producer([&promise]() {
-    int result = expensive_computation();
-    promise.set_value(result);    // signals the future
-    // or: promise.set_exception(std::current_exception());
+long long sum_range(const std::vector<int>& v, int lo, int hi) {
+    return std::accumulate(v.begin()+lo, v.begin()+hi, 0LL);
+}
+
+std::vector<int> v(1'000'000, 1);
+
+// Launch four parallel computations:
+auto f1 = std::async(std::launch::async, sum_range, std::ref(v), 0,       250'000);
+auto f2 = std::async(std::launch::async, sum_range, std::ref(v), 250'000, 500'000);
+auto f3 = std::async(std::launch::async, sum_range, std::ref(v), 500'000, 750'000);
+auto f4 = std::async(std::launch::async, sum_range, std::ref(v), 750'000, 1'000'000);
+
+// Collect results (blocks until each is ready):
+long long total = f1.get() + f2.get() + f3.get() + f4.get();
+std::cout << total << "\n";  // 1000000
+```
+
+---
+
+## `std::promise` and `std::future` -- Manual Wiring
+
+`std::async` is the convenient wrapper. `std::promise` / `std::future` is the low-level mechanism:
+
+```cpp
+std::promise<int>  promise;
+std::future<int>   future = promise.get_future();
+
+// In another thread: set the value when ready
+std::jthread worker{[&promise]{
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+    promise.set_value(42);          // fulfills the future
+    // promise.set_exception(std::make_exception_ptr(std::runtime_error{"oops"}));
+}};
+
+// In the main thread: wait for and get the value
+int result = future.get();   // blocks until promise.set_value() is called
+std::cout << result << "\n"; // 42
+```
+
+Use `promise`/`future` when you need to transfer a result from a callback, event handler, or other non-function context to a waiting thread.
+
+---
+
+## `std::shared_future` -- Multiple Waiters
+
+A `std::future` can only be waited on once -- calling `get()` twice is an error. `std::shared_future` allows multiple threads to wait on the same result:
+
+```cpp
+std::shared_future<int> sf = std::async(std::launch::async, compute).share();
+
+// Multiple threads can wait:
+std::jthread t1{[sf]{ std::cout << "Thread 1 got: " << sf.get() << "\n"; }};
+std::jthread t2{[sf]{ std::cout << "Thread 2 got: " << sf.get() << "\n"; }};
+std::jthread t3{[sf]{ std::cout << "Thread 3 got: " << sf.get() << "\n"; }};
+// All three get the same result; the computation runs only once
+```
+
+---
+
+## Parallel STL (C++17) -- Automatic Parallelism
+
+The simplest way to parallelize standard algorithms: add an execution policy:
+
+```cpp
+#include <execution>
+#include <algorithm>
+
+std::vector<int> v(1'000'000);
+std::iota(v.begin(), v.end(), 0);
+
+// Sequential (default):
+std::sort(v.begin(), v.end());
+
+// Parallel (uses thread pool internally):
+std::sort(std::execution::par, v.begin(), v.end());
+
+// Parallel + vectorized (SIMD):
+std::sort(std::execution::par_unseq, v.begin(), v.end());
+
+// Almost any algorithm works:
+std::for_each(std::execution::par, v.begin(), v.end(), [](int& x){ x *= 2; });
+long long sum = std::reduce(std::execution::par, v.begin(), v.end(), 0LL);
+```
+
+This is the highest-level parallelism tool. For many workloads, adding `std::execution::par` is all you need.
+
+---
+
+## Exception Handling Across Threads
+
+Exceptions in async tasks are captured and rethrown on `future.get()`:
+
+```cpp
+auto f = std::async(std::launch::async, []{
+    throw std::runtime_error{"something failed"};
+    return 42;
 });
 
-int result = fut.get();  // waits for producer to set the value
+try {
+    int result = f.get();   // rethrows the exception here
+} catch (const std::runtime_error& e) {
+    std::cout << "Caught: " << e.what() << "\n";
+}
 ```
 
-### `std::shared_future`
+For `std::thread`, uncaught exceptions call `std::terminate`. Always wrap thread functions in try-catch or use `std::async`/`std::future`.
 
-`future` can only be retrieved once. `shared_future` can be copied and `.get()` called multiple times:
+---
 
-```cpp
-auto sf = fut.share();   // convert future to shared_future
+## Choosing Concurrency Tools
 
-std::jthread t1([sf]() { auto r = sf.get(); });  // both can wait
-std::jthread t2([sf]() { auto r = sf.get(); });
+```
+Level of control needed:
+  High-level (most cases):
+    Parallel STL:  std::execution::par -- one-liner parallelism for algorithms
+    std::async:    simple "run this in background and get the result"
+
+  Mid-level:
+    std::jthread:  full thread control with RAII cleanup
+    std::future/promise: manual value passing between threads
+
+  Low-level (for library/framework authors):
+    std::mutex, std::condition_variable: classic synchronization
+    std::atomic: lock-free single-value operations
+
+  High-performance (when std:: is not enough):
+    Intel TBB, OpenMP: production-grade task parallelism
+    GPU compute (Chapter 47+): massively parallel workloads
 ```
 
-### Thread Pools
+---
 
-The standard library doesn't ship a thread pool (C++26 plans to add one). For now, use a library or write your own:
+## Common Mistakes in This Chapter
+
+### Mistake 1: Forgetting to Call `future.get()`
+
+**The bug:**
+```cpp
+auto f = std::async(std::launch::async, compute);
+// ... forgot to call f.get() ...
+// When f is destroyed, its destructor BLOCKS until the task completes!
+// Effectively serializes your "parallel" code
+```
+**The fix:** Call `f.get()` explicitly when you need the result. If you do not need the result, consider `std::jthread` directly.
+
+### Mistake 2: Storing `std::future` in a Container and Not Getting
 
 ```cpp
-// Common pattern with std::async — tasks may reuse threads from an internal pool:
 std::vector<std::future<int>> futures;
-for (int i = 0; i < 100; ++i) {
+for (int i = 0; i < 10; ++i)
     futures.push_back(std::async(std::launch::async, compute, i));
+// CAREFUL: when the vector is destroyed, each future's destructor blocks
+// The futures are destroyed in order -- effectively serialized
+```
+**The fix:** Collect all futures first, then call `get()` on each. Or use `std::shared_future`.
+
+---
+
+## Exercises
+
+**Exercise 45.1 -- Parallel map**
+
+Given a vector of strings, use `std::async` to compute the length of each string in parallel, then collect the results.
+
+*Answer:*
+```cpp
+std::vector<std::string> words = {"hello", "world", "foo", "bar", "baz"};
+std::vector<std::future<int>> futures;
+
+for (const auto& w : words) {
+    futures.push_back(std::async(std::launch::async,
+        [&w]{ return (int)w.size(); }));
 }
-for (auto& f : futures) {
-    std::cout << f.get() << "\n";
-}
+
+std::vector<int> lengths;
+for (auto& f : futures) lengths.push_back(f.get());
+
+for (int n : lengths) std::cout << n << " ";  // 5 5 3 3 3
 ```
 
-Libraries like Intel TBB, Taskflow, and Asio provide production-grade thread pools with work stealing.
+---
 
-### Key Takeaways
+**Exercise 45.2 -- Parallel STL sum**
 
-- `std::async(std::launch::async, fn, args)` runs `fn` in a new thread, returns a `std::future<T>`.
-- `future.get()` blocks until the result is ready.
-- `std::promise<T>` + `std::future<T>` is a manual producer/consumer channel.
-- `std::shared_future` allows multiple threads to wait on the same result.
-- The standard has no thread pool yet (C++26); use `std::async` for simple cases, a library for production.
+Use `std::reduce` with `std::execution::par` to sum 10 million integers. Compare the time with the sequential version.
+
+*Answer:*
+```cpp
+#include <execution>
+#include <numeric>
+#include <vector>
+#include <chrono>
+
+std::vector<int> v(10'000'000, 1);
+
+auto t0 = std::chrono::high_resolution_clock::now();
+long long seq = std::reduce(v.begin(), v.end(), 0LL);
+auto t1 = std::chrono::high_resolution_clock::now();
+long long par = std::reduce(std::execution::par, v.begin(), v.end(), 0LL);
+auto t2 = std::chrono::high_resolution_clock::now();
+
+auto seq_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
+auto par_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+
+std::cout << "Sequential: " << seq_ms << " ms, result=" << seq << "\n";
+std::cout << "Parallel:   " << par_ms << " ms, result=" << par << "\n";
+// Typical: sequential ~10ms, parallel ~3ms on a 4-core machine
+```
 
 ---
 
+*Part IX is complete. You now understand C++ concurrency at all levels: creating and managing threads with `jthread`, protecting shared state with mutexes and condition variables, lock-free synchronization with atomics and the memory model, and the high-level async/future interface for result passing.*
+
+*Part X covers graphics and game development -- the math, the GPU pipeline, OpenGL, Vulkan, and game engine architecture. Ask to continue.*
+
 ---
 
-# Part X — Specialization A: Graphics & Game Development
+# Part X -- Graphics and Game Development
+
+Graphics programming sits at the intersection of math, hardware, and real-time systems. This part builds the foundation from the bottom up: the linear algebra that describes 3D space, how the GPU processes geometry and pixels, the OpenGL and Vulkan APIs that bridge CPU and GPU, and the engine architecture patterns that organize a real-time game.
 
 ---
 
 <a name="ch46"></a>
-## Chapter 46: The Math: vectors, matrices, quaternions
+# Chapter 46: Math for Graphics -- Vectors, Matrices, and Quaternions
 
-### Why Math?
+## Why Math Matters
 
-Graphics and game development require 3D spatial math. Before writing a line of OpenGL or Vulkan code, you need to understand the data structures that describe positions, orientations, and transformations in 3D space.
+Every object on screen is the result of transforming vertices through a sequence of matrix multiplications. Misunderstand the math and your objects will be in the wrong place, facing the wrong direction, or scaled incorrectly. This chapter gives you the conceptual grounding; Chapter 48 shows how it wires into OpenGL.
 
-### Vectors
+---
 
-A vector in 3D is a direction and magnitude — or a position (a point displaced from the origin).
+## Vectors
+
+A **vector** in 3D graphics has two meanings that are always clear from context:
+
+1. **Position**: a point in space (x, y, z)
+2. **Direction**: a displacement or orientation (no fixed position)
+
+```
+2D vector (3, 2):
+
+Y
+^
+|      * (3,2)
+|     /
+|    /  <- vector (arrow from origin)
+|   /
++-----------> X
+
+A vector stores: x=3, y=2
+Length (magnitude): sqrt(3² + 2²) = sqrt(13) ≈ 3.61
+```
 
 ```cpp
+// In C++, implement a simple Vec3:
 struct Vec3 {
     float x, y, z;
-    
+
     Vec3 operator+(const Vec3& o) const { return {x+o.x, y+o.y, z+o.z}; }
     Vec3 operator-(const Vec3& o) const { return {x-o.x, y-o.y, z-o.z}; }
-    Vec3 operator*(float s)       const { return {x*s, y*s, z*s}; }
-    
+    Vec3 operator*(float s)       const { return {x*s,   y*s,   z*s};   }
+
     float dot(const Vec3& o) const { return x*o.x + y*o.y + z*o.z; }
-    
+
     Vec3 cross(const Vec3& o) const {
         return { y*o.z - z*o.y,
                  z*o.x - x*o.z,
                  x*o.y - y*o.x };
     }
-    
-    float length() const { return std::sqrt(dot(*this)); }
+
+    float length()    const { return std::sqrt(dot(*this)); }
     Vec3  normalize() const { float l = length(); return {x/l, y/l, z/l}; }
 };
 ```
 
-Key operations:
-- **Dot product** `a · b = |a||b|cos(θ)`: measures alignment. `dot > 0` → same direction, `dot = 0` → perpendicular, `dot < 0` → opposite.
-- **Cross product** `a × b`: returns a vector perpendicular to both. Used for normals and "which way is left."
-- **Normalization**: make length = 1. Normalized direction vectors are needed for lighting.
+**Dot product** `a · b = |a||b|cos(θ)`:
+- Two vectors pointing the same direction: dot > 0
+- Perpendicular: dot == 0
+- Opposite directions: dot < 0
+- If both are unit vectors: dot gives cos(angle between them)
 
-### Matrices
+**Cross product** `a × b` gives a vector perpendicular to both a and b. Used to compute surface normals.
 
-A 4×4 matrix represents a transformation in 3D (translation, rotation, scale, projection). Vertices are transformed by multiplying by matrices.
+```
+Cross product right-hand rule:
+  Point fingers along a, curl toward b -> thumb points in a × b direction
+
+  b
+  ^
+  |
+  |
+  +----> a
+  (cross product points OUT of the screen, toward you)
+```
+
+---
+
+## Matrices and Transformations
+
+A **4×4 matrix** (Mat4) is the workhorse of 3D graphics. Using 4D **homogeneous coordinates** (x, y, z, w) allows translation, rotation, and scaling to all be matrix multiplications.
+
+```
+4x4 identity matrix (does nothing):
+| 1  0  0  0 |
+| 0  1  0  0 |
+| 0  0  1  0 |
+| 0  0  0  1 |
+
+Translation matrix (move by tx, ty, tz):
+| 1  0  0  tx |
+| 0  1  0  ty |
+| 0  0  1  tz |
+| 0  0  0  1  |
+
+Scale matrix (scale by sx, sy, sz):
+| sx 0  0  0 |
+| 0  sy 0  0 |
+| 0  0  sz 0 |
+| 0  0  0  1 |
+```
+
+**Key insight**: to transform a point, multiply the 4x4 matrix by the column vector [x, y, z, 1]. For directions, use w=0 (translation has no effect on directions).
 
 ```cpp
+struct Vec4 { float x, y, z, w; };
+
 struct Mat4 {
-    float m[4][4] = {};  // row-major
-    
-    static Mat4 identity() {
-        Mat4 r;
-        r.m[0][0] = r.m[1][1] = r.m[2][2] = r.m[3][3] = 1.0f;
-        return r;
+    float m[4][4];  // m[row][col]
+
+    // Transform a point (w=1 means translation applies)
+    Vec4 operator*(const Vec4& v) const {
+        return {
+            m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z + m[0][3]*v.w,
+            m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z + m[1][3]*v.w,
+            m[2][0]*v.x + m[2][1]*v.y + m[2][2]*v.z + m[2][3]*v.w,
+            m[3][0]*v.x + m[3][1]*v.y + m[3][2]*v.z + m[3][3]*v.w,
+        };
     }
-    
+
+    // Matrix multiplication: combine two transforms
     Mat4 operator*(const Mat4& o) const {
-        Mat4 result;
+        Mat4 result{};
         for (int r = 0; r < 4; ++r)
             for (int c = 0; c < 4; ++c)
                 for (int k = 0; k < 4; ++k)
                     result.m[r][c] += m[r][k] * o.m[k][c];
         return result;
     }
-    
-    Vec3 transform_point(Vec3 p) const {
-        float w = m[3][0]*p.x + m[3][1]*p.y + m[3][2]*p.z + m[3][3];
-        return {
-            (m[0][0]*p.x + m[0][1]*p.y + m[0][2]*p.z + m[0][3]) / w,
-            (m[1][0]*p.x + m[1][1]*p.y + m[1][2]*p.z + m[1][3]) / w,
-            (m[2][0]*p.x + m[2][1]*p.y + m[2][2]*p.z + m[2][3]) / w
-        };
-    }
 };
 ```
 
-The 4th component (w) enables translation in matrix form — this is *homogeneous coordinates*. Points have `w=1`, directions have `w=0`.
+### The Transform Pipeline
 
-The transformation pipeline:
+Every vertex in a 3D scene passes through three spaces:
 
 ```
-Object Space → Model Matrix → World Space → View Matrix → Camera Space → Projection Matrix → Clip Space
+Object Space        World Space         View Space          Clip Space
+(local to model) -> (placed in world) -> (relative to cam) -> (projected to 2D)
+
+        Model            View                Projection
+vertex --------> world -------> camera ---------> NDC
+        matrix           matrix              matrix
 ```
 
-### Quaternions
+```
+Combined: clip_pos = Projection * View * Model * object_pos
 
-Quaternions represent rotations without gimbal lock (the problem where two rotation axes align, losing a degree of freedom). They're more compact than rotation matrices (4 floats vs 16) and easier to interpolate.
+In a vertex shader:
+gl_Position = projection * view * model * vec4(position, 1.0);
+```
+
+The **Model matrix** places an object in the world (translation + rotation + scale).
+The **View matrix** is the inverse of the camera's transform (moves the world around the camera).
+The **Projection matrix** converts 3D camera space to 2D clip space (perspective divide).
+
+---
+
+## Quaternions -- Rotations Without Gimbal Lock
+
+Euler angles (pitch, yaw, roll) seem intuitive but suffer from **gimbal lock**: when two rotation axes align, you lose a degree of freedom. Quaternions avoid this.
+
+A quaternion has four components: `q = (w, x, y, z)` where w is the scalar part and (x, y, z) is the vector part. A unit quaternion (|q| = 1) represents a rotation.
+
+```
+Rotation of angle θ around unit axis (ax, ay, az):
+  w = cos(θ/2)
+  x = ax * sin(θ/2)
+  y = ay * sin(θ/2)
+  z = az * sin(θ/2)
+```
 
 ```cpp
 struct Quat {
-    float w, x, y, z;  // w is the scalar part
-    
-    static Quat from_axis_angle(Vec3 axis, float angle_rad) {
-        float half = angle_rad * 0.5f;
-        float s = std::sin(half);
-        return { std::cos(half), axis.x*s, axis.y*s, axis.z*s };
+    float w, x, y, z;
+
+    Quat(float angle_rad, Vec3 axis) {
+        axis = axis.normalize();
+        float half = angle_rad / 2.f;
+        w = std::cos(half);
+        x = axis.x * std::sin(half);
+        y = axis.y * std::sin(half);
+        z = axis.z * std::sin(half);
     }
-    
-    Quat operator*(const Quat& o) const {
-        return {
-            w*o.w - x*o.x - y*o.y - z*o.z,
-            w*o.x + x*o.w + y*o.z - z*o.y,
-            w*o.y - x*o.z + y*o.w + z*o.x,
-            w*o.z + x*o.y - y*o.x + z*o.w
-        };
+
+    // Combine two rotations (apply q first, then this):
+    Quat operator*(const Quat& q) const {
+        return { w*q.w - x*q.x - y*q.y - z*q.z,
+                 w*q.x + x*q.w + y*q.z - z*q.y,
+                 w*q.y - x*q.z + y*q.w + z*q.x,
+                 w*q.z + x*q.y - y*q.x + z*q.w };
     }
-    
-    // Spherical linear interpolation (smooth rotation between two orientations)
-    static Quat slerp(Quat a, Quat b, float t);
+
+    // Convert quaternion to 4x4 rotation matrix for use in shaders
+    Mat4 to_mat4() const;
 };
 ```
 
-### Use a Library
+**SLERP** (spherical linear interpolation) smoothly interpolates between two rotations:
 
-In practice, use **GLM** (OpenGL Mathematics) — a header-only C++ math library that mirrors GLSL (the GPU shader language) syntax:
+```cpp
+Quat slerp(Quat a, Quat b, float t) {
+    float dot = a.w*b.w + a.x*b.x + a.y*b.y + a.z*b.z;
+    if (dot < 0) { b.w=-b.w; b.x=-b.x; b.y=-b.y; b.z=-b.z; dot=-dot; }
+    if (dot > 0.9995f) {  // nearly identical -- linear interpolate
+        return { a.w + t*(b.w-a.w), a.x + t*(b.x-a.x),
+                 a.y + t*(b.y-a.y), a.z + t*(b.z-a.z) };
+    }
+    float theta_0 = std::acos(dot);
+    float theta   = theta_0 * t;
+    float sa = std::sin(theta_0), sb = std::sin(theta);
+    float s0 = std::cos(theta) - dot * sb / sa;
+    float s1 = sb / sa;
+    return { s0*a.w + s1*b.w, s0*a.x + s1*b.x,
+             s0*a.y + s1*b.y, s0*a.z + s1*b.z };
+}
+```
+
+In practice, use **GLM** (OpenGL Mathematics library) rather than writing your own:
 
 ```cpp
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-glm::vec3 position = {1.0f, 2.0f, 3.0f};
-glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
-model = glm::scale(model, glm::vec3(2.0f));
+glm::vec3 pos{1.0f, 2.0f, 3.0f};
+glm::mat4 model = glm::mat4{1.0f};                          // identity
+model = glm::translate(model, pos);                          // move
+model = glm::rotate(model, glm::radians(45.f), {0,1,0});    // rotate 45° around Y
+model = glm::scale(model, {2.f, 2.f, 2.f});                 // scale 2x
 
-glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 1, 0));
-glm::quat interp   = glm::slerp(q1, q2, 0.5f);
+glm::quat q = glm::angleAxis(glm::radians(45.f), glm::vec3{0,1,0});
+glm::mat4 rot_mat = glm::mat4_cast(q);
 ```
 
-### Key Takeaways
+---
 
-- Vectors: position/direction. Key ops: dot (alignment), cross (perpendicular), normalize.
-- 4×4 matrices represent transformations. The pipeline is Model → View → Projection.
-- Quaternions represent rotations without gimbal lock; use `slerp` for smooth interpolation.
-- In practice, use GLM — it matches GLSL syntax and is highly optimized.
+## Common Mistakes in This Chapter
+
+### Mistake 1: Column-Major vs Row-Major Confusion
+
+**The bug:** Writing matrix math assuming row-major order, but OpenGL/GLM is column-major. Your transforms are transposed.
+
+**Symptom:** Objects appear at wrong positions or with wrong orientations.
+
+**Fix:** GLM is column-major by default (matching OpenGL). Access elements as `m[col][row]`. Use `glm::value_ptr(matrix)` to pass to OpenGL.
+
+### Mistake 2: Normalizing Before Cross Product
+
+**The bug:**
+```cpp
+Vec3 normal = a.cross(b);
+// normal is NOT a unit vector -- its length depends on |a| and |b|
+// Using it directly in lighting calculations gives wrong results
+```
+**Fix:** `Vec3 normal = a.cross(b).normalize();`
+
+### Mistake 3: Gimbal Lock With Euler Angles
+
+**The bug:** Accumulating rotations as three Euler angles. When pitch ≈ 90°, yaw and roll collapse onto the same axis.
+
+**Fix:** Store rotations as quaternions. Compose them with multiplication. Convert to matrix only at render time.
+
+---
+
+## Exercises
+
+**Exercise 46.1 -- Look-at matrix**
+
+Implement a `look_at(eye, target, up)` function that produces a view matrix. Use GLM's implementation as reference.
+
+*Answer:*
+```cpp
+// Manual implementation of glm::lookAt:
+Mat4 look_at(Vec3 eye, Vec3 target, Vec3 up) {
+    Vec3 f = (target - eye).normalize();  // forward
+    Vec3 r = f.cross(up).normalize();     // right
+    Vec3 u = r.cross(f);                  // true up
+
+    Mat4 m{};
+    m.m[0][0]=r.x;  m.m[0][1]=r.y;  m.m[0][2]=r.z;  m.m[0][3]=-r.dot(eye);
+    m.m[1][0]=u.x;  m.m[1][1]=u.y;  m.m[1][2]=u.z;  m.m[1][3]=-u.dot(eye);
+    m.m[2][0]=-f.x; m.m[2][1]=-f.y; m.m[2][2]=-f.z; m.m[2][3]=f.dot(eye);
+    m.m[3][3]=1.f;
+    return m;
+}
+```
+
+---
+
+**Exercise 46.2 -- Angle between vectors**
+
+Given two 3D vectors, compute the angle between them in degrees using the dot product.
+
+*Answer:*
+```cpp
+float angle_between(Vec3 a, Vec3 b) {
+    float cos_theta = a.normalize().dot(b.normalize());
+    cos_theta = std::clamp(cos_theta, -1.f, 1.f);  // guard against float error
+    return std::acos(cos_theta) * (180.f / 3.14159265f);
+}
+// angle_between({1,0,0}, {0,1,0}) == 90.0 degrees
+```
 
 ---
 
 <a name="ch47"></a>
-## Chapter 47: How the GPU Works
+# Chapter 47: How the GPU Works
 
-### CPU vs GPU Architecture
+## CPU vs GPU: Two Different Machines
 
-A CPU has a few (4-64) powerful cores, each with large caches, branch prediction, and out-of-order execution — optimized for sequential tasks and complex logic.
-
-A GPU has thousands of small, simple cores — optimized for doing the *same operation on many data elements simultaneously* (SIMD at massive scale). A modern GPU has 10,000-80,000 shader cores.
+A CPU has a small number of very powerful cores (4–64) optimized for sequential, branchy code. A GPU has thousands of smaller, simpler cores optimized for running the same operation on many data items simultaneously.
 
 ```
-CPU: 16 powerful cores
-     Complex out-of-order execution
-     4 MB L3 cache per core
-     Excels at: sequential code, branching, complex logic
+CPU:                                GPU:
++-------+-------+-------+-------+   +--+--+--+--+--+--+--+--+
+| Core  | Core  | Core  | Core  |   |SM|SM|SM|SM|SM|SM|SM|SM|
+| (fast)|       |       |       |   +--+--+--+--+--+--+--+--+
++-------+-------+-------+-------+   |SM|SM|SM|SM|SM|SM|SM|SM|  <- each SM has
+| Large cache / branch prediction|  +--+--+--+--+--+--+--+--+     32-128 CUDA cores
+| Out-of-order execution         |  | ... 80+ Streaming        
+| Single thread: very fast       |  |     Multiprocessors      |
++--------------------------------+  +--+--+--+--+--+--+--+--+--+
+                                    | Very wide memory bus       |
+                                    | HBM: 900 GB/s bandwidth    |
+                                    +----------------------------+
 
-GPU: 80,000+ simple shader cores
-     Simple in-order execution (many cores)
-     Shared L2 cache
-     Excels at: parallel data transformation, matrix multiply
+CPU: great for 1 task very fast    GPU: great for 10,000 tasks simultaneously
 ```
 
-### The Graphics Pipeline
+---
 
-When you call a draw call (e.g., "draw this mesh"), the GPU runs it through a fixed pipeline:
+## The Rendering Pipeline
 
-```
-1. Input Assembly: read vertices from a buffer
-2. Vertex Shader: run once per vertex (positions, normals → clip space)
-3. Rasterization: convert triangles to fragments (pixels)
-4. Fragment Shader: run once per fragment (compute color, apply textures)
-5. Output Merge: depth test, blend, write to framebuffer
-```
-
-Stages 2 and 4 are *programmable* — you write shader code (GLSL for OpenGL, SPIR-V for Vulkan) that the GPU executes in parallel on every vertex/fragment.
-
-### GPU Memory
+When you draw a triangle, it travels through a fixed sequence of stages on the GPU:
 
 ```
-VRAM (Video RAM): on the GPU card — fast but limited (8-24 GB typical)
-  - Vertex buffers (VBO): mesh geometry
-  - Index buffers (IBO): triangle index arrays
-  - Textures: images
-  - Uniform buffers (UBO): small per-draw-call data (matrices, colors)
-  - Framebuffers: render targets (what you draw to)
+CPU sends commands and data to GPU over PCIe bus
 
-System RAM: on the CPU — large but slow to transfer to GPU
+Vertex Buffer (in GPU VRAM):
+  position (x,y,z), color, texcoord, normal for each vertex
+
+Pipeline stages:
+
+1. VERTEX SHADER (programmable)
+   Input:  one vertex (position, attributes)
+   Output: clip-space position, any other per-vertex data
+   Runs:   once per vertex (in parallel for all vertices)
+
+2. PRIMITIVE ASSEMBLY + RASTERIZATION (fixed function)
+   Assembles vertices into triangles
+   Determines which screen pixels each triangle covers
+   Interpolates vertex outputs across the triangle surface
+
+3. FRAGMENT SHADER / PIXEL SHADER (programmable)
+   Input:  one fragment (screen pixel covered by a triangle)
+             + interpolated values from vertex shader
+   Output: color (RGBA) for that pixel
+   Runs:   once per fragment (in parallel for all fragments)
+
+4. OUTPUT MERGER (fixed function)
+   Depth test: is this fragment in front of what's already there?
+   Blending: transparency / compositing
+   Writes final color to the framebuffer
 ```
 
-The bottleneck is often the CPU→GPU transfer (PCIe bandwidth). Minimize uploads; keep data in VRAM.
+**Vertex shader** and **fragment shader** are the two stages you write when programming with OpenGL or Vulkan. They run directly on the GPU, written in GLSL (OpenGL) or SPIR-V/GLSL/HLSL (Vulkan).
 
-### Shaders
+---
 
-Shaders are programs that run on the GPU. Written in GLSL (OpenGL) or HLSL (DirectX):
+## GLSL Shader Basics
+
+Shaders are written in GLSL (GL Shading Language), which looks like simplified C:
 
 ```glsl
-// Vertex shader (GLSL)
-#version 460
+// Vertex shader (runs once per vertex):
+#version 330 core
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texcoord;
+layout (location = 0) in vec3 aPosition;   // input from vertex buffer
+layout (location = 1) in vec2 aTexCoord;   // texture coordinates
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 uModel;       // set from CPU -- same for all vertices in a draw call
+uniform mat4 uView;
+uniform mat4 uProjection;
 
-out vec2 frag_texcoord;
+out vec2 vTexCoord;        // passed to fragment shader (interpolated)
 
 void main() {
-    gl_Position = projection * view * model * vec4(position, 1.0);
-    frag_texcoord = texcoord;
+    gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
+    vTexCoord   = aTexCoord;
 }
 ```
 
 ```glsl
-// Fragment shader (GLSL)
-#version 460
+// Fragment shader (runs once per pixel covered by a triangle):
+#version 330 core
 
-in vec2 frag_texcoord;
-out vec4 color;
+in  vec2 vTexCoord;
+out vec4 FragColor;        // output: RGBA color for this pixel
 
-uniform sampler2D texture_map;
+uniform sampler2D uTexture;
 
 void main() {
-    color = texture(texture_map, frag_texcoord);
+    FragColor = texture(uTexture, vTexCoord);
 }
 ```
 
-The vertex shader runs once per vertex (millions of times per frame). The fragment shader runs once per pixel covered (tens of millions of times per frame). Both run in parallel across all GPU cores.
+---
 
-### Compute Shaders
+## GPU Memory: Where Things Live
 
-Beyond graphics, the GPU is used for general computation (GPGPU). Compute shaders run arbitrary parallel workloads: physics simulation, ML inference, image processing.
+```
+GPU VRAM (fast, on-chip or HBM):
+  +----------------------------+
+  | Framebuffer: color/depth   |  <- what gets displayed
+  +----------------------------+
+  | Vertex Buffers (VBO)       |  <- geometry data uploaded from CPU
+  | Index Buffers (EBO)        |  <- triangle connectivity
+  | Textures                   |  <- image data
+  | Uniform Buffers (UBO)      |  <- small, frequently-changing data (MVP matrices)
+  +----------------------------+
 
-```glsl
-// Compute shader: add two arrays
-#version 460
-layout(local_size_x = 256) in;
-
-layout(std430, binding = 0) buffer A { float a[]; };
-layout(std430, binding = 1) buffer B { float b[]; };
-layout(std430, binding = 2) buffer C { float c[]; };
-
-void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    c[idx] = a[idx] + b[idx];
-}
-// dispatch with 10,000,000 / 256 workgroups → processes 10M floats in parallel
+CPU RAM (slow path for GPU):
+  Data must be explicitly transferred CPU -> GPU via DMA
+  In OpenGL: glBufferData, glTexImage2D
+  In Vulkan: staging buffers + vkCmdCopyBuffer
 ```
 
-### Key Takeaways
+---
 
-- GPUs have thousands of simple cores for massively parallel workloads.
-- The graphics pipeline: vertex shader → rasterization → fragment shader.
-- You control vertex and fragment shaders in GLSL/HLSL.
-- Data lives in VRAM (fast) or RAM (needs upload). Minimize CPU→GPU transfers.
-- Compute shaders run arbitrary GPU programs beyond rendering.
+## The CPU-GPU Handoff
+
+The GPU is a separate processor. The CPU sends **commands** to a **command queue**; the GPU executes them asynchronously. This is the fundamental architecture of modern graphics APIs.
+
+```
+CPU thread:                          GPU:
+  submit command A   --->  |queue| ---> execute A
+  submit command B   --->  |     | ---> execute B (may overlap with A)
+  submit command C   --->  |     | ---> execute C
+                               ^
+                               GPU pulls commands from queue at its own pace
+
+CPU and GPU run in parallel.
+CPU should never block waiting for GPU except at:
+  - vkQueueWaitIdle / glFinish (explicit sync)
+  - End of frame (present swap chain image)
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Uploading Data to GPU Every Frame
+
+**The bug:** Calling `glBufferData` with the same static mesh data every frame. This stalls the GPU pipeline.
+
+**Fix:** Upload static geometry once at load time. Use `glBufferSubData` or persistent mapped buffers for dynamic data.
+
+### Mistake 2: Reading Back Data From GPU to CPU
+
+**The bug:**
+```cpp
+glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+// Forces GPU to finish all pending commands before reading -- stall
+```
+**Fix:** Use asynchronous pixel buffer objects (PBOs) to read back without stalling. Or avoid readback entirely by doing computation entirely on the GPU.
+
+---
+
+## Exercises
+
+**Exercise 47.1 -- Pipeline stage identification**
+
+For each operation, identify whether it runs in the vertex shader, fragment shader, or is a fixed-function step:
+a) Clipping triangles to the view frustum
+b) Computing a surface normal from height map data
+c) Sampling a texture for a surface color
+d) Assembling three vertex outputs into a triangle
+
+*Answer:* a) Fixed-function (after vertex shader), b) Vertex shader, c) Fragment shader, d) Fixed-function (primitive assembly).
 
 ---
 
 <a name="ch48"></a>
-## Chapter 48: OpenGL Fundamentals
+# Chapter 48: OpenGL Fundamentals
 
-### What Is OpenGL?
+## What Is OpenGL?
 
-OpenGL is a cross-platform graphics API for drawing 2D/3D graphics by communicating with the GPU. It's the oldest and most widely documented real-time graphics API. Vulkan (Chapter 49) is its modern successor.
+OpenGL is a cross-platform API for telling the GPU to draw things. It is a state machine: you set state (which shader to use, which vertex buffer is bound, which texture is active), then issue draw calls. The GPU executes those draws using the current state.
 
-### Setup: GLFW + GLAD
+OpenGL is older and simpler than Vulkan (Chapter 49). Start here.
 
-- **GLFW**: creates a window and an OpenGL context.
-- **GLAD**: loads OpenGL function pointers (OpenGL functions aren't in a static library — they're loaded from the driver at runtime).
+---
+
+## Setting Up: GLFW + GLAD
 
 ```cpp
-#include <glad/glad.h>
+// Dependencies:
+//   GLFW: creates a window and OpenGL context
+//   GLAD: loads OpenGL function pointers (they are not linked at compile time)
+// Install: apt install libglfw3-dev  or  vcpkg install glfw3 glad
+
+#include <glad/glad.h>         // must include before GLFW
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 int main() {
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL", nullptr, nullptr);
+    if (!window) { std::cerr << "Failed to create window\n"; return 1; }
     glfwMakeContextCurrent(window);
-    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to load OpenGL\n"; return 1;
+    }
+    glViewport(0, 0, 800, 600);
 
     while (!glfwWindowShouldClose(window)) {
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        // Draw calls here
-        
-        glfwSwapBuffers(window);
         glfwPollEvents();
+        glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Draw here
+        glfwSwapBuffers(window);   // swap front/back buffer
     }
     glfwTerminate();
 }
 ```
 
-### The Core Workflow
+---
 
-1. **Create vertex data** on the CPU.
-2. **Upload** to a *Vertex Buffer Object* (VBO) on the GPU.
-3. **Describe the layout** with a *Vertex Array Object* (VAO).
-4. **Compile shaders** and link into a *shader program*.
-5. **Draw** with `glDrawArrays` or `glDrawElements`.
+## Drawing a Triangle: The Full Pipeline
 
 ```cpp
-// Triangle vertices: position (x,y,z) + color (r,g,b)
+// 1. Vertex data: positions for three corners of a triangle
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom-left (red)
-     0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom-right (green)
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  // top (blue)
+    // x      y      z
+   -0.5f, -0.5f,  0.0f,   // bottom left
+    0.5f, -0.5f,  0.0f,   // bottom right
+    0.0f,  0.5f,  0.0f,   // top center
 };
 
-// Create and bind VAO + VBO
+// 2. Create and bind a Vertex Array Object (VAO) -- records the following setup
 unsigned int VAO, VBO;
 glGenVertexArrays(1, &VAO);
 glGenBuffers(1, &VBO);
-
 glBindVertexArray(VAO);
+
+// 3. Upload vertex data to GPU
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
 glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-// Describe attribute 0: position (3 floats, starts at offset 0)
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+// 4. Tell OpenGL how vertex data is laid out
+//    attribute 0 = position, 3 floats, not normalized, stride 12 bytes, offset 0
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
 
-// Describe attribute 1: color (3 floats, starts at offset 12 bytes)
-glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
-glEnableVertexAttribArray(1);
+glBindVertexArray(0);  // unbind -- setup is recorded in VAO
 
-// Draw:
-glUseProgram(shader_program);
-glBindVertexArray(VAO);
-glDrawArrays(GL_TRIANGLES, 0, 3);
-```
+// 5. Compile shaders
+const char* vert_src = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+void main() { gl_Position = vec4(aPos, 1.0); }
+)";
+const char* frag_src = R"(
+#version 330 core
+out vec4 FragColor;
+void main() { FragColor = vec4(1.0, 0.5, 0.2, 1.0); }  // orange
+)";
 
-### Compiling Shaders at Runtime
-
-```cpp
-const char* vert_src = R"glsl(
-    #version 460 core
-    layout(location=0) in vec3 pos;
-    layout(location=1) in vec3 color;
-    out vec3 fragColor;
-    void main() {
-        gl_Position = vec4(pos, 1.0);
-        fragColor = color;
+auto compile_shader = [](const char* src, GLenum type) {
+    unsigned int shader = glCreateShader(type);
+    glShaderSource(shader, 1, &src, nullptr);
+    glCompileShader(shader);
+    int ok; glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
+    if (!ok) {
+        char log[512]; glGetShaderInfoLog(shader, 512, nullptr, log);
+        std::cerr << "Shader error: " << log << "\n";
     }
-)glsl";
+    return shader;
+};
 
-unsigned int vert = glCreateShader(GL_VERTEX_SHADER);
-glShaderSource(vert, 1, &vert_src, nullptr);
-glCompileShader(vert);
-
-// Check for errors:
-int success;
-glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
-if (!success) {
-    char log[512];
-    glGetShaderInfoLog(vert, 512, nullptr, log);
-    std::cerr << "Shader error: " << log << "\n";
-}
-
-unsigned int program = glCreateProgram();
-glAttachShader(program, vert);
-glAttachShader(program, frag);
-glLinkProgram(program);
+unsigned int vert = compile_shader(vert_src, GL_VERTEX_SHADER);
+unsigned int frag = compile_shader(frag_src, GL_FRAGMENT_SHADER);
+unsigned int prog = glCreateProgram();
+glAttachShader(prog, vert);
+glAttachShader(prog, frag);
+glLinkProgram(prog);
 glDeleteShader(vert);
 glDeleteShader(frag);
+
+// 6. Draw loop
+while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+    glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(prog);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);   // draw 3 vertices as 1 triangle
+
+    glfwSwapBuffers(window);
+}
 ```
 
-### Textures
+---
+
+## Textures
 
 ```cpp
-// Load image with stb_image (single-header library):
+// Load image data (using stb_image.h -- single header library):
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-int width, height, channels;
-unsigned char* data = stbi_load("texture.png", &width, &height, &channels, 0);
+int w, h, channels;
+unsigned char* data = stbi_load("texture.png", &w, &h, &channels, 0);
 
 unsigned int texture;
 glGenTextures(1, &texture);
 glBindTexture(GL_TEXTURE_2D, texture);
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-glGenerateMipmap(GL_TEXTURE_2D);
+
+// Filtering: how to sample when the texture is magnified/minified
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// Wrapping: what happens at texture edges
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+// Upload to GPU:
+GLenum fmt = (channels == 4) ? GL_RGBA : GL_RGB;
+glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, GL_UNSIGNED_BYTE, data);
+glGenerateMipmap(GL_TEXTURE_2D);   // generate lower-res versions automatically
+
 stbi_image_free(data);
+
+// In the draw loop:
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, texture);
+glUniform1i(glGetUniformLocation(prog, "uTexture"), 0);  // texture unit 0
 ```
 
-### Key Takeaways
+---
 
-- OpenGL is a state machine. Bind objects (VAO, VBO, textures, shader programs) then draw.
-- VAO describes vertex layout. VBO holds vertex data. Bind both before drawing.
-- Shaders are compiled at runtime from GLSL source strings.
-- Modern OpenGL (4.x Core Profile) uses vertex arrays — no legacy `glBegin`/`glEnd`.
-- Use GLFW for windowing and GLAD for loading function pointers.
+## Uniforms: Sending Data to Shaders
+
+Uniforms are per-draw-call values set from the CPU:
+
+```cpp
+#include <glm/gtc/type_ptr.hpp>
+
+// In vertex shader: uniform mat4 uModel; uniform mat4 uView; uniform mat4 uProjection;
+
+glm::mat4 model = glm::translate(glm::mat4{1.f}, {0.f, 0.f, -3.f});
+glm::mat4 view  = glm::lookAt({0,0,5}, {0,0,0}, {0,1,0});
+glm::mat4 proj  = glm::perspective(glm::radians(45.f), 800.f/600.f, 0.1f, 100.f);
+
+glUseProgram(prog);
+glUniformMatrix4fv(glGetUniformLocation(prog, "uModel"), 1, GL_FALSE, glm::value_ptr(model));
+glUniformMatrix4fv(glGetUniformLocation(prog, "uView"),  1, GL_FALSE, glm::value_ptr(view));
+glUniformMatrix4fv(glGetUniformLocation(prog, "uProjection"), 1, GL_FALSE, glm::value_ptr(proj));
+```
+
+---
+
+## Depth Testing
+
+Without depth testing, objects drawn later overwrite objects drawn earlier regardless of depth:
+
+```cpp
+glEnable(GL_DEPTH_TEST);   // enable depth testing (compare new fragment Z against depth buffer)
+
+// In the clear call, also clear the depth buffer:
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Wrong Attribute Pointer Stride
+
+**The bug:**
+```cpp
+// Vertex data: position (3 floats) + texcoord (2 floats) = 5 floats total
+// Stride should be 5 * sizeof(float), but:
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+// Wrong stride! GPU reads wrong data for the second vertex onward
+```
+**Fix:** Stride is the total size of one vertex: `5 * sizeof(float)`.
+
+### Mistake 2: Not Binding VAO Before Drawing
+
+**The bug:**
+```cpp
+glDrawArrays(GL_TRIANGLES, 0, 3);  // draws nothing or wrong data -- VAO not bound
+```
+**Fix:** Always `glBindVertexArray(VAO)` before each draw call.
+
+### Mistake 3: Forgetting to Enable Depth Test
+
+**Symptom:** Objects drawn later appear in front of objects drawn earlier even when they are behind them.
+
+**Fix:** `glEnable(GL_DEPTH_TEST)` at startup; `glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)` each frame.
+
+---
+
+## Exercises
+
+**Exercise 48.1 -- Spinning cube**
+
+Extend the triangle example to draw a cube (8 vertices, 12 triangles using an index buffer). Apply a model matrix that rotates around Y axis using `glfwGetTime()`.
+
+*Answer (key parts):*
+```cpp
+// Index buffer for 12 triangles (36 indices):
+unsigned int indices[] = {
+    0,1,2, 2,3,0,  // front face
+    4,5,6, 6,7,4,  // back face
+    0,4,5, 5,1,0,  // left
+    3,7,6, 6,2,3,  // right
+    0,3,7, 7,4,0,  // top
+    1,2,6, 6,5,1   // bottom
+};
+unsigned int EBO;
+glGenBuffers(1, &EBO);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+// In draw loop:
+float angle = (float)glfwGetTime();
+glm::mat4 model = glm::rotate(glm::mat4{1.f}, angle, {0.f,1.f,0.f});
+glUniformMatrix4fv(glGetUniformLocation(prog,"uModel"),1,GL_FALSE,glm::value_ptr(model));
+glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+```
 
 ---
 
 <a name="ch49"></a>
-## Chapter 49: Moving to Vulkan
+# Chapter 49: Vulkan -- Explicit GPU Control
 
-### Why Vulkan?
+## Why Vulkan Exists
 
-OpenGL hides complexity behind a global state machine managed by the driver. The driver guesses your intentions, validates inputs, and compiles shaders behind the scenes — this causes unpredictable hitches and overhead.
+OpenGL hides complexity: the driver validates your calls, manages synchronization, and compiles shaders at runtime. This has a cost -- the driver does work you may not need, and validation overhead can be significant.
 
-Vulkan is explicit: you manage GPU memory, command buffers, synchronization, and pipeline states yourself. In exchange, you get:
+Vulkan is explicit: you do everything yourself. More code, but:
+- Near-zero driver overhead
+- Explicit control over GPU memory allocation
+- Multi-threaded command recording
+- Cross-platform (Windows, Linux, Android, macOS via MoltenVK)
 
-- **Predictable performance** — no driver magic.
-- **Lower CPU overhead** — multithreaded command recording.
-- **Explicit control** — know exactly what the GPU is doing.
-- **Portability** — runs on Windows, Linux, macOS (via MoltenVK), Android.
+A minimal Vulkan "hello triangle" is ~1000 lines versus ~100 for OpenGL. In a production engine, that complexity pays off. For a first project, OpenGL is fine.
 
-### The Verbosity Trade-Off
+---
 
-Vulkan's "hello triangle" is ~1000 lines. OpenGL's is ~100. Every object you implicitly got from OpenGL must be explicitly created in Vulkan. This is the trade-off: control vs. boilerplate.
-
-For this reason, most Vulkan programs use:
-- **vk-bootstrap**: simplifies instance, device, and swapchain creation.
-- **VMA (Vulkan Memory Allocator)**: manages GPU memory allocation.
-- Custom wrappers / engines that abstract the boilerplate.
-
-### Core Vulkan Concepts
+## Core Vulkan Concepts
 
 ```
-VkInstance            — the Vulkan runtime
-VkPhysicalDevice      — the GPU hardware
-VkDevice              — logical device (interface to the GPU)
-VkQueue               — command submission queue (graphics, compute, transfer)
-VkSwapchain           — sequence of images presented to the screen
-VkRenderPass          — describes the structure of rendering (attachments)
-VkFramebuffer         — links images to a render pass
-VkPipeline            — compiled graphics state (shaders + fixed function)
-VkCommandBuffer       — recorded list of GPU commands
-VkDescriptorSet       — table of bindings (textures, UBOs) used by shaders
-VkSemaphore           — GPU-GPU synchronization
-VkFence               — GPU-CPU synchronization
+VkInstance         -- connection to the Vulkan runtime
+VkPhysicalDevice   -- the GPU hardware (can enumerate multiple GPUs)
+VkDevice           -- logical device: your connection to a physical device
+VkQueue            -- submission queue for commands (graphics/compute/transfer)
+VkSwapchainKHR     -- sequence of images to display (triple-buffering etc.)
+VkRenderPass       -- describes framebuffer attachments and their usage
+VkPipeline         -- compiled shader programs + all fixed-function state
+VkCommandBuffer    -- recorded sequence of GPU commands
+VkFence/VkSemaphore -- CPU-GPU and GPU-GPU synchronization primitives
 ```
 
-### The Render Loop
+---
+
+## Vulkan Initialization Sequence
+
+```
+1. Create VkInstance (with validation layers in debug builds)
+2. Create VkSurfaceKHR (platform-specific window surface, via GLFW)
+3. Pick VkPhysicalDevice (GPU with required queue families + features)
+4. Create VkDevice + VkQueues (graphics queue, present queue)
+5. Create VkSwapchainKHR (images to render into and display)
+6. Create VkImageViews for swapchain images
+7. Create VkRenderPass (what attachments, their load/store ops)
+8. Create VkFramebuffers (one per swapchain image)
+9. Create VkPipelineLayout + VkGraphicsPipeline
+    - Vertex input state
+    - Vertex shader (SPIR-V binary)
+    - Rasterizer state
+    - Fragment shader (SPIR-V binary)
+    - Color blending state
+    - Depth/stencil state
+10. Create VkCommandPool + VkCommandBuffers (one per frame in flight)
+11. Create VkSemaphores + VkFences (for frame synchronization)
+```
+
+---
+
+## The Vulkan Render Loop
 
 ```cpp
-// Acquire image from swapchain:
-uint32_t imageIndex;
-vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphore,
-                      VK_NULL_HANDLE, &imageIndex);
+// Pseudocode for one frame:
+void draw_frame() {
+    // 1. Wait for GPU to finish with the previous frame using this frame's slot
+    vkWaitForFences(device, 1, &in_flight_fence[current_frame], VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &in_flight_fence[current_frame]);
 
-// Record commands:
-vkBeginCommandBuffer(commandBuffer, &beginInfo);
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
-    vkCmdEndRenderPass(commandBuffer);
-vkEndCommandBuffer(commandBuffer);
+    // 2. Acquire next swapchain image
+    uint32_t image_index;
+    vkAcquireNextImageKHR(device, swapchain, UINT64_MAX,
+                          image_available_sem[current_frame], VK_NULL_HANDLE,
+                          &image_index);
 
-// Submit to GPU:
-vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence);
+    // 3. Record commands into command buffer
+    vkResetCommandBuffer(cmd_buf[current_frame], 0);
+    record_commands(cmd_buf[current_frame], image_index);
 
-// Present to screen:
-vkQueuePresentKHR(presentQueue, &presentInfo);
+    // 4. Submit command buffer to queue
+    VkSubmitInfo submit{VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    submit.waitSemaphoreCount   = 1;
+    submit.pWaitSemaphores      = &image_available_sem[current_frame];   // wait for image
+    VkPipelineStageFlags wait_stages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    submit.pWaitDstStageMask    = &wait_stages;
+    submit.commandBufferCount   = 1;
+    submit.pCommandBuffers      = &cmd_buf[current_frame];
+    submit.signalSemaphoreCount = 1;
+    submit.pSignalSemaphores    = &render_finished_sem[current_frame];   // signal when done
+
+    vkQueueSubmit(graphics_queue, 1, &submit, in_flight_fence[current_frame]);
+
+    // 5. Present the rendered image
+    VkPresentInfoKHR present{VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+    present.waitSemaphoreCount = 1;
+    present.pWaitSemaphores    = &render_finished_sem[current_frame];    // wait for render
+    present.swapchainCount     = 1;
+    present.pSwapchains        = &swapchain;
+    present.pImageIndices      = &image_index;
+    vkQueuePresentKHR(present_queue, &present);
+
+    current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
 ```
 
-### Shaders in Vulkan: SPIR-V
+---
 
-Vulkan doesn't accept GLSL directly — shaders must be compiled to SPIR-V (a binary IR):
+## Vulkan Memory Management
 
-```bash
-glslc shader.vert -o shader.vert.spv
-glslc shader.frag -o shader.frag.spv
-```
-
-The GLSL syntax is mostly the same as OpenGL. SPIR-V is loaded at runtime:
+In OpenGL, the driver allocates GPU memory for you. In Vulkan, you are responsible:
 
 ```cpp
-std::vector<char> code = read_file("shader.vert.spv");
-VkShaderModuleCreateInfo createInfo{};
-createInfo.codeSize = code.size();
-createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-VkShaderModule shaderModule;
-vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
+// Allocate a buffer (e.g., for vertex data):
+VkBufferCreateInfo buf_info{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+buf_info.size  = sizeof(vertices);
+buf_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+VkBuffer vertex_buffer;
+vkCreateBuffer(device, &buf_info, nullptr, &vertex_buffer);
+
+// Query memory requirements:
+VkMemoryRequirements mem_req;
+vkGetBufferMemoryRequirements(device, vertex_buffer, &mem_req);
+
+// Find suitable memory type (device-local for GPU-only, host-visible for CPU-writeable):
+VkMemoryAllocateInfo alloc{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
+alloc.allocationSize  = mem_req.size;
+alloc.memoryTypeIndex = find_memory_type(mem_req.memoryTypeBits,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+VkDeviceMemory buffer_memory;
+vkAllocateMemory(device, &alloc, nullptr, &buffer_memory);
+vkBindBufferMemory(device, vertex_buffer, buffer_memory, 0);
+
+// Write data via memory mapping (only possible with HOST_VISIBLE memory):
+void* mapped;
+vkMapMemory(device, buffer_memory, 0, sizeof(vertices), 0, &mapped);
+memcpy(mapped, vertices, sizeof(vertices));
+vkUnmapMemory(device, buffer_memory);
 ```
 
-### Recommended Learning Path
+In practice, use the **Vulkan Memory Allocator (VMA)** library which handles memory type selection and suballocation automatically.
 
-1. Read **"Vulkan Tutorial"** (vulkan-tutorial.com) — the canonical free resource.
-2. Use **vk-bootstrap** and **VMA** to reduce boilerplate.
-3. Study **Sascha Willems' Vulkan samples** for specific techniques.
-4. For a game engine, look at **vkguide.dev** (a game engine focused Vulkan guide).
+---
 
-### Key Takeaways
+## OpenGL vs Vulkan: When to Use Each
 
-- Vulkan is explicit where OpenGL is implicit — you manage memory, command buffers, synchronization.
-- More boilerplate, but more predictable performance and lower CPU overhead.
-- Use vk-bootstrap + VMA to reduce setup boilerplate in new projects.
-- Shaders compile to SPIR-V (via glslc). The GLSL language is almost identical to OpenGL.
-- Learn via vulkan-tutorial.com — it's the community standard.
+```
+Use OpenGL when:
+  - Learning graphics programming for the first time
+  - Rapid prototyping
+  - Tool development (not performance critical)
+  - Target audience: older hardware / drivers
+
+Use Vulkan when:
+  - Production games or engines
+  - Need fine-grained control over synchronization
+  - Multi-threaded command recording (a big OpenGL weakness)
+  - Cross-platform with best performance
+  - Modern hardware targets
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Not Enabling Validation Layers in Debug
+
+**The bug:** Writing Vulkan without validation layers and getting a black screen with no error message.
+
+**Fix:** Always enable `VK_LAYER_KHRONOS_validation` in debug builds. It catches almost every API misuse with a clear error message. Disable only in final release builds.
+
+### Mistake 2: Wrong Semaphore Usage
+
+**The bug:** Submitting a command buffer that signals a semaphore, then waiting on that semaphore in the same `vkQueueSubmit` call.
+
+**Symptom:** GPU deadlock or validation error.
+
+**Fix:** Signal semaphores flow from one submit to the next submit (or to present). A submit cannot wait on a semaphore it also signals.
+
+---
+
+## Exercises
+
+**Exercise 49.1 -- Conceptual: frame-in-flight**
+
+Why do production Vulkan engines use 2 or 3 "frames in flight" rather than 1? What would go wrong with only 1?
+
+*Answer:* With 1 frame in flight, the CPU must wait for the GPU to finish the previous frame before recording the next one. This stalls the CPU. With 2-3 frames in flight, the CPU records frame N+1 while the GPU renders frame N, keeping both fully busy. The cost is that GPU memory for framebuffers, command buffers, and semaphores is duplicated per frame.
 
 ---
 
 <a name="ch50"></a>
-## Chapter 50: Game Loop, ECS Architecture, and Engine Design
+# Chapter 50: Game Loop, ECS, and Engine Design
 
-### The Game Loop
+## The Game Loop
 
-Every game has a main loop that processes input, updates state, and renders — as fast as possible (or at a fixed rate):
+Every game runs a loop: read input, update world state, render. The precise structure of this loop determines whether your game runs consistently across different hardware.
 
-```cpp
-float last_time = glfwGetTime();
-
-while (!glfwWindowShouldClose(window)) {
-    float now   = glfwGetTime();
-    float delta = now - last_time;    // time since last frame (seconds)
-    last_time   = now;
-
-    glfwPollEvents();                  // process OS events (input)
-    
-    update(delta);                     // update game state
-    render();                          // draw the frame
-    
-    glfwSwapBuffers(window);           // present to screen
-}
 ```
-
-`delta` (delta time) is critical: game logic should multiply velocities by delta so the game runs at the same *speed* regardless of framerate:
-
-```cpp
-// Bad: ties movement speed to framerate
-position.x += 5.0f;  // faster on 120fps than 60fps
-
-// Good: frame-rate independent
-position.x += 5.0f * delta;  // always moves 5 units/second
-```
-
-### Fixed Timestep
-
-Physics simulation is unstable with variable delta. Use a fixed timestep with a variable render rate:
-
-```cpp
-const float FIXED_DT = 1.0f / 60.0f;  // 60 physics steps per second
-float accumulator = 0.0f;
+Naive loop (DO NOT USE):
 
 while (running) {
-    float frame_time = measure_frame_time();
+    handle_input();
+    update();     // moves objects by fixed amount
+    render();
+}
+
+Problem: on a fast machine (200 fps), objects move 200 times/second
+         on a slow machine (30 fps), they move 30 times/second
+         -> game plays at different speeds on different hardware
+```
+
+### Fixed Timestep Loop (The Standard Solution)
+
+```cpp
+const double FIXED_DT = 1.0 / 60.0;  // 60 physics updates per second, always
+
+double accumulator = 0.0;
+double previous_time = glfwGetTime();
+
+while (!glfwWindowShouldClose(window)) {
+    double current_time = glfwGetTime();
+    double frame_time   = current_time - previous_time;
+    previous_time       = current_time;
+
+    frame_time = std::min(frame_time, 0.25);  // spiral-of-death guard
     accumulator += frame_time;
-    
+
+    handle_input();
+
     while (accumulator >= FIXED_DT) {
-        physics_update(FIXED_DT);     // always runs with constant dt
+        update(FIXED_DT);     // physics/game logic at fixed 60 Hz
         accumulator -= FIXED_DT;
     }
-    
-    float alpha = accumulator / FIXED_DT;  // fractional step for interpolation
-    render(alpha);                          // render between steps
+
+    double alpha = accumulator / FIXED_DT;  // 0..1: interpolation factor
+    render(alpha);  // interpolate between previous and current state for smoothness
+    glfwSwapBuffers(window);
+    glfwPollEvents();
 }
 ```
 
-### Entity Component System (ECS)
+```
+Timeline diagram:
 
-OOP game engines model game objects as class hierarchies:
+Physics:   |---P---|---P---|---P---|---P---|
+Render:    |------R-------|------R---------|
 
-```cpp
-class GameObject;
-class Enemy : public GameObject;
-class FlyingEnemy : public Enemy;  // deep hierarchies become painful
+P = physics update at fixed 60 Hz
+R = render at whatever rate the GPU supports (could be 144 Hz)
+
+Between physics steps, render interpolates positions for smooth motion.
 ```
 
-ECS separates concerns:
-- **Entity**: just an ID (uint32_t).
-- **Component**: plain data struct, no behavior.
-- **System**: stateless functions that operate on components.
-
-```cpp
-// Components — plain structs
-struct Transform { glm::vec3 pos, scale; glm::quat rot; };
-struct Velocity   { glm::vec3 linear, angular; };
-struct Health     { float hp, max_hp; };
-struct Renderable { MeshID mesh; MaterialID material; };
-
-// Entity is just an ID
-using Entity = uint32_t;
-
-// ECS Registry (entt library example)
-#include <entt/entt.hpp>
-
-entt::registry registry;
-
-// Create entities:
-Entity player = registry.create();
-registry.emplace<Transform>(player, glm::vec3{0,0,0}, glm::vec3{1,1,1}, glm::quat{});
-registry.emplace<Health>(player, 100.0f, 100.0f);
-
-// Systems operate on all entities with certain components:
-void movement_system(entt::registry& reg, float dt) {
-    auto view = reg.view<Transform, Velocity>();
-    for (auto [entity, xform, vel] : view.each()) {
-        xform.pos += vel.linear * dt;
-    }
-}
-
-void health_system(entt::registry& reg) {
-    auto view = reg.view<Health>();
-    for (auto [entity, hp] : view.each()) {
-        if (hp.hp <= 0) reg.destroy(entity);
-    }
-}
-```
-
-### Why ECS?
-
-1. **Performance**: components in contiguous arrays — cache-friendly iteration.
-2. **Flexibility**: add/remove components at runtime — no class hierarchy changes.
-3. **Composition**: mix and match behaviors by combining components.
-4. **Testability**: systems are pure functions — easy to unit test.
-
-**entt** is the most popular C++ ECS library — header-only, extremely fast.
-
-### Engine Architecture Overview
-
-```
-Engine
-├── Core
-│   ├── Window + Input (GLFW)
-│   ├── Event system
-│   └── Main loop
-├── ECS (entt)
-│   ├── Entity management
-│   ├── Component storage
-│   └── System scheduler
-├── Renderer (OpenGL / Vulkan)
-│   ├── Mesh loading (assimp)
-│   ├── Shader management
-│   ├── Material system
-│   └── Render passes
-├── Physics
-│   └── (PhysX, Bullet, Jolt)
-├── Audio
-│   └── (OpenAL, FMOD)
-└── Asset System
-    ├── Texture loading (stb_image)
-    └── Scene serialization
-```
-
-### Key Takeaways
-
-- The game loop: poll input → update → render, as fast as possible.
-- Use delta time for frame-rate-independent movement.
-- Use a fixed timestep for physics to ensure stability.
-- ECS: Entity (ID) + Component (data) + System (behavior). Cache-friendly and flexible.
-- **entt** is the go-to C++ ECS library.
+The "spiral of death guard" (`frame_time = std::min(frame_time, 0.25)`) prevents the update loop from running forever when the game falls far behind (e.g., after a freeze).
 
 ---
 
+## Entity-Component System (ECS)
+
+OOP designs games as object hierarchies: `Enemy extends Character extends Actor`. This causes fragmentation: each `Enemy` is a separate heap allocation, accessed through a vtable, with its fields scattered across memory.
+
+ECS separates **identity** (entity), **data** (component), and **behavior** (system):
+
+```
+Entity:    just an ID (integer)
+Component: plain data, no methods, stored in contiguous arrays
+System:    functions that operate on entities with specific components
+
+Example:
+
+Entity 1: has Position, Velocity, Sprite
+Entity 2: has Position, Velocity, Health
+Entity 3: has Position, Sprite             (static decoration -- no Velocity)
+
+Physics System: iterates ALL entities with (Position, Velocity)
+  -> processes Entity 1 and Entity 2 only
+  -> data is contiguous in memory: cache-friendly
+
+Render System: iterates ALL entities with (Position, Sprite)
+  -> processes Entity 1 and Entity 3
+```
+
+### Simple ECS Implementation
+
+```cpp
+using EntityID = uint32_t;
+
+// Component storage: one array per component type
+struct Position  { float x, y, z; };
+struct Velocity  { float vx, vy, vz; };
+struct Health    { int hp, max_hp; };
+
+struct World {
+    std::vector<Position> positions;   // indexed by EntityID
+    std::vector<Velocity> velocities;
+    std::vector<Health>   healths;
+    std::vector<uint32_t> component_mask;   // bitfield of which components an entity has
+
+    enum Components : uint32_t {
+        HAS_POSITION = 1 << 0,
+        HAS_VELOCITY = 1 << 1,
+        HAS_HEALTH   = 1 << 2,
+    };
+
+    EntityID create_entity() {
+        EntityID id = positions.size();
+        positions.emplace_back();
+        velocities.emplace_back();
+        healths.emplace_back();
+        component_mask.push_back(0);
+        return id;
+    }
+
+    void add_position(EntityID e, Position p) {
+        positions[e] = p;
+        component_mask[e] |= HAS_POSITION;
+    }
+    void add_velocity(EntityID e, Velocity v) {
+        velocities[e] = v;
+        component_mask[e] |= HAS_VELOCITY;
+    }
+};
+
+// Physics system: only processes entities with Position AND Velocity
+void physics_system(World& w, float dt) {
+    for (EntityID e = 0; e < w.positions.size(); ++e) {
+        if ((w.component_mask[e] & (World::HAS_POSITION | World::HAS_VELOCITY))
+            == (World::HAS_POSITION | World::HAS_VELOCITY)) {
+            w.positions[e].x += w.velocities[e].vx * dt;
+            w.positions[e].y += w.velocities[e].vy * dt;
+            w.positions[e].z += w.velocities[e].vz * dt;
+        }
+    }
+}
+```
+
+Production ECS libraries (EnTT, flecs, DOTS) handle this more efficiently with archetype-based storage and sparse sets.
+
 ---
 
-# Part XI — Specialization B: Systems Programming
+## Scene Graph vs ECS
+
+```
+Scene Graph (traditional OOP):
+
+        Root
+       /    \
+  World     UI
+   /  \
+Tank  Tree
+ /\
+Hull Turret
+ |
+Barrel
+
+Good for: hierarchical transforms (barrel rotates with turret, turret with hull)
+Bad for:  performance (random access, pointer chasing, vtable dispatch)
+
+ECS:
+
+Components stored in flat arrays:
+  positions:  [p0, p1, p2, p3, p4, ...]
+  velocities: [v0, ---, v2, ---, v4, ...]   (--- = entity doesn't have this)
+
+Good for:  performance (cache-friendly, SIMD-friendly)
+Bad for:   hierarchical relationships (need explicit parent/child component)
+```
+
+In practice, most engines combine both: ECS for gameplay objects, scene graph for hierarchical transforms.
+
+---
+
+## Resource Management in a Game Engine
+
+```cpp
+// Resource handle system: thin ID wrapper, assets loaded asynchronously
+using TextureHandle = uint32_t;
+using MeshHandle    = uint32_t;
+
+class ResourceManager {
+    std::unordered_map<std::string, TextureHandle> texture_cache;
+    std::vector<Texture>                           textures;
+
+public:
+    TextureHandle load_texture(const std::string& path) {
+        auto it = texture_cache.find(path);
+        if (it != texture_cache.end()) return it->second;  // cached
+
+        TextureHandle h = textures.size();
+        textures.push_back(Texture::from_file(path));
+        texture_cache[path] = h;
+        return h;
+    }
+
+    const Texture& get(TextureHandle h) const { return textures[h]; }
+};
+```
+
+This pattern (handle = index into dense array) avoids dangling pointers, is cache-friendly, and makes serialization trivial.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Variable Timestep for Physics
+
+**The bug:**
+```cpp
+update(frame_time);  // passes variable delta time directly to physics
+```
+**Symptom:** Physics behaves differently at 30 FPS vs 120 FPS. Objects pass through walls at low frame rates.
+
+**Fix:** Fixed timestep loop as shown above.
+
+### Mistake 2: One Component = One Allocation
+
+**The bug:**
+```cpp
+struct Enemy {
+    std::unique_ptr<Position> pos;  // heap allocation per enemy
+    std::unique_ptr<Health>   hp;   // heap allocation per enemy
+};
+```
+**Symptom:** Cache misses on every component access -- poor performance with many entities.
+
+**Fix:** Store all `Position` components together in a `std::vector<Position>`, all `Health` together in `std::vector<Health>`. Index by EntityID.
+
+---
+
+## Exercises
+
+**Exercise 50.1 -- Frame time cap**
+
+In the fixed timestep loop, explain what the "spiral of death" is and why `frame_time = std::min(frame_time, 0.25)` prevents it.
+
+*Answer:* The spiral of death occurs when `update()` takes longer than `FIXED_DT`. Each iteration of the outer loop adds more to the accumulator than `update` can drain. The next frame has an even larger accumulator, requiring even more updates, which take even longer, until the game freezes. Capping `frame_time` at 0.25 seconds limits how much work one frame can trigger -- the game slows down visually (time dilation) but doesn't freeze.
+
+---
+
+**Exercise 50.2 -- Simple ECS**
+
+Add a `Render` component (sprite ID) to the `World` class above. Write a `render_system` that iterates all entities with both `Position` and `Render` and prints "drawing entity E at (x, y, z)".
+
+*Answer:*
+```cpp
+struct RenderComp { uint32_t sprite_id; };
+
+struct World {
+    // ... existing fields ...
+    std::vector<RenderComp> renders;
+    enum Components : uint32_t {
+        HAS_POSITION = 1 << 0,
+        HAS_VELOCITY = 1 << 1,
+        HAS_HEALTH   = 1 << 2,
+        HAS_RENDER   = 1 << 3,
+    };
+
+    void add_render(EntityID e, RenderComp r) {
+        renders[e] = r;
+        component_mask[e] |= HAS_RENDER;
+    }
+};
+
+void render_system(const World& w) {
+    for (EntityID e = 0; e < w.positions.size(); ++e) {
+        if ((w.component_mask[e] & (World::HAS_POSITION | World::HAS_RENDER))
+            == (World::HAS_POSITION | World::HAS_RENDER)) {
+            auto& p = w.positions[e];
+            std::cout << "Drawing entity " << e
+                      << " at (" << p.x << ", " << p.y << ", " << p.z << ")\n";
+        }
+    }
+}
+```
+
+---
+
+*Part X is complete. You now understand the full graphics stack: the math that describes 3D space, how the GPU pipeline processes geometry into pixels, how OpenGL gives you a drawable window with a simple API, how Vulkan gives you explicit control at the cost of more code, and how game engines organize their runtime logic with fixed timestep loops and ECS.*
+
+*Part XI covers systems programming -- the machine level: registers, memory, syscalls, Linux APIs, networking from the ground up, and where C++ meets C, eBPF, and Go. Ask to continue.*
+
+---
+
+# Part XI -- Systems Programming
+
+Systems programming is writing code that talks directly to the operating system, the hardware, and other languages. This is where C++ earns its reputation: you can write code that controls exactly how memory is laid out, how system calls are invoked, and how bytes move across a network socket. Python runs on top of an interpreter that hides all of this. C++ can reach all the way down.
 
 ---
 
 <a name="ch51"></a>
-## Chapter 51: The Machine: registers, memory, syscalls
+# Chapter 51: The Machine -- Registers, Memory, and Syscalls
 
-### What Your C++ Code Becomes
+## The Execution Model: What the CPU Actually Does
 
-C++ is translated to machine code — instructions for the CPU. Understanding the machine helps you write better C++ and debug at the assembly level.
+A CPU executes one instruction at a time (ignoring pipelining and out-of-order execution for now). Each instruction reads from and writes to **registers** -- small, extremely fast storage inside the CPU itself.
+
+```
+x86-64 general-purpose registers (64-bit):
+  RAX  -- accumulator: return values, arithmetic
+  RBX  -- base: general-purpose, callee-saved
+  RCX  -- counter: loop counts, system call 4th arg
+  RDX  -- data: I/O, system call 3rd arg
+  RSI  -- source index: string ops, system call 2nd arg
+  RDI  -- destination index: string ops, system call 1st arg
+  RSP  -- stack pointer: top of current stack frame
+  RBP  -- base pointer: bottom of current stack frame
+  R8-R15 -- additional general-purpose
+
+Special registers:
+  RIP  -- instruction pointer: address of next instruction
+  RFLAGS -- condition flags: zero, sign, overflow, carry
+```
+
+The stack pointer RSP points to the top of the call stack. When you call a function, RSP decreases (stack grows downward); when you return, RSP increases.
+
+---
+
+## From C++ to Machine Code
 
 ```cpp
 int add(int a, int b) {
@@ -6500,509 +15239,978 @@ int add(int a, int b) {
 }
 ```
 
-Compiles to (x86-64 with -O2):
+Compiles (roughly) to:
 
 ```asm
+; System V AMD64 ABI (Linux/macOS calling convention):
+; First argument in EDI (lower 32 bits of RDI)
+; Second argument in ESI (lower 32 bits of RSI)
+; Return value in EAX (lower 32 bits of RAX)
+
 add(int, int):
-    lea eax, [rdi + rsi]   ; eax = first_arg + second_arg
-    ret                     ; return eax
+    lea  eax, [rdi + rsi]   ; eax = edi + esi
+    ret                      ; return (RAX holds result)
 ```
 
-Just two instructions. The arguments arrive in registers `rdi` and `rsi` (System V AMD64 ABI). The return value goes in `rax`.
-
-### Registers
-
-x86-64 has 16 general-purpose 64-bit registers:
-
-```
-rax — return value, caller-saved
-rbx — callee-saved
-rcx — 4th argument, caller-saved
-rdx — 3rd argument, caller-saved
-rsi — 2nd argument, caller-saved
-rdi — 1st argument, caller-saved
-rbp — base pointer (stack frame)
-rsp — stack pointer
-r8  — 5th argument
-r9  — 6th argument
-r10-r11 — caller-saved scratch
-r12-r15 — callee-saved
-```
-
-"Caller-saved" means the calling function must save them before calling if it needs them. "Callee-saved" means the called function must restore them before returning.
-
-Reading assembly in disassemblers (like `objdump -d`) helps diagnose generated code quality and confirm that hot paths are optimized.
-
-### Looking at Assembly
-
+You can see your code's assembly with:
 ```bash
-g++ -O2 -S -o output.s myfile.cpp   # generates assembly source
-objdump -d -C ./my_binary | head -50  # disassemble binary
+g++ -O2 -S -masm=intel program.cpp -o program.s   # emit assembly
+# Or online: gcc.godbolt.org (Compiler Explorer)
 ```
 
-Or use **Compiler Explorer** (godbolt.org) — paste C++ and see the assembly live.
+**Why does this matter?** Understanding what the compiler generates helps you write code that compiles to fewer, faster instructions. It also helps you understand pointer arithmetic, struct layout, and why certain patterns are slow.
 
-### System Calls
+---
 
-A system call is a request from your program to the OS kernel. File I/O, network sockets, memory mapping — all go through syscalls.
+## Virtual Memory: How the OS Lies About Memory
+
+Every process thinks it has the entire 64-bit address space (16 exabytes) to itself. This is a lie -- a useful one called **virtual memory**.
+
+```
+Process virtual address space (64-bit Linux, simplified):
+
+0xFFFFFFFFFFFFFFFF  ----
+                    Kernel space (not accessible from userspace)
+0xFFFF800000000000  ----
+        ...         (non-canonical, inaccessible)
+0x00007FFFFFFFFFFF  ----
+                    Stack (grows downward)
+                    ...
+                    Memory-mapped files, shared libs
+                    ...
+                    Heap (grows upward)
+                    BSS segment (zero-initialized globals)
+                    Data segment (initialized globals)
+                    Text segment (code -- read-only)
+0x0000000000400000  ----
+                    (nothing -- null pointer trap zone)
+0x0000000000000000  ----
+```
+
+The OS maintains a **page table** that maps each virtual page (4 KB) to a physical RAM page. When you access a virtual address, the hardware walks the page table; if the page is not present, a page fault fires and the OS loads it from disk or terminates the process.
+
+---
+
+## System Calls: Asking the OS to Do Things
+
+User code cannot directly read files, create sockets, or allocate memory -- those are kernel operations. User code makes **system calls** (syscalls) to ask the kernel.
+
+In Linux, a syscall is triggered by the `syscall` instruction. libc functions like `malloc`, `read`, `write`, `open`, and `close` are thin wrappers around syscalls.
+
+```
+Python open("file.txt")
+  -> CPython C code
+    -> libc fopen()
+      -> libc internally calls read() which invokes:
+        -> syscall(SYS_openat, ...) instruction
+          -> kernel handles it
+            -> returns file descriptor integer back to user space
+```
+
+In C++, you can call libc directly or (on Linux) invoke syscalls yourself:
 
 ```cpp
-// C++ standard library call:
-std::ofstream file("data.txt");
-file << "hello\n";
+#include <unistd.h>     // POSIX read/write/close
+#include <fcntl.h>      // open
+#include <sys/syscall.h> // SYS_* constants
 
-// Underneath, this calls:
-// open("data.txt", O_CREAT|O_WRONLY|O_TRUNC, 0666)  → file descriptor
-// write(fd, "hello\n", 6)
-// close(fd)
+// Standard POSIX I/O (preferred):
+int fd = open("file.txt", O_RDONLY);
+char buf[128];
+ssize_t n = read(fd, buf, sizeof(buf));
+close(fd);
 
-// Which are wrappers around Linux syscalls:
-// syscall(SYS_openat, AT_FDCWD, "data.txt", ...)
-// syscall(SYS_write, fd, "hello\n", 6)
-// syscall(SYS_close, fd)
+// Raw syscall (Linux only, rarely needed):
+long result = syscall(SYS_write, STDOUT_FILENO, "hello\n", 6);
 ```
 
-The standard library wraps syscalls. For systems programming you sometimes call them directly via `<unistd.h>`.
+---
 
-### Virtual Memory
+## Calling Conventions and ABI
 
-Every process sees a private, contiguous virtual address space (typically 48 bits on x86-64 — 256 TB). The OS maps this to physical RAM pages (4 KB each). This provides isolation (processes can't see each other's memory) and abstraction (you don't know which physical pages you're using).
+The **ABI** (Application Binary Interface) defines how functions exchange arguments and return values at the machine level. The Linux x86-64 ABI (System V AMD64):
 
 ```
-Virtual address space of a process:
-0x0000000000000000 - 0x00007FFFFFFFFFFF  (user space, 128 TB)
-  ↓ Code (.text): the compiled instructions
-  ↓ Data (.data, .bss): global variables
-  ↓ Heap: grows upward (new/malloc)
-  ↑ Stack: grows downward (local variables)
-0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF  (kernel space — mapped but inaccessible)
+Integer/pointer arguments: RDI, RSI, RDX, RCX, R8, R9  (first 6)
+                            Stack for 7th argument onward
+Float arguments:            XMM0 - XMM7
+Return value:               RAX (integer), XMM0 (float)
+Caller-saved (volatile):    RAX, RCX, RDX, RSI, RDI, R8-R11
+Callee-saved (preserved):   RBX, RBP, R12-R15
 ```
 
-### Key Takeaways
+This is why passing more than 6 arguments is slightly slower (7th and beyond go on the stack), and why returning large structs by value is not always free (the caller may pass a hidden pointer in RDI as the return-value destination).
 
-- C++ function arguments are passed in registers (`rdi`, `rsi`, ...) on Linux x86-64.
-- Look at generated assembly with `g++ -S` or godbolt.org to understand what your code costs.
-- System calls are the boundary between user space and the OS kernel.
-- Virtual memory gives each process a private address space, mapped to physical pages by the OS.
+---
+
+## Inspecting the Stack Frame
+
+```cpp
+// Stack frame layout during function call:
+void callee(int x, int y) {
+    // At entry:
+    //   RSP points here  <-- top of stack
+    //   previous RBP     <- [RBP + 0]  (if frame pointer enabled)
+    //   return address   <- [RBP + 8]  (where to jump when callee returns)
+    //   x argument       <- in RDI (not on stack for first 6 args)
+    //   y argument       <- in RSI
+
+    int local = x + y;    // local allocated on stack: [RBP - 4]
+}
+```
+
+You can inspect live stack frames with a debugger:
+```bash
+gdb ./program
+(gdb) run
+(gdb) break callee
+(gdb) info registers    # see all register values
+(gdb) x/16xg $rsp       # examine 16 8-byte words at stack pointer
+(gdb) backtrace         # print call stack
+```
+
+---
+
+## `mmap` -- Direct Memory Mapping
+
+`mmap` maps files or anonymous memory directly into the virtual address space. It is how the OS loader loads executables, how `malloc` gets large chunks from the kernel, and how databases do I/O without copying:
+
+```cpp
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+// Map a file into memory for read-only access:
+int fd = open("large_file.bin", O_RDONLY);
+struct stat st; fstat(fd, &st);
+void* ptr = mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+close(fd);  // can close fd after mmap -- the mapping persists
+
+if (ptr == MAP_FAILED) { perror("mmap"); return 1; }
+
+// Now access the file contents as if it were an array:
+const uint8_t* data = static_cast<const uint8_t*>(ptr);
+std::cout << "First byte: " << (int)data[0] << "\n";
+
+munmap(ptr, st.st_size);   // unmap when done
+```
+
+Reading a 10 GB file with `mmap` and accessing only a few pages is far faster than `read()` into a buffer -- only the accessed pages are loaded from disk.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Reading Uninitialized Stack Variables
+
+**The bug:**
+```cpp
+int arr[10];       // on the stack -- NOT zero-initialized
+std::cout << arr[5];  // reads whatever happened to be there before
+```
+**Fix:** `int arr[10] = {};` (value-initializes all to zero) or use `std::array<int,10> arr{}`.
+
+### Mistake 2: Stack Overflow From Large Stack Allocations
+
+**The bug:**
+```cpp
+void deep_recursion(int n) {
+    int huge_array[1'000'000];  // 4 MB on the stack -- stack is typically 8 MB
+    if (n > 0) deep_recursion(n-1);
+}
+deep_recursion(3);  // crash: stack overflow
+```
+**Fix:** Large buffers belong on the heap (`std::vector<int>(1'000'000)`), not the stack.
+
+---
+
+## Exercises
+
+**Exercise 51.1 -- Syscall tracing**
+
+Run `strace ./your_program` on a simple C++ program that opens and reads a file. Identify the `openat`, `read`, and `close` syscalls. What does `strace` output for a `std::cout << "hello\n"` statement?
+
+*Answer:* `std::cout << "hello\n"` calls `write(1, "hello\n", 6)` (file descriptor 1 = stdout). `strace` will show:
+```
+write(1, "hello\n", 6) = 6
+```
+
+---
+
+**Exercise 51.2 -- Memory-mapped file reader**
+
+Write a C++ program that uses `mmap` to open a text file and count the number of newline characters (`\n`) without using `fread` or `std::ifstream`.
+
+*Answer:*
+```cpp
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+
+int main(int argc, char* argv[]) {
+    int fd = open(argv[1], O_RDONLY);
+    struct stat st; fstat(fd, &st);
+    const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+
+    long count = 0;
+    for (off_t i = 0; i < st.st_size; ++i)
+        if (data[i] == '\n') ++count;
+
+    munmap((void*)data, st.st_size);
+    std::cout << count << " lines\n";
+}
+```
 
 ---
 
 <a name="ch52"></a>
-## Chapter 52: Working with the OS and Linux APIs
+# Chapter 52: Working With OS and Linux APIs
 
-### POSIX — The Portable Interface
+## POSIX: The Portable Interface
 
-Linux follows POSIX (Portable Operating System Interface), a standard API for OS services. POSIX functions live in `<unistd.h>`, `<fcntl.h>`, `<sys/types.h>`, etc.
+POSIX (Portable Operating System Interface) is a standard for OS APIs. Linux, macOS, and BSDs all implement it. Windows has partial support. POSIX defines: file I/O, processes, threads (pthreads), signals, pipes, sockets, and more.
 
-### File I/O at the System Level
+`std::thread` in C++ is implemented on top of pthreads on Linux. Understanding the underlying POSIX layer explains behavior that the C++ standard doesn't specify.
 
-```cpp
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
+---
 
-// Open file:
-int fd = open("data.txt", O_RDWR | O_CREAT | O_TRUNC, 0644);
-if (fd == -1) {
-    perror("open");  // prints error message + errno description
-    return -1;
-}
+## Processes
 
-// Write:
-const char* msg = "Hello, world!\n";
-ssize_t written = write(fd, msg, strlen(msg));
-
-// Read:
-char buf[256];
-ssize_t bytes_read = read(fd, buf, sizeof(buf));
-
-// Seek:
-lseek(fd, 0, SEEK_SET);  // back to beginning
-
-// Close:
-close(fd);
-```
-
-For most purposes, use C++ streams or C `FILE*`. Use raw file descriptors when you need:
-- `sendfile` (zero-copy file send)
-- `mmap` (memory-mapped files)
-- Non-blocking I/O
-- `io_uring` (modern Linux async I/O)
-
-### Memory-Mapped Files
-
-`mmap` maps a file directly into virtual memory. Reading/writing the memory IS reading/writing the file — no explicit read/write calls:
+A **process** is a running program with its own address space. Unlike threads (which share memory), processes have isolated memory.
 
 ```cpp
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <unistd.h>    // fork, exec, getpid
+#include <sys/wait.h>  // waitpid
 
-int fd = open("large_file.bin", O_RDONLY);
-struct stat st;
-fstat(fd, &st);
+// fork() creates a child process that is an exact copy of the parent:
+pid_t pid = fork();
 
-void* data = mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-close(fd);  // can close fd after mmap
-
-// Access the file as if it were an array in memory:
-uint32_t* ints = static_cast<uint32_t*>(data);
-for (size_t i = 0; i < st.st_size / 4; ++i) {
-    process(ints[i]);  // OS pages in file data on demand
+if (pid < 0) {
+    perror("fork failed");
+} else if (pid == 0) {
+    // We are in the CHILD process
+    std::cout << "Child PID: " << getpid() << "\n";
+    // Replace child process image with a new program:
+    execl("/bin/ls", "ls", "-la", nullptr);
+    // If execl returns, it failed:
+    perror("exec failed");
+    _exit(1);
+} else {
+    // We are in the PARENT process (pid = child's PID)
+    std::cout << "Parent waiting for child " << pid << "\n";
+    int status;
+    waitpid(pid, &status, 0);   // wait for child to finish
+    std::cout << "Child exited with status " << WEXITSTATUS(status) << "\n";
 }
-
-munmap(data, st.st_size);  // unmap when done
 ```
 
-`mmap` is extremely fast for read-heavy workloads — no kernel/user copy. The OS handles caching and reads pages on demand (demand paging).
+The `fork()`/`exec()` pattern is how shells work: fork creates a child, exec replaces it with the new program.
 
-### Signals
+---
 
-Signals are asynchronous notifications to a process (like Python's `signal` module):
+## Signals
+
+Signals are asynchronous notifications sent to a process. SIGINT (Ctrl+C), SIGTERM (kill), SIGSEGV (segfault), SIGCHLD (child exited).
 
 ```cpp
 #include <csignal>
 
-volatile std::atomic<bool> running = true;
+std::atomic<bool> shutdown_requested{false};
 
-void handle_sigint(int signal) {
-    running = false;  // set flag, exit main loop cleanly
+void signal_handler(int sig) {
+    if (sig == SIGINT || sig == SIGTERM)
+        shutdown_requested.store(true, std::memory_order_relaxed);
 }
 
 int main() {
-    std::signal(SIGINT, handle_sigint);  // handle Ctrl+C
-    
-    while (running) {
+    std::signal(SIGINT,  signal_handler);   // register handler for Ctrl+C
+    std::signal(SIGTERM, signal_handler);   // register handler for kill
+
+    while (!shutdown_requested) {
         do_work();
     }
-    cleanup();
+    std::cout << "Shutting down cleanly\n";
 }
 ```
 
-Key signals: `SIGINT` (Ctrl+C), `SIGTERM` (kill command), `SIGSEGV` (segfault), `SIGKILL` (uncatchable kill).
+Signal handlers run in interrupt context -- they can interrupt any instruction. Only **async-signal-safe** functions are permitted inside a handler (e.g., `write`, not `printf` or `malloc`). The pattern above uses an atomic flag and processes the signal in the main loop.
 
-### Processes: `fork` and `exec`
-
-```cpp
-#include <unistd.h>
-#include <sys/wait.h>
-
-pid_t pid = fork();   // creates a copy of the current process
-if (pid == 0) {
-    // Child process:
-    execl("/bin/ls", "ls", "-la", nullptr);  // replace child with 'ls'
-    perror("execl");  // only reached if execl fails
-    _exit(1);
-} else if (pid > 0) {
-    // Parent process:
-    int status;
-    waitpid(pid, &status, 0);  // wait for child to finish
-    std::cout << "Child exited with " << WEXITSTATUS(status) << "\n";
-} else {
-    perror("fork");
-}
-```
-
-Python's `subprocess` module wraps fork/exec. In C++, you call it directly.
-
-### Key Takeaways
-
-- POSIX provides direct OS APIs: `open`/`read`/`write`/`close` for files, `fork`/`exec` for processes, `mmap` for memory-mapped I/O.
-- `mmap` is the fastest way to read large files — zero copy, OS-managed paging.
-- Signals are async notifications. Use `volatile atomic<bool>` flags as signal-safe state.
-- `fork` creates a process copy. `exec` replaces a process image. Together they launch child programs.
+For more complex signal handling, use `signalfd` or `sigaction` with `SA_SIGACTION`.
 
 ---
 
-<a name="ch53"></a>
-## Chapter 53: Networking from the Ground Up
+## File Descriptors and POSIX I/O
 
-### Sockets
-
-Network programming on Unix uses *sockets* — file descriptors connected to network endpoints. The socket API is the foundation of all networking, including what Python's `socket` module wraps.
+Everything in Unix is a file: disk files, sockets, pipes, terminals, devices. All are accessed via **file descriptors** (small integers).
 
 ```cpp
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>
 
-// TCP Client connecting to a server:
-int sock = socket(AF_INET, SOCK_STREAM, 0);  // IPv4, TCP, default protocol
+// Open flags: O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND
+int fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+// 0644 = permissions: owner rw, group r, other r
 
-sockaddr_in server_addr{};
-server_addr.sin_family = AF_INET;
-server_addr.sin_port   = htons(8080);         // host-to-network byte order
-inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+const char* msg = "hello from C++\n";
+ssize_t written = write(fd, msg, strlen(msg));
+if (written < 0) perror("write");
 
-connect(sock, (sockaddr*)&server_addr, sizeof(server_addr));
+close(fd);
 
-const char* msg = "GET / HTTP/1.0\r\n\r\n";
-send(sock, msg, strlen(msg), 0);
+// Duplicating file descriptors (used to redirect stdout):
+int saved_stdout = dup(STDOUT_FILENO);   // save original stdout fd
+int new_fd = open("stdout_capture.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+dup2(new_fd, STDOUT_FILENO);   // stdout now writes to the file
+close(new_fd);
 
-char buf[4096];
-ssize_t bytes = recv(sock, buf, sizeof(buf)-1, 0);
-buf[bytes] = '\0';
-std::cout << buf;
+std::cout << "This goes to stdout_capture.txt\n";
 
-close(sock);
+dup2(saved_stdout, STDOUT_FILENO);   // restore stdout
+close(saved_stdout);
 ```
 
-### TCP Server
+---
+
+## Pipes: Inter-Process Communication
+
+A pipe is a unidirectional byte channel with a read end and a write end:
 
 ```cpp
-int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+#include <unistd.h>
 
-// Allow address reuse (avoid "address already in use" on restart):
-int opt = 1;
-setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+int pipefd[2];   // pipefd[0] = read end, pipefd[1] = write end
+pipe(pipefd);
 
-sockaddr_in addr{};
-addr.sin_family      = AF_INET;
-addr.sin_addr.s_addr = INADDR_ANY;  // accept on all interfaces
-addr.sin_port        = htons(8080);
-
-bind(server_fd, (sockaddr*)&addr, sizeof(addr));
-listen(server_fd, 10);  // backlog of 10 pending connections
-
-while (true) {
-    sockaddr_in client_addr{};
-    socklen_t len = sizeof(client_addr);
-    int client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
-    
-    // Handle client (in a thread for concurrency):
-    std::jthread t([client_fd]() {
-        char buf[1024];
-        ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
-        send(client_fd, buf, n, 0);  // echo back
-        close(client_fd);
-    });
+pid_t pid = fork();
+if (pid == 0) {
+    // Child: write to pipe
+    close(pipefd[0]);                           // close unused read end
+    const char* msg = "message from child";
+    write(pipefd[1], msg, strlen(msg));
+    close(pipefd[1]);
+    _exit(0);
+} else {
+    // Parent: read from pipe
+    close(pipefd[1]);                           // close unused write end
+    char buf[64] = {};
+    read(pipefd[0], buf, sizeof(buf)-1);
+    std::cout << "Parent received: " << buf << "\n";
+    close(pipefd[0]);
+    wait(nullptr);
 }
 ```
 
-### Non-Blocking I/O and `select`/`epoll`
+---
 
-One-thread-per-connection doesn't scale. `select`/`poll`/`epoll` let one thread monitor many connections:
+## `epoll` -- Scalable I/O Multiplexing
+
+`select` and `poll` check multiple file descriptors for readiness. `epoll` is the Linux-specific high-performance version used by every production server:
 
 ```cpp
-// epoll — the Linux-specific, high-performance variant:
 #include <sys/epoll.h>
 
-int epfd = epoll_create1(0);
+int epfd = epoll_create1(0);  // create epoll instance
 
+// Register a socket fd for read events:
 epoll_event ev{};
-ev.events  = EPOLLIN;  // notify when data available to read
-ev.data.fd = server_fd;
-epoll_ctl(epfd, EPOLL_CTL_ADD, server_fd, &ev);
+ev.events  = EPOLLIN;    // notify when data is available to read
+ev.data.fd = socket_fd;
+epoll_ctl(epfd, EPOLL_CTL_ADD, socket_fd, &ev);
 
+// Event loop:
 epoll_event events[64];
 while (true) {
-    int n = epoll_wait(epfd, events, 64, -1);  // blocks until events ready
+    int n = epoll_wait(epfd, events, 64, -1);   // -1 = wait indefinitely
     for (int i = 0; i < n; ++i) {
-        if (events[i].data.fd == server_fd) {
-            // New connection
-        } else {
-            // Data available on events[i].data.fd
+        if (events[i].events & EPOLLIN) {
+            int fd = events[i].data.fd;
+            char buf[4096];
+            ssize_t bytes = read(fd, buf, sizeof(buf));
+            if (bytes <= 0) {
+                epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr);
+                close(fd);
+            } else {
+                handle_data(fd, buf, bytes);
+            }
         }
     }
 }
 ```
 
-`epoll` scales to millions of connections — it's what nginx, Redis, and most modern servers use under the hood.
+`epoll` is O(1) per event regardless of how many fds are registered (unlike `select` which is O(n)). It is the foundation of high-performance event loops like libuv (Node.js) and Boost.Asio.
 
-### Modern Approach: Asio
+---
 
-The Asio library (standalone or via Boost) provides a high-level async networking API:
+## Common Mistakes in This Chapter
 
+### Mistake 1: Not Handling `EINTR`
+
+**The bug:**
 ```cpp
-#include <asio.hpp>
+ssize_t n = read(fd, buf, len);
+if (n < 0) { perror("read"); return; }
+```
+**Symptom:** `read` returns -1 with `errno == EINTR` when interrupted by a signal (not an error -- restart).
 
-asio::io_context io;
-asio::ip::tcp::acceptor acceptor(io, {asio::ip::tcp::v4(), 8080});
-
-auto handle_client = [](asio::ip::tcp::socket socket) -> asio::awaitable<void> {
-    char buf[1024];
-    auto n = co_await socket.async_read_some(asio::buffer(buf), asio::use_awaitable);
-    co_await async_write(socket, asio::buffer(buf, n), asio::use_awaitable);
-};
-
-auto listener = [&]() -> asio::awaitable<void> {
-    while (true) {
-        auto socket = co_await acceptor.async_accept(asio::use_awaitable);
-        asio::co_spawn(io, handle_client(std::move(socket)), asio::detached);
-    }
-};
-
-asio::co_spawn(io, listener(), asio::detached);
-io.run();
+**Fix:**
+```cpp
+ssize_t n;
+do { n = read(fd, buf, len); } while (n < 0 && errno == EINTR);
+if (n < 0) { perror("read"); return; }
 ```
 
-Asio + C++20 coroutines gives async networking with Python asyncio-style clarity.
+### Mistake 2: Forgetting `O_CLOEXEC` on Forked Programs
 
-### Key Takeaways
+**The bug:** Opening files or sockets without `O_CLOEXEC`. When `fork` + `exec` creates a child process, all open file descriptors are inherited by the child unless marked close-on-exec.
 
-- Sockets are file descriptors for network connections. `socket` → `bind`/`connect` → `send`/`recv` → `close`.
-- TCP: use `SOCK_STREAM`. UDP: use `SOCK_DGRAM`.
-- `epoll` enables one thread to handle thousands of connections efficiently.
-- Use Asio (with C++20 coroutines) for production async networking — cleaner than raw epoll.
+**Fix:** `open(path, flags | O_CLOEXEC)`, `socket(... | SOCK_CLOEXEC)`.
+
+---
+
+## Exercises
+
+**Exercise 52.1 -- Process output capture**
+
+Fork a child process that runs `ls -la /tmp` using `execl`. Redirect the child's stdout to a pipe, and have the parent read and print the output.
+
+*Answer (key structure):*
+```cpp
+int pfd[2]; pipe2(pfd, O_CLOEXEC);
+pid_t pid = fork();
+if (pid == 0) {
+    dup2(pfd[1], STDOUT_FILENO);
+    // pfd[0] and pfd[1] auto-close (O_CLOEXEC)
+    execl("/bin/ls", "ls", "-la", "/tmp", nullptr);
+    _exit(1);
+}
+close(pfd[1]);
+char buf[4096]; ssize_t n;
+while ((n = read(pfd[0], buf, sizeof(buf))) > 0)
+    write(STDOUT_FILENO, buf, n);
+close(pfd[0]);
+waitpid(pid, nullptr, 0);
+```
+
+---
+
+<a name="ch53"></a>
+# Chapter 53: Networking From the Ground Up
+
+## The Network Stack
+
+```
+Application layer:  HTTP, WebSocket, gRPC -- what your program sends/receives
+Transport layer:    TCP (reliable, ordered) or UDP (unreliable, fast)
+Network layer:      IP -- addressing and routing between machines
+Link layer:         Ethernet, WiFi -- physical transmission
+
+From your C++ code, you interact at the transport layer via the BSD sockets API.
+The kernel handles everything below.
+```
+
+---
+
+## TCP Sockets: A Server
+
+```cpp
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <cstring>
+#include <iostream>
+
+int main() {
+    // 1. Create a TCP socket (AF_INET = IPv4, SOCK_STREAM = TCP)
+    int server_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+
+    // 2. Set SO_REUSEADDR to avoid "address already in use" on restart
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    // 3. Bind to a port
+    sockaddr_in addr{};
+    addr.sin_family      = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;  // listen on all interfaces
+    addr.sin_port        = htons(8080); // host-to-network-short: endian conversion
+    bind(server_fd, (sockaddr*)&addr, sizeof(addr));
+
+    // 4. Listen for incoming connections (backlog = 10)
+    listen(server_fd, 10);
+    std::cout << "Listening on :8080\n";
+
+    while (true) {
+        // 5. Accept a connection (blocks until a client connects)
+        sockaddr_in client_addr{};
+        socklen_t client_len = sizeof(client_addr);
+        int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+
+        // 6. Communicate with the client
+        char buf[1024];
+        ssize_t n = recv(client_fd, buf, sizeof(buf)-1, 0);
+        if (n > 0) {
+            buf[n] = '\0';
+            std::cout << "Received: " << buf;
+            const char* response = "HTTP/1.1 200 OK\r\n\r\nHello!\r\n";
+            send(client_fd, response, strlen(response), 0);
+        }
+        close(client_fd);
+    }
+}
+```
+
+---
+
+## TCP Sockets: A Client
+
+```cpp
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>    // inet_pton
+#include <unistd.h>
+
+int main() {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    sockaddr_in server{};
+    server.sin_family = AF_INET;
+    server.sin_port   = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &server.sin_addr);  // parse IP string
+
+    if (connect(fd, (sockaddr*)&server, sizeof(server)) < 0) {
+        perror("connect"); return 1;
+    }
+
+    const char* req = "GET / HTTP/1.0\r\nHost: localhost\r\n\r\n";
+    send(fd, req, strlen(req), 0);
+
+    char buf[4096];
+    ssize_t n = recv(fd, buf, sizeof(buf)-1, 0);
+    buf[n] = '\0';
+    std::cout << buf;
+    close(fd);
+}
+```
+
+---
+
+## UDP Sockets
+
+UDP sends individual datagrams -- no connection, no ordering guarantee, no retransmission. Used for gaming (low latency matters more than reliability), DNS, streaming media.
+
+```cpp
+// UDP server:
+int fd = socket(AF_INET, SOCK_DGRAM, 0);
+sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_port=htons(9000);
+addr.sin_addr.s_addr = INADDR_ANY;
+bind(fd, (sockaddr*)&addr, sizeof(addr));
+
+char buf[1024];
+sockaddr_in sender{};
+socklen_t sender_len = sizeof(sender);
+// recvfrom captures sender's address so we can reply:
+ssize_t n = recvfrom(fd, buf, sizeof(buf)-1, 0, (sockaddr*)&sender, &sender_len);
+buf[n] = '\0';
+std::cout << "UDP received: " << buf << "\n";
+sendto(fd, "pong", 4, 0, (sockaddr*)&sender, sender_len);
+close(fd);
+```
+
+---
+
+## Non-Blocking I/O and `epoll`
+
+A production server handles thousands of connections. One thread per connection wastes memory (each thread stack is ~2-8 MB). Non-blocking I/O + `epoll` (from Chapter 52) handles all connections in one or a few threads:
+
+```cpp
+// Make a socket non-blocking:
+int flags = fcntl(fd, F_GETFL, 0);
+fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+// With O_NONBLOCK: read/recv/accept return immediately with EAGAIN/EWOULDBLOCK
+// when there is no data, instead of blocking
+ssize_t n = recv(fd, buf, len, 0);
+if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+    // No data available right now -- come back when epoll says it's ready
+}
+```
+
+This is the reactor pattern: register fds with `epoll`, wait for readiness events, then process all ready fds. Libraries like **Boost.Asio**, **libuv**, and **io_uring** build on this.
+
+---
+
+## Address Resolution: `getaddrinfo`
+
+Rather than hardcoding IPv4 addresses, use `getaddrinfo` which handles both IPv4 and IPv6, DNS lookups, and service names:
+
+```cpp
+#include <netdb.h>
+
+addrinfo hints{};
+hints.ai_family   = AF_UNSPEC;    // accept IPv4 or IPv6
+hints.ai_socktype = SOCK_STREAM;  // TCP
+
+addrinfo* result;
+int err = getaddrinfo("example.com", "80", &hints, &result);
+if (err != 0) {
+    std::cerr << gai_strerror(err) << "\n"; return 1;
+}
+
+// result is a linked list of addresses -- try each until one connects:
+for (addrinfo* rp = result; rp != nullptr; rp = rp->ai_next) {
+    int fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+        // Connected!
+        freeaddrinfo(result);
+        // use fd ...
+    }
+    close(fd);
+}
+freeaddrinfo(result);
+```
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Assuming `recv` Returns the Full Message
+
+**The bug:**
+```cpp
+char buf[1024];
+recv(fd, buf, sizeof(buf), 0);
+// Assumes all bytes of the message arrive in one call
+```
+**Symptom:** Partial reads. `recv` may return less than the full message.
+
+**Fix:** Loop until all expected bytes are received ("read exactly N bytes" pattern):
+```cpp
+size_t total = 0;
+while (total < expected) {
+    ssize_t n = recv(fd, buf+total, expected-total, 0);
+    if (n <= 0) break;  // connection closed or error
+    total += n;
+}
+```
+
+### Mistake 2: Not Converting Byte Order
+
+**The bug:**
+```cpp
+addr.sin_port = 8080;    // wrong! network byte order is big-endian
+```
+**Fix:** Always use `htons()` for port numbers and `htonl()` for 32-bit addresses: `addr.sin_port = htons(8080)`.
+
+---
+
+## Exercises
+
+**Exercise 53.1 -- Echo server**
+
+Write a TCP echo server that accepts a connection, reads up to 1024 bytes, sends the same bytes back, and closes the connection. Test it with `nc localhost 8080`.
+
+*Answer:* The server structure is the same as the example above. In the communication step:
+```cpp
+char buf[1024];
+ssize_t n = recv(client_fd, buf, sizeof(buf), 0);
+if (n > 0) send(client_fd, buf, n, 0);   // echo back exactly what was received
+close(client_fd);
+```
 
 ---
 
 <a name="ch54"></a>
-## Chapter 54: Where C++ Meets C, eBPF, and Go
+# Chapter 54: Where C++ Meets C, eBPF, and Go
 
-### Interoperability with C
+## Calling C From C++
 
-C++ is backward-compatible with C. Every C function is callable from C++. But C++ has name mangling (function names get decorated with type information for overload resolution), so C libraries can't call C++ functions directly without a wrapper.
-
-```cpp
-// Calling a C library from C++ — just include the header:
-#include <stdlib.h>   // C headers — just works
-#include <string.h>
-
-void* buf = malloc(1024);  // C function — callable from C++
-free(buf);
-```
-
-When writing a C++ library that C code must call, export with `extern "C"`:
+C++ is backward-compatible with C at the object-file level. Any C library can be called from C++:
 
 ```cpp
-// mylib.h
-#ifdef __cplusplus
-extern "C" {  // prevent C++ name mangling
-#endif
-
-void init_library(void);
-int  compute(int x, int y);
-void shutdown_library(void);
-
-#ifdef __cplusplus
-}
-#endif
-```
-
-```cpp
-// mylib.cpp
-#include "mylib.h"
-
+// Declare a C function with C linkage (no name mangling):
 extern "C" {
-    void init_library()        { /* ... */ }
-    int  compute(int x, int y) { return x + y; }
-    void shutdown_library()    { /* ... */ }
+    #include <curl/curl.h>  // C library header
 }
+
+// Or wrap a C function you wrote yourself:
+extern "C" int my_c_function(int x);
+
+// C++ calls it like any function:
+int result = my_c_function(42);
 ```
 
-Now C code can `#include "mylib.h"` and call these functions. Python's `ctypes` and `cffi` can too.
-
-### C++ → Python: pybind11
-
-**pybind11** wraps C++ classes and functions for Python with minimal boilerplate:
+**Name mangling**: C++ encodes type information into symbol names (`foo(int, double)` becomes `_ZN3foo3dEi` or similar). C symbols have no mangling. `extern "C"` tells the C++ compiler not to mangle the name, making it linkable from C.
 
 ```cpp
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+// A C++ library that exports a C-compatible API:
+// header: mylib.h
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int add(int a, int b) { return a + b; }
+void mylib_init();
+int  mylib_compute(int x);
+void mylib_cleanup();
 
-struct Dog {
-    std::string name;
-    Dog(std::string n) : name(std::move(n)) {}
-    std::string bark() const { return name + " says: Woof!"; }
-};
+#ifdef __cplusplus
+}
+#endif
+```
 
-PYBIND11_MODULE(mymodule, m) {
-    m.def("add", &add, "Add two integers");
-    
-    py::class_<Dog>(m, "Dog")
-        .def(py::init<std::string>())
-        .def("bark", &Dog::bark)
-        .def_readwrite("name", &Dog::name);
+This pattern lets you write the implementation in C++ while exposing a C ABI that any language can call (Python via ctypes, Go via cgo, Rust via bindgen).
+
+---
+
+## Calling C++ From Python (ctypes / cffi)
+
+```cpp
+// mylib.cpp -- compile to shared library:
+// g++ -O2 -shared -fPIC -o libmylib.so mylib.cpp
+extern "C" {
+    int add(int a, int b) { return a + b; }
+    double sqrt_approx(double x) { return x * 0.5 * (3.0 - x); }
 }
 ```
 
 ```python
-import mymodule
-print(mymodule.add(3, 4))   # 7
-d = mymodule.Dog("Rex")
-print(d.bark())              # "Rex says: Woof!"
+# Python calling the shared library:
+import ctypes
+lib = ctypes.CDLL("./libmylib.so")
+lib.add.argtypes = [ctypes.c_int, ctypes.c_int]
+lib.add.restype  = ctypes.c_int
+
+result = lib.add(3, 4)   # calls C++ function -- result = 7
 ```
 
-This is how NumPy, PyTorch, OpenCV, and most high-performance Python libraries work — C++ core, Python wrapper.
+For more ergonomic Python bindings, use **pybind11** (header-only, wraps C++ classes automatically) or **nanobind** (faster, smaller).
 
-### eBPF — Programmable Kernel
+---
 
-eBPF (extended Berkeley Packet Filter) lets you run sandboxed programs inside the Linux kernel without modifying kernel source or loading kernel modules. It's used for performance tracing, security monitoring, and networking.
+## Calling C++ From Go (cgo)
 
-From C++, you write eBPF programs in restricted C, compile to eBPF bytecode, and load them using `bpf()` syscall or the **libbpf** library:
+```go
+// main.go -- Go calling C++ via cgo:
+package main
+
+/*
+#cgo LDFLAGS: -L. -lmylib -lstdc++
+#include "mylib.h"
+*/
+import "C"
+import "fmt"
+
+func main() {
+    result := C.add(3, 4)
+    fmt.Println("Result:", int(result))
+}
+```
+
+cgo generates glue code that marshals between Go and C types. The overhead is roughly 50-100ns per call -- fine for infrequent calls, a problem for tight loops.
+
+---
+
+## eBPF: Running C++ Code in the Linux Kernel
+
+**eBPF** (extended Berkeley Packet Filter) is a revolutionary Linux feature: you write small programs (in C, compiled to BPF bytecode) that run inside the kernel without kernel module development. They can:
+
+- Trace any kernel function (without modifying the kernel)
+- Filter network packets at wire speed
+- Collect performance metrics
+- Implement custom schedulers and load balancers
 
 ```c
-// bpf_prog.c — compiled with clang to BPF target
+// eBPF program in C (compiled with clang -target bpf):
+// Counts how many times write() is called per PID
+
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 1024);
+    __type(key,   __u32);   // PID
+    __type(value, __u64);   // count
+} write_counts SEC(".maps");
+
 SEC("tracepoint/syscalls/sys_enter_write")
 int trace_write(struct trace_event_raw_sys_enter* ctx) {
-    bpf_printk("write called, fd=%d\n", ctx->args[0]);
+    __u32 pid = bpf_get_current_pid_tgid() >> 32;
+    __u64* count = bpf_map_lookup_elem(&write_counts, &pid);
+    if (count) {
+        __sync_fetch_and_add(count, 1);
+    } else {
+        __u64 one = 1;
+        bpf_map_update_elem(&write_counts, &pid, &one, BPF_ANY);
+    }
     return 0;
 }
 
 char LICENSE[] SEC("license") = "GPL";
 ```
 
-```bash
-clang -O2 -target bpf -c bpf_prog.c -o bpf_prog.o
-```
-
-The C++ userspace loader attaches and reads data:
-
 ```cpp
+// C++ user-space loader (using libbpf):
 #include <bpf/libbpf.h>
 
-struct bpf_object* obj = bpf_object__open("bpf_prog.o");
+struct bpf_object* obj = bpf_object__open_file("trace_write.bpf.o", nullptr);
 bpf_object__load(obj);
-// attach to tracepoint, read from ring buffer...
+struct bpf_program* prog = bpf_object__find_program_by_name(obj, "trace_write");
+struct bpf_link* link = bpf_program__attach(prog);
+
+// After running some time, read the map:
+int map_fd = bpf_object__find_map_fd_by_name(obj, "write_counts");
+__u32 pid; __u64 count;
+bpf_map_get_next_key(map_fd, nullptr, &pid);
+bpf_map_lookup_elem(map_fd, &pid, &count);
+printf("PID %u called write() %llu times\n", pid, count);
+
+bpf_link__destroy(link);
+bpf_object__close(obj);
 ```
 
-Tools like **bpftrace**, **BCC**, and **Cilium** are built on eBPF. It's the modern way to observe and control Linux kernel behavior.
-
-### C++ and Go Interoperability
-
-Go can call C (and thus C++) via CGo:
-
-```go
-// Go file
-package main
-
-/*
-#include "mylib.h"
-#cgo LDFLAGS: -L. -lmylib
-*/
-import "C"
-
-func main() {
-    result := C.compute(3, 4)
-    println(int(result))
-}
-```
-
-C++ calling Go requires exporting Go functions with `//export`:
-
-```go
-//export go_function
-func go_function(x C.int) C.int {
-    return x * 2
-}
-```
-
-Then compile Go to a C archive (`go build -buildmode=c-archive`) and link with the C++ program. This is how mixed Go/C++ systems like CockroachDB work.
-
-### Key Takeaways
-
-- C++ is backward compatible with C. Use `extern "C"` to prevent name mangling when C code must call C++.
-- **pybind11** wraps C++ for Python — how NumPy, PyTorch, and OpenCV expose their C++ cores.
-- **eBPF** runs sandboxed C programs inside the Linux kernel for tracing, security, and networking.
-- Go ↔ C++ interop via CGo + `extern "C"` — used in mixed-language systems.
+eBPF tools you already know: `perf`, `strace` (modern versions), `tcpdump`, and Cilium (Kubernetes networking) are all built on eBPF.
 
 ---
+
+## `std::bit_cast` and Bitwise Reinterpretation (C++20)
+
+When working at the systems level you often need to reinterpret the bits of one type as another. The safe way (avoids undefined behavior):
+
+```cpp
+#include <bit>
+
+// Read the IEEE 754 bit pattern of a float as a uint32:
+float f = 3.14f;
+uint32_t bits = std::bit_cast<uint32_t>(f);
+printf("float 3.14 bit pattern: 0x%08X\n", bits);
+
+// Check the sign bit, exponent, mantissa:
+bool     sign     = (bits >> 31) & 1;
+uint32_t exponent = (bits >> 23) & 0xFF;
+uint32_t mantissa =  bits        & 0x7FFFFF;
+printf("sign=%d exponent=%d mantissa=0x%06X\n", sign, exponent-127, mantissa);
+```
+
+`std::bit_cast` requires both types to have the same size and be trivially copyable. It is the correct replacement for the old `memcpy` trick and the undefined-behavior `*(uint32_t*)&f` cast.
+
+---
+
+## Inline Assembly
+
+For extreme optimization or hardware-specific operations, C++ allows inline assembly:
+
+```cpp
+// Read the CPU's timestamp counter (nanosecond-precision cycle counter):
+uint64_t rdtsc() {
+    uint32_t lo, hi;
+    __asm__ __volatile__(
+        "rdtsc"
+        : "=a"(lo), "=d"(hi)   // outputs: eax -> lo, edx -> hi
+        :                        // no inputs
+        : "memory"               // clobbers: forces memory writes to complete
+    );
+    return ((uint64_t)hi << 32) | lo;
+}
+
+uint64_t start = rdtsc();
+do_work();
+uint64_t elapsed = rdtsc() - start;
+printf("Cycles: %llu\n", elapsed);
+```
+
+Use inline assembly sparingly -- it is non-portable and prevents many compiler optimizations. For most purposes, compiler intrinsics (`<immintrin.h>` for SIMD) or `__builtin_*` functions are better.
+
+---
+
+## Common Mistakes in This Chapter
+
+### Mistake 1: Name Mangling Mismatch
+
+**The bug:**
+```cpp
+// In C++ without extern "C":
+int add(int a, int b);   // symbol: _Z3addii (mangled)
+
+// Linked against a C object file where add is compiled as:
+// symbol: add (unmangled)
+
+// Linker error: undefined reference to _Z3addii
+```
+**Fix:** Use `extern "C"` when declaring functions that will be linked to C translation units.
+
+### Mistake 2: Type Mismatch Across FFI Boundary
+
+**The bug:**
+```python
+lib.add.argtypes = [ctypes.c_int, ctypes.c_int]
+lib.add(3.14, 4)   # passing float where int expected -- silent corruption
+```
+**Fix:** Always declare argtypes and restype in ctypes. Add assertions or use a type-safe binding library like pybind11.
+
+---
+
+## Exercises
+
+**Exercise 54.1 -- Python extension via ctypes**
+
+Write a C++ function `int dot_product(int* a, int* b, int n)` that computes the dot product of two arrays. Compile it as a shared library and call it from Python using ctypes.
+
+*Answer:*
+```cpp
+// dot.cpp
+extern "C" {
+    int dot_product(const int* a, const int* b, int n) {
+        int sum = 0;
+        for (int i = 0; i < n; ++i) sum += a[i] * b[i];
+        return sum;
+    }
+}
+// Build: g++ -O2 -shared -fPIC -o libdot.so dot.cpp
+```
+
+```python
+import ctypes
+lib = ctypes.CDLL("./libdot.so")
+lib.dot_product.argtypes = [
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int
+]
+lib.dot_product.restype = ctypes.c_int
+
+a = (ctypes.c_int * 3)(1, 2, 3)
+b = (ctypes.c_int * 3)(4, 5, 6)
+print(lib.dot_product(a, b, 3))  # 1*4 + 2*5 + 3*6 = 32
+```
+
+---
+
+**Exercise 54.2 -- std::bit_cast exploration**
+
+Use `std::bit_cast` to extract the sign, biased exponent, and mantissa bits from `float` values: `1.0f`, `-2.5f`, and `std::numeric_limits<float>::infinity()`. Verify the IEEE 754 structure manually.
+
+*Answer:*
+```cpp
+auto inspect = [](float f) {
+    uint32_t b = std::bit_cast<uint32_t>(f);
+    int  sign = b >> 31;
+    int  exp  = ((b >> 23) & 0xFF) - 127;
+    uint32_t man = b & 0x7FFFFF;
+    std::cout << f << ": sign=" << sign << " exp=" << exp
+              << " mantissa=0x" << std::hex << man << std::dec << "\n";
+};
+inspect(1.0f);                                   // sign=0 exp=0  mantissa=0x000000
+inspect(-2.5f);                                  // sign=1 exp=1  mantissa=0x200000
+inspect(std::numeric_limits<float>::infinity()); // sign=0 exp=128(=255-127) mantissa=0x0
+```
+
+---
+
+*Part XI is complete. You now understand C++ at the machine level: how registers and stack frames work, how the OS exposes services via syscalls and POSIX APIs, how TCP and UDP sockets are built from first principles, and how C++ interoperates with C, Python, Go, and the Linux kernel via eBPF.*
+
+*The Appendices (A-D) follow: toolchain setup, compiler flags reference, the Python-to-C++ cheat sheet, and the common mistakes and debugging guide. Ask to continue.*
 
 ---
 
@@ -7010,417 +16218,980 @@ Then compile Go to a C archive (`go build -buildmode=c-archive`) and link with t
 
 ---
 
-<a name="appa"></a>
-## Appendix A: Setting Up Your Toolchain
+<a name="appendix-a"></a>
+# Appendix A: Setting Up Your Toolchain
 
-### Linux (Ubuntu/Debian)
+## Linux (Ubuntu/Debian)
 
 ```bash
-# Install GCC and G++
+# Compiler and build tools
 sudo apt update
-sudo apt install build-essential
+sudo apt install build-essential          # gcc, g++, make
+sudo apt install clang clang-format clang-tidy lldb
 
-# Install Clang (recommended for better error messages)
-sudo apt install clang clang-format clang-tidy
+# Install a specific GCC version (for C++23):
+sudo apt install gcc-13 g++-13
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
 
-# Install CMake (the standard C++ build system)
+# CMake (build system)
 sudo apt install cmake
 
-# Check versions:
-g++ --version
-clang++ --version
-cmake --version
+# Ninja (fast build backend, pairs with CMake)
+sudo apt install ninja-build
+
+# vcpkg (C++ package manager)
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+cd ~/vcpkg && ./bootstrap-vcpkg.sh
+echo 'export VCPKG_ROOT=$HOME/vcpkg' >> ~/.bashrc
+echo 'export PATH="$VCPKG_ROOT:$PATH"' >> ~/.bashrc
+
+# Conan (alternative package manager)
+pip install conan
+
+# Sanitizers (built into gcc/clang -- no install needed)
+# AddressSanitizer:  -fsanitize=address
+# ThreadSanitizer:   -fsanitize=thread
+# UBSanitizer:       -fsanitize=undefined
+
+# Valgrind (memory checker)
+sudo apt install valgrind
+
+# perf (CPU profiler)
+sudo apt install linux-tools-common linux-tools-generic
+
+# gdb (debugger)
+sudo apt install gdb
 ```
-
-### macOS
-
-```bash
-# Install Xcode Command Line Tools (provides clang):
-xcode-select --install
-
-# Install GCC and CMake via Homebrew:
-brew install gcc cmake ninja
-```
-
-### Windows
-
-Option 1 — **MSVC** (Microsoft's compiler, best Windows integration):
-- Install Visual Studio Community (free) from visualstudio.microsoft.com
-- Select "Desktop Development with C++"
-
-Option 2 — **WSL2 + GCC/Clang** (Linux development environment on Windows):
-```powershell
-wsl --install         # installs Ubuntu
-# then follow Linux instructions above
-```
-
-Option 3 — **MinGW-w64** (GCC for Windows natively):
-```powershell
-winget install mingw  # or download from mingw-w64.org
-```
-
-### Choosing Your Compiler
-
-**GCC**: best standards compliance, good diagnostics, best on Linux.
-**Clang**: best error messages (most beginner-friendly), required for Xcode on Mac.
-**MSVC**: best Windows debugging experience, required for some Windows APIs.
-
-For learning: **use Clang** — its error messages are the clearest.
-
-### Compiling Manually
-
-```bash
-# Single file:
-g++ -std=c++23 -Wall -Wextra -O2 -o output main.cpp
-
-# Multiple files:
-g++ -std=c++23 -Wall -Wextra -O2 -o output main.cpp util.cpp
-
-# Common flags:
-# -std=c++23   : use C++23 standard (also: c++20, c++17)
-# -Wall        : enable all common warnings
-# -Wextra      : enable extra warnings
-# -O0          : no optimization (debug, default)
-# -O2          : optimize (use for release)
-# -O3          : aggressive optimization
-# -g           : include debug symbols
-# -fsanitize=address : AddressSanitizer (detect memory errors)
-# -fsanitize=undefined : UBSanitizer (detect undefined behavior)
-```
-
-### CMake
-
-CMake is the standard build system for C++ projects. `CMakeLists.txt`:
-
-```cmake
-cmake_minimum_required(VERSION 3.20)
-project(MyProject VERSION 1.0 LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-add_executable(my_program
-    src/main.cpp
-    src/util.cpp
-)
-
-target_include_directories(my_program PRIVATE include)
-
-# Add a library:
-add_library(mylib STATIC src/mylib.cpp)
-target_include_directories(mylib PUBLIC include)
-target_link_libraries(my_program PRIVATE mylib)
-```
-
-```bash
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)     # parallel build
-./my_program
-```
-
-### Sanitizers (Essential for Development)
-
-Run your program with sanitizers during development to catch bugs that otherwise produce silent undefined behavior:
-
-```bash
-g++ -std=c++23 -g -fsanitize=address,undefined -o program main.cpp
-./program
-# AddressSanitizer reports: use-after-free, buffer overflow, stack overflow
-# UBSanitizer reports: signed integer overflow, null dereference, alignment issues
-```
-
-Always develop with sanitizers. Only disable them for performance benchmarking.
 
 ---
 
-<a name="appb"></a>
-## Appendix B: Compiler Flags Reference
+## macOS
+
+```bash
+# Xcode Command Line Tools (includes clang, make, git)
+xcode-select --install
+
+# Homebrew (package manager)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# GCC (if you want gcc instead of/in addition to Apple clang)
+brew install gcc
+
+# CMake, Ninja
+brew install cmake ninja
+
+# vcpkg
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+cd ~/vcpkg && ./bootstrap-vcpkg.sh
+
+# lldb is the default macOS debugger (installed with Xcode tools)
+
+# Instruments (Apple profiler -- comes with Xcode)
+# Instruments.app -> Time Profiler for CPU profiling
+
+# Note: ThreadSanitizer and AddressSanitizer work on macOS with clang
+```
+
+---
+
+## Windows
+
+```powershell
+# Option 1: MSVC (Microsoft Visual C++) -- native Windows compiler
+# Install: Visual Studio Community (free)
+#   Choose workload: "Desktop development with C++"
+#   Or: Build Tools for Visual Studio (command-line only, no IDE)
+
+# Developer Command Prompt (sets up PATH for cl.exe, link.exe, etc.):
+# Start Menu -> "x64 Native Tools Command Prompt for VS 2022"
+
+# Compile from command line:
+cl /std:c++20 /EHsc /W4 /O2 main.cpp /Fe:main.exe
+
+# Option 2: MSYS2/MinGW (GCC on Windows)
+# Download MSYS2 from msys2.org
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+
+# Option 3: WSL2 (Windows Subsystem for Linux) -- full Linux toolchain
+# In PowerShell:
+wsl --install
+# Then follow the Linux instructions above inside WSL2
+
+# CMake GUI
+# Download from cmake.org -- useful for configuring projects visually
+
+# vcpkg on Windows:
+git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+C:\vcpkg\bootstrap-vcpkg.bat
+```
+
+---
+
+## Your First CMake Project
+
+```
+project/
+├── CMakeLists.txt
+├── src/
+│   └── main.cpp
+└── include/
+    └── mylib.hpp
+```
+
+```cmake
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.20)
+project(MyProject LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)           # use -std=c++20 not -std=gnu++20
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)   # for clangd/IDEs
+
+# Build type defaults:
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Compiler warnings (good practice -- treat warnings as errors in CI):
+add_compile_options(
+    -Wall -Wextra -Wpedantic
+    $<$<CONFIG:Debug>:-g -O0>
+    $<$<CONFIG:Release>:-O3 -DNDEBUG>
+)
+
+# Your executable:
+add_executable(my_app src/main.cpp)
+target_include_directories(my_app PRIVATE include)
+
+# Link a library (e.g., pthreads on Linux):
+find_package(Threads REQUIRED)
+target_link_libraries(my_app PRIVATE Threads::Threads)
+```
+
+```bash
+# Build:
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Run:
+./build/my_app
+
+# Debug build with sanitizers:
+cmake -B build-dbg -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined"
+cmake --build build-dbg
+./build-dbg/my_app
+```
+
+---
+
+## IDE Setup
+
+### VS Code
+```json
+// .vscode/settings.json
+{
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build"]
+}
+```
+Extensions: `clangd` (language server), `CodeLLDB` (debugger), `CMake Tools`.
+
+### CLion (JetBrains)
+Open the folder containing `CMakeLists.txt`. CLion detects it automatically and runs cmake. No configuration file needed.
+
+---
+
+<a name="appendix-b"></a>
+# Appendix B: Compiler Flags Reference
+
+## GCC / Clang Flags
 
 ### Warning Flags
 
 ```bash
--Wall                  # Enable "all" common warnings
--Wextra                # Extra warnings (more than -Wall)
--Wpedantic             # Strict ISO C++ compliance
--Wconversion           # Warn on implicit type conversions
--Wshadow               # Warn when a variable shadows an outer one
--Wnon-virtual-dtor     # Warn on non-virtual destructors in polymorphic classes
--Wold-style-cast       # Warn on C-style casts
--Woverloaded-virtual   # Warn when a derived class hides a virtual function
-
-# Treat warnings as errors (recommended):
--Werror
+-Wall           # Enable most common warnings (not all)
+-Wextra         # Extra warnings beyond -Wall
+-Wpedantic      # Strictly conform to the C++ standard
+-Werror         # Treat all warnings as errors (use in CI)
+-Wshadow        # Warn when a local variable shadows an outer variable
+-Wnon-virtual-dtor  # Warn when a class with virtual functions has no virtual dtor
+-Wold-style-cast    # Warn on C-style casts
+-Woverloaded-virtual # Warn when a derived function hides a base virtual function
+-Wconversion    # Warn on implicit conversions that may change value
+-Wsign-conversion   # Warn on signed/unsigned conversion
 ```
 
 ### Optimization Flags
 
 ```bash
--O0     # No optimization (default) — best for debugging
--O1     # Basic optimizations
--O2     # Recommended for release — good balance
--O3     # Aggressive optimizations (may increase code size)
--Os     # Optimize for code size
--Og     # Optimize for debuggability (better than -O0 for debug builds)
--Ofast  # -O3 + unsafe math optimizations (may break IEEE 754)
+-O0     # No optimization (default) -- fastest compilation, easiest debugging
+-O1     # Basic optimization
+-O2     # Standard release optimization (safe)
+-O3     # Aggressive optimization (enables vectorization, more inlining)
+-Os     # Optimize for size
+-Og     # Optimize for debugging experience (some optimization, full debug info)
+-Ofast  # O3 + allow non-standard float behavior (breaks IEEE 754 compliance)
 
-# Link-time optimization (cross-file inlining):
--flto   # compile and link with LTO
+# Link-time optimization (whole-program optimization):
+-flto           # Enable LTO
+-flto=thin      # Clang ThinLTO (faster, parallel)
 ```
 
-### Debug and Profiling Flags
+### Debug Flags
 
 ```bash
--g      # Generate debug info (DWARF format on Linux)
--g3     # Maximum debug info (includes macros)
--ggdb   # Debug info optimized for GDB
-
--pg     # gprof profiling instrumentation
--fno-omit-frame-pointer  # Keep frame pointers (needed for perf/flamegraphs)
+-g          # Generate debug info (DWARF) -- use with -O0 or -Og
+-g3         # More debug info (includes macro definitions)
+-ggdb       # Extra GDB-specific debug info
+-fno-omit-frame-pointer  # Keep frame pointer for profilers (perf, gprof)
 ```
 
 ### Sanitizer Flags
 
 ```bash
--fsanitize=address          # AddressSanitizer: buffer overflows, use-after-free
--fsanitize=memory           # MemorySanitizer: uninitialized reads (Clang only)
--fsanitize=undefined        # UBSan: undefined behavior
--fsanitize=thread           # ThreadSanitizer: data races
--fsanitize=leak             # LeakSanitizer: memory leaks
+# AddressSanitizer: detects heap/stack overflows, use-after-free, double-free
+-fsanitize=address -fno-omit-frame-pointer
 
-# Typical dev build:
--g -fsanitize=address,undefined -fno-omit-frame-pointer
+# ThreadSanitizer: detects data races
+-fsanitize=thread
+
+# UndefinedBehaviorSanitizer: detects UB (integer overflow, null deref, etc.)
+-fsanitize=undefined
+
+# MemorySanitizer (clang only): detects uninitialized memory reads
+-fsanitize=memory
+
+# Combine ASAN + UBSAN (common in CI):
+-fsanitize=address,undefined
+
+# Note: sanitizers add ~2x runtime overhead -- use in debug/test builds only
 ```
 
-### Architecture-Specific
+### Architecture and Feature Flags
 
 ```bash
--march=native       # Optimize for current machine (not portable binary)
--march=x86-64-v3    # AVX2 baseline (good for modern machines)
--msse4.2            # Enable SSE4.2
--mavx2              # Enable AVX2 (256-bit SIMD)
--mavx512f           # Enable AVX-512 (512-bit SIMD)
+-march=native   # Optimize for the CPU you're compiling on (not portable)
+-march=x86-64-v3 # Target Intel Haswell and later (AVX2, widely portable)
+-mavx2          # Enable AVX2 SIMD instructions
+-msse4.2        # Enable SSE4.2 (older but widely available)
 
-# Position-Independent Code (needed for shared libraries):
--fPIC
+# C++ standard:
+-std=c++17
+-std=c++20
+-std=c++23
 ```
 
-### Recommended Build Configurations
+### Hardening Flags (Production Security)
 
 ```bash
-# Debug:
-g++ -std=c++23 -g -O0 -Wall -Wextra -fsanitize=address,undefined main.cpp
-
-# Release:
-g++ -std=c++23 -O2 -DNDEBUG -Wall -Wextra main.cpp
-
-# Release + LTO:
-g++ -std=c++23 -O2 -flto -DNDEBUG main.cpp
-
-# Profiling:
-g++ -std=c++23 -O2 -g -fno-omit-frame-pointer main.cpp
+-D_FORTIFY_SOURCE=2     # Runtime buffer overflow checks (glibc)
+-fstack-protector-strong # Stack smashing protection
+-fPIE -pie              # Position-independent executable (ASLR support)
+-Wl,-z,relro            # Make GOT read-only after dynamic linking
+-Wl,-z,now              # Resolve all symbols at startup (no lazy binding)
 ```
 
 ---
 
-<a name="appc"></a>
-## Appendix C: Python → C++ Idiom Cheat Sheet
+## MSVC Flags (Windows)
 
-| Python | C++ |
-|--------|-----|
-| `x = 5` | `int x = 5;` or `auto x = 5;` |
-| `x = 5.0` | `double x = 5.0;` |
-| `x = "hello"` | `std::string x = "hello";` |
-| `x = [1,2,3]` | `std::vector<int> x = {1,2,3};` |
-| `x = (1, 2, 3)` | `auto x = std::tuple{1, 2, 3};` |
-| `x = {1,2,3}` (set) | `std::set<int> x = {1,2,3};` |
-| `x = {"a":1}` (dict) | `std::unordered_map<std::string,int> x = {{"a",1}};` |
-| `len(x)` | `x.size()` |
-| `x.append(v)` | `x.push_back(v)` |
-| `x.pop()` | `x.pop_back()` |
-| `x[i]` | `x[i]` (no bounds check) or `x.at(i)` |
-| `x[1:4]` (slice) | `std::vector<int>(x.begin()+1, x.begin()+4)` |
-| `for v in x:` | `for (auto& v : x)` |
-| `for i,v in enumerate(x):` | `for (auto [i,v] : std::views::enumerate(x))` (C++23) |
-| `if x is None:` | `if (x == nullptr):` or `if (!x)` (smart ptr) |
-| `None` | `nullptr` (pointers) or `std::nullopt` (optional) |
-| `lambda x: x*2` | `[](int x){ return x*2; }` |
-| `map(fn, lst)` | `std::ranges::transform` or `\| std::views::transform(fn)` |
-| `filter(fn, lst)` | `std::ranges::copy_if` or `\| std::views::filter(fn)` |
-| `sorted(lst)` | `std::ranges::sort(lst)` (in-place) |
-| `sum(lst)` | `std::accumulate(lst.begin(), lst.end(), 0)` |
-| `print(x)` | `std::cout << x << "\n";` or `std::println("{}",x)` (C++23) |
-| `f"{x} {y}"` | `std::format("{} {}", x, y)` |
-| `class Foo:` | `class Foo { public: ... };` |
-| `def __init__(self):` | `Foo() { }` (constructor) |
-| `def __del__(self):` | `~Foo() { }` (destructor) |
-| `self.x` | `this->x` or just `x` in member function |
-| `isinstance(x, T)` | `dynamic_cast<T*>(x) != nullptr` |
-| `try: ... except E:` | `try { ... } catch (const E& e) { ... }` |
-| `raise ValueError("msg")` | `throw std::invalid_argument("msg");` |
-| `with open(f) as h:` | `std::ifstream h(f);` (RAII — auto closes) |
-| `import module` | `#include "module.h"` |
-| `from mod import fn` | `using mod::fn;` or just use `mod::fn()` |
-| `a if cond else b` | `cond ? a : b` |
-| `a // b` | `a / b` (when both are ints) |
-| `a ** b` | `std::pow(a, b)` |
-| `not x` | `!x` |
-| `x and y` | `x && y` |
-| `x or y` | `x \|\| y` |
+```bash
+/std:c++20      # C++20 standard
+/W4             # Warning level 4 (equivalent to -Wall -Wextra)
+/WX             # Treat warnings as errors
+/EHsc           # Standard C++ exception handling
+/MD             # Dynamic runtime library (release)
+/MDd            # Dynamic runtime library (debug)
+/O2             # Optimize for speed
+/Od             # No optimization (debug)
+/Zi             # Generate debug info (PDB file)
+/RTC1           # Runtime checks for uninitialized variables and stack overflows
+/analyze        # Static analysis (Clang-based)
+
+# Address sanitizer (MSVC 2019+):
+/fsanitize=address
+
+# Whole program optimization:
+/GL             # Link-time code generation (like -flto)
+/LTCG           # Linker flag for LTO
+```
 
 ---
 
-<a name="appd"></a>
-## Appendix D: Common Mistakes and How to Debug Them
+## Recommended Flag Sets
 
-### 1. Uninitialized Variables
+```bash
+# Debug build (fast to compile, easy to debug, all checks):
+g++ -std=c++20 -g -O0 -Wall -Wextra -Wpedantic \
+    -fsanitize=address,undefined -fno-omit-frame-pointer \
+    main.cpp -o main_debug
+
+# Release build (maximum performance):
+g++ -std=c++20 -O3 -DNDEBUG -march=native -flto \
+    -Wall -Wextra -Wpedantic \
+    main.cpp -o main_release
+
+# CI build (catches everything, portable):
+g++ -std=c++20 -O2 -march=x86-64 -Wall -Wextra -Wpedantic -Werror \
+    -fsanitize=address,undefined \
+    main.cpp -o main_ci
+```
+
+---
+
+<a name="appendix-c"></a>
+# Appendix C: Python to C++ Cheat Sheet
+
+## Types
+
+| Python | C++ | Notes |
+|--------|-----|-------|
+| `int` | `int`, `long`, `int64_t` | C++ int is 32-bit; use `int64_t` for Python-sized ints |
+| `float` | `double` | Python float is 64-bit double |
+| `bool` | `bool` | Same semantics |
+| `str` | `std::string` | C++ strings are mutable, not Unicode by default |
+| `bytes` | `std::vector<uint8_t>` or `std::string` | Raw bytes |
+| `list` | `std::vector<T>` | Dynamic array |
+| `tuple` | `std::tuple<T,U,V>` or `std::pair<T,U>` | Fixed-size, typed |
+| `dict` | `std::unordered_map<K,V>` | Hash map |
+| `set` | `std::unordered_set<T>` | Hash set |
+| `None` | `nullptr`, `std::nullopt`, `std::monostate` | Depends on context |
+| `Optional[T]` | `std::optional<T>` | May-or-may-not-have-a-value |
+
+---
+
+## Variables and Assignment
+
+```python
+# Python
+x = 42
+x = "now a string"   # rebind to different type
+y = x                # y is a reference to the same object
+```
 
 ```cpp
-int x;
-if (x > 0) ...  // BUG: x has garbage value — undefined behavior
+// C++
+int x = 42;
+// x = "now a string";  // ERROR -- types are fixed
+int y = x;             // y is a COPY of x (not a reference)
+int& z = x;            // z IS a reference (alias)
 ```
 
-**Fix**: Always initialize. `int x = 0;` or `int x{};`.
-**Detect**: Compile with `-Wall`. Run with `-fsanitize=memory` (Clang).
+---
 
-### 2. Out-of-Bounds Array Access
+## Functions
 
+```python
+# Python
+def add(a, b):
+    return a + b
+
+def greet(name: str = "world") -> str:
+    return f"Hello, {name}!"
+```
+
+```cpp
+// C++
+int add(int a, int b) {
+    return a + b;
+}
+
+std::string greet(const std::string& name = "world") {
+    return "Hello, " + name + "!";
+    // or: return std::format("Hello, {}!", name);  // C++20
+}
+```
+
+---
+
+## Classes
+
+```python
+# Python
+class Animal:
+    def __init__(self, name: str):
+        self.name = name
+
+    def speak(self) -> str:
+        return "..."
+
+class Dog(Animal):
+    def speak(self) -> str:
+        return f"{self.name} says: Woof!"
+```
+
+```cpp
+// C++
+class Animal {
+protected:
+    std::string name;
+public:
+    Animal(std::string n) : name{std::move(n)} {}
+    virtual std::string speak() const { return "..."; }
+    virtual ~Animal() = default;   // always virtual in polymorphic base classes
+};
+
+class Dog : public Animal {
+public:
+    Dog(std::string n) : Animal{std::move(n)} {}
+    std::string speak() const override {
+        return name + " says: Woof!";
+    }
+};
+```
+
+---
+
+## Containers
+
+```python
+# Python list
+nums = [1, 2, 3]
+nums.append(4)
+nums.pop()
+for n in nums: print(n)
+length = len(nums)
+```
+
+```cpp
+// C++ vector
+std::vector<int> nums = {1, 2, 3};
+nums.push_back(4);
+nums.pop_back();
+for (int n : nums) std::cout << n << "\n";
+size_t length = nums.size();
+```
+
+```python
+# Python dict
+d = {"key": 42}
+d["new"] = 99
+v = d.get("missing", 0)
+for k, v in d.items(): print(k, v)
+```
+
+```cpp
+// C++ unordered_map
+std::unordered_map<std::string, int> d = {{"key", 42}};
+d["new"] = 99;
+int v = d.count("missing") ? d["missing"] : 0;
+// or: auto it = d.find("missing"); int v = (it != d.end()) ? it->second : 0;
+for (auto& [k, val] : d) std::cout << k << " " << val << "\n";
+```
+
+---
+
+## String Formatting
+
+```python
+# Python
+name, age = "Alice", 30
+msg = f"Name: {name}, Age: {age}"
+pi = f"{3.14159:.2f}"
+```
+
+```cpp
+// C++20
+std::string name = "Alice"; int age = 30;
+auto msg = std::format("Name: {}, Age: {}", name, age);
+auto pi  = std::format("{:.2f}", 3.14159);
+
+// C++17 and earlier: use stringstream or printf-style
+std::ostringstream oss;
+oss << "Name: " << name << ", Age: " << age;
+std::string msg17 = oss.str();
+```
+
+---
+
+## Error Handling
+
+```python
+# Python
+try:
+    result = int("not_a_number")
+except ValueError as e:
+    print(f"Error: {e}")
+```
+
+```cpp
+// C++
+try {
+    int result = std::stoi("not_a_number");
+} catch (const std::invalid_argument& e) {
+    std::cerr << "Error: " << e.what() << "\n";
+} catch (const std::out_of_range& e) {
+    std::cerr << "Out of range: " << e.what() << "\n";
+}
+
+// For functions that should not fail: std::optional or std::expected (C++23)
+std::optional<int> parse_int(const std::string& s) {
+    try { return std::stoi(s); }
+    catch (...) { return std::nullopt; }
+}
+if (auto v = parse_int("42")) std::cout << *v << "\n";
+```
+
+---
+
+## Lambdas / Closures
+
+```python
+# Python
+add = lambda a, b: a + b
+nums = [3, 1, 4, 1, 5]
+nums.sort(key=lambda x: -x)   # sort descending
+total = sum(x*x for x in nums)
+```
+
+```cpp
+// C++
+auto add = [](int a, int b) { return a + b; };
+std::vector<int> nums = {3, 1, 4, 1, 5};
+std::sort(nums.begin(), nums.end(), [](int a, int b){ return a > b; });  // descending
+int total = 0;
+for (int x : nums) total += x*x;
+// Or: std::transform_reduce(nums.begin(), nums.end(), 0, std::plus{},
+//                           [](int x){ return x*x; });
+```
+
+---
+
+## Concurrency
+
+```python
+# Python (GIL limits true parallelism)
+import threading
+t = threading.Thread(target=worker)
+t.start()
+t.join()
+
+import concurrent.futures
+with concurrent.futures.ThreadPoolExecutor() as ex:
+    result = ex.submit(compute, arg).result()
+```
+
+```cpp
+// C++ (true parallelism)
+std::jthread t{worker};   // joins automatically in destructor
+
+// Equivalent to ThreadPoolExecutor:
+auto future = std::async(std::launch::async, compute, arg);
+int result = future.get();
+```
+
+---
+
+## Memory Model Comparison
+
+```
+Python:                         C++:
+Every object on the heap        Objects can be on stack OR heap
+Garbage collected               Deterministic destruction (RAII)
+No manual memory management     new/delete (avoid) or smart pointers
+References everywhere           Value semantics by default, & for reference
+No pointer arithmetic           Full pointer arithmetic available
+GIL limits thread parallelism   True thread parallelism
+```
+
+---
+
+## Common Python Patterns and Their C++ Equivalents
+
+```python
+# List comprehension
+squares = [x*x for x in range(10)]
+
+# Dict comprehension
+d = {x: x*x for x in range(5)}
+
+# Generator
+def gen():
+    for i in range(10):
+        yield i*i
+
+# Context manager
+with open("file.txt") as f:
+    data = f.read()
+```
+
+```cpp
+// No list comprehension -- use a loop or std::ranges::transform:
+std::vector<int> squares;
+for (int x = 0; x < 10; ++x) squares.push_back(x*x);
+// Or:
+auto v = std::views::iota(0, 10)
+       | std::views::transform([](int x){ return x*x; });
+
+// No dict comprehension -- use a loop:
+std::unordered_map<int,int> d;
+for (int x = 0; x < 5; ++x) d[x] = x*x;
+
+// Generator -> coroutine (C++20):
+cppcoro::generator<int> gen() {
+    for (int i = 0; i < 10; ++i) co_yield i*i;
+}
+
+// Context manager -> RAII class with constructor/destructor:
+{
+    std::ifstream f{"file.txt"};
+    std::string data{std::istreambuf_iterator<char>{f}, {}};
+}   // file automatically closed here
+```
+
+---
+
+<a name="appendix-d"></a>
+# Appendix D: Common Mistakes and Debugging Guide
+
+## The Thirty Most Common C++ Bugs
+
+### Memory Bugs
+
+**D.1 Use-after-free**
+```cpp
+int* p = new int{42};
+delete p;
+std::cout << *p;   // UB: reading freed memory
+```
+Detection: AddressSanitizer (`-fsanitize=address`). Fix: Use `unique_ptr`.
+
+**D.2 Double-free**
+```cpp
+int* p = new int{42};
+delete p;
+delete p;   // UB: freeing already-freed memory
+```
+Detection: AddressSanitizer. Fix: Use `unique_ptr` (its destructor runs exactly once).
+
+**D.3 Buffer overflow**
 ```cpp
 int arr[5];
-arr[5] = 10;  // BUG: one past the end — undefined behavior
+arr[5] = 42;   // UB: one past the end
 ```
+Detection: AddressSanitizer, `-D_FORTIFY_SOURCE=2`. Fix: Use `std::vector` or `std::array` with `.at()`.
 
-**Fix**: Use `at()` on vectors and arrays. Check indices.
-**Detect**: `-fsanitize=address` (AddressSanitizer).
-
-### 3. Use After Free
-
+**D.4 Stack overflow**
 ```cpp
-int* p = new int(42);
-delete p;
-std::cout << *p;  // BUG: use after free — undefined behavior
+void f() { char buf[10'000'000]; }   // 10 MB on a ~8 MB stack
 ```
+Detection: Crash with SIGSEGV. Fix: Move large data to heap (`std::vector`).
 
-**Fix**: Set pointer to `nullptr` after delete. Use smart pointers.
-**Detect**: `-fsanitize=address`.
-
-### 4. Memory Leak
-
+**D.5 Dangling reference**
 ```cpp
-void leak() {
-    int* p = new int[1000];
-    if (error) return;  // forgets to delete[] p
-    delete[] p;
+std::string& get_name() {
+    std::string s = "Alice";
+    return s;   // returns reference to local -- destroyed on return
 }
 ```
+Detection: AddressSanitizer, compiler warning `-Wreturn-local-addr`. Fix: Return by value.
 
-**Fix**: Use `std::vector` or `std::unique_ptr` instead of raw arrays.
-**Detect**: `-fsanitize=leak` or Valgrind (`valgrind --leak-check=full ./prog`).
+---
 
-### 5. Dangling Reference
+### Uninitialized Variables
 
+**D.6 Uninitialized local variable**
 ```cpp
-int& bad() {
-    int local = 42;
-    return local;  // returns reference to local — destroyed on return!
-}
-int& r = bad();  // r refers to destroyed memory
+int x;
+std::cout << x;   // UB: x has garbage value
 ```
+Detection: `-Wuninitialized`, MemorySanitizer, UBSanitizer. Fix: `int x = 0;` or `int x{};`.
 
-**Fix**: Never return references to local variables. Return values or use smart pointers.
-**Detect**: `-Wall -Wextra` sometimes catches this. Sanitizers help.
-
-### 6. Integer Overflow
-
+**D.7 Uninitialized class member**
 ```cpp
-int a = 2'000'000'000;
-int b = a + a;  // BUG: signed overflow — undefined behavior
+struct Foo {
+    int value;   // NOT zero-initialized by default
+    Foo() {}     // no initialization of value
+};
+Foo f; std::cout << f.value;   // UB
 ```
+Fix: `int value{0};` or initialize in the member initializer list.
 
-**Fix**: Use `int64_t` or check before overflow.
-**Detect**: `-fsanitize=undefined`.
+---
 
-### 7. Slicing
+### Integer and Arithmetic Bugs
 
+**D.8 Signed integer overflow**
 ```cpp
-class Base { virtual void f(); };
-class Derived : public Base { int extra; };
-
-Derived d;
-Base b = d;     // BUG: slices — copies only the Base part, discards extra
-b.f();          // calls Base::f, not Derived::f
+int x = INT_MAX;
+x++;   // UB: signed overflow
 ```
+Detection: UBSanitizer (`-fsanitize=undefined`). Fix: Use `int64_t` or check before overflow.
 
-**Fix**: Use pointers or references for polymorphism. Never copy polymorphic objects by value.
-**Detect**: Code review. `-Wvirtual-move-assign` can warn in some cases.
-
-### 8. Missing `virtual` Destructor
-
+**D.9 Signed/unsigned comparison**
 ```cpp
-class Base { ~Base() {} };
-class Derived : public Base { int* data = new int[100]; ~Derived() { delete[] data; } };
-
-Base* p = new Derived();
-delete p;  // BUG: calls ~Base() only — data is leaked
+int size = get_size();
+for (size_t i = 0; i < size; ++i) {}  // warning: comparing signed and unsigned
+// If size is negative, the comparison wraps and the loop runs ~4 billion times
 ```
+Fix: Use consistent types. `for (int i = 0; i < size; ++i)` or `for (size_t i = 0; i < (size_t)size; ++i)`.
 
-**Fix**: Make `~Base()` `virtual`.
-**Detect**: `-Wnon-virtual-dtor`.
+**D.10 Integer truncation**
+```cpp
+long long big = 10'000'000'000LL;
+int small = big;   // truncated -- wrong value
+```
+Detection: `-Wconversion`. Fix: Use appropriate type throughout.
 
-### 9. Race Condition
+---
 
+### Object Lifetime Bugs
+
+**D.11 Iterator invalidation**
+```cpp
+std::vector<int> v = {1, 2, 3};
+auto it = v.begin();
+v.push_back(4);   // may reallocate -- it is now dangling!
+std::cout << *it;  // UB
+```
+Fix: Do not hold iterators across mutations. Re-acquire the iterator after mutation.
+
+**D.12 Accessing destroyed `shared_ptr` object via `weak_ptr`**
+```cpp
+auto weak = std::make_shared<Foo>().weak();  // shared_ptr destroyed immediately!
+auto locked = weak.lock();   // nullptr -- object is gone
+locked->do_something();      // crash
+```
+Fix: Always check `if (auto p = weak.lock())` before using.
+
+**D.13 Moving from and then using an object**
+```cpp
+auto s = std::string{"hello"};
+auto t = std::move(s);   // s is now in a valid but unspecified state
+std::cout << s;          // valid but usually prints ""
+s.push_back('!');        // valid (moved-from strings can be reused)
+```
+Rule: After `std::move(x)`, treat `x` as if it were default-constructed. Do not read until you reassign it.
+
+---
+
+### Concurrency Bugs
+
+**D.14 Data race**
 ```cpp
 int counter = 0;
-std::jthread t([](){ for(int i=0;i<1e6;++i) ++counter; });  // BUG: race on counter
+std::jthread t1{[&]{ for(int i=0;i<1000;++i) ++counter; }};
+std::jthread t2{[&]{ for(int i=0;i<1000;++i) ++counter; }};
+```
+Detection: ThreadSanitizer (`-fsanitize=thread`). Fix: `std::atomic<int>` or mutex.
+
+**D.15 Deadlock**
+```cpp
+// Two threads locking mutexes in opposite order -- classic deadlock
+```
+Detection: Thread sanitizer, Helgrind (valgrind tool). Fix: Always lock in the same order; use `std::scoped_lock` for multiple mutexes.
+
+**D.16 Spurious wakeup without predicate**
+```cpp
+cv.wait(lock);   // wakes spuriously, condition may not be true
+```
+Fix: `cv.wait(lock, []{ return condition; });`
+
+---
+
+### Template and Type Bugs
+
+**D.17 Most vexing parse**
+```cpp
+Widget w();   // NOT constructing a Widget -- this declares a function!
+```
+Fix: `Widget w{};` (brace initialization never parses as a function declaration).
+
+**D.18 Narrowing conversion**
+```cpp
+int x = 3;
+double d{x};  // OK
+int y{3.14};  // ERROR: narrowing -- brace init catches this
+int z = 3.14; // OK (silently truncates to 3)
+```
+Use brace initialization to catch narrowing at compile time.
+
+**D.19 Shadowed variable**
+```cpp
+int x = 10;
+if (true) {
+    int x = 20;  // shadows outer x -- is this intentional?
+    std::cout << x;  // 20
+}
+std::cout << x;  // 10
+```
+Detection: `-Wshadow`. Fix: Rename the inner variable.
+
+---
+
+### Type System and Casting Bugs
+
+**D.20 Wrong `dynamic_cast`**
+```cpp
+Base* b = new Derived1{};
+Derived2* d = dynamic_cast<Derived2*>(b);  // returns nullptr
+d->method();  // crash: null pointer dereference
+```
+Fix: Always check the result of `dynamic_cast`: `if (auto d = dynamic_cast<Derived2*>(b)) { ... }`.
+
+**D.21 C-style cast removes const**
+```cpp
+const int x = 42;
+int* p = (int*)&x;  // removes const -- UB to write through p
+*p = 99;            // UB
+```
+Fix: Use `const_cast` only when you know the object is not actually const (e.g., a const reference to a non-const object). Better: redesign to not need const removal.
+
+---
+
+### I/O and Format Bugs
+
+**D.22 Printf format mismatch**
+```cpp
+size_t n = 42;
+printf("%d\n", n);  // UB: %d is for int, size_t may be 64-bit
+```
+Fix: Use `%zu` for `size_t`, or prefer `std::cout` / `std::format`.
+
+**D.23 `std::cin` leaving newline in buffer**
+```cpp
+int n;
+std::cin >> n;
+std::string line;
+std::getline(std::cin, line);  // reads the '\n' left by >>  -- line is ""
+```
+Fix: `std::cin >> std::ws;` before `getline`, or `std::cin.ignore(...)` to discard the newline.
+
+---
+
+### Build and Linking Bugs
+
+**D.24 Multiple definition**
+```
+error: multiple definition of 'my_global'
+```
+Cause: Defining a variable in a header included by multiple translation units.
+Fix: Declare `extern int my_global;` in the header, define `int my_global = 0;` in exactly one `.cpp` file. Or use `inline int my_global = 0;` (C++17).
+
+**D.25 Circular include**
+```cpp
+// a.hpp includes b.hpp; b.hpp includes a.hpp
+```
+Fix: Use forward declarations where possible. Break the cycle by forward-declaring the class instead of including the header.
+
+---
+
+## Debugging Workflow
+
+### Step 1: Read the Error Message
+
+Compiler errors look intimidating but are precise. The key information is:
+- **File and line number**: `main.cpp:42:10:`
+- **Category**: `error:` (must fix) vs `warning:` (should fix)
+- **Message**: the actual problem
+
+Template errors are long because they print the full instantiation chain. Read the **first** error and the **innermost** line of the chain.
+
+### Step 2: Reproduce Minimally
+
+```bash
+# Isolate the bug: comment out sections until the crash goes away.
+# The last thing you commented out is the culprit.
+
+# Compile with debug + sanitizers:
+g++ -g -O0 -fsanitize=address,undefined main.cpp && ./a.out
+
+# ASAN output shows: type of error, the exact line, and a stack trace
+# ==ERROR: AddressSanitizer: heap-use-after-free on address ...
+# WRITE of size 4 at 0x... thread T0
+#     #0 0x... in main main.cpp:42
 ```
 
-**Fix**: Use `std::atomic<int>` or `std::mutex`.
-**Detect**: `-fsanitize=thread` (ThreadSanitizer).
+### Step 3: Use the Debugger
 
-### 10. Wrong Delete
+```bash
+# Compile with debug info:
+g++ -g -O0 main.cpp -o main
+
+# Launch gdb:
+gdb ./main
+
+# Key gdb commands:
+(gdb) run                    # run the program
+(gdb) break main.cpp:42      # set breakpoint at line 42
+(gdb) break MyClass::method  # break on function entry
+(gdb) next  (or n)           # step over (execute current line)
+(gdb) step  (or s)           # step into function
+(gdb) continue (or c)        # continue to next breakpoint
+(gdb) print variable         # print variable value
+(gdb) print *ptr             # dereference and print
+(gdb) backtrace (or bt)      # print call stack
+(gdb) frame 3                # switch to stack frame 3
+(gdb) info locals            # print all local variables
+(gdb) watch variable         # break when variable changes (watchpoint)
+(gdb) list                   # show source around current line
+```
+
+### Step 4: Add Logging
+
+For bugs that disappear under a debugger (timing-sensitive, release-only):
 
 ```cpp
-int* arr = new int[10];
-delete arr;   // BUG: should be delete[]
+// Use std::cerr (unbuffered -- always printed even on crash):
+std::cerr << "[DEBUG] value=" << value << " at line " << __LINE__ << "\n";
+
+// Conditional logging macro:
+#define LOG(x) std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] " << x << "\n"
+LOG("entering function, n=" << n);
 ```
 
-**Fix**: Match `new` with `delete`, `new[]` with `delete[]`. Or use `std::vector`.
-**Detect**: `-fsanitize=address` often catches this.
-
-### GDB Quick Reference
+### Step 5: Static Analysis
 
 ```bash
-g++ -g -O0 -o prog main.cpp   # compile with debug symbols, no optimization
-gdb ./prog
+# clang-tidy: automated code linter (catches many common bugs)
+clang-tidy main.cpp -- -std=c++20
 
-(gdb) run                     # run the program
-(gdb) bt                      # backtrace — show call stack on crash
-(gdb) b main.cpp:42           # set breakpoint at line 42
-(gdb) n                       # next line (step over)
-(gdb) s                       # step into function
-(gdb) p variable_name         # print variable
-(gdb) info locals             # print all local variables
-(gdb) watch variable_name     # break when variable changes
-(gdb) q                       # quit
+# cppcheck: another static analyzer
+cppcheck --enable=all main.cpp
+
+# Compiler's own analyzer:
+g++ -fanalyzer main.cpp       # GCC static analysis
+clang++ --analyze main.cpp    # Clang static analysis
 ```
-
-### Reading a Crash (Segfault)
-
-```bash
-# 1. Compile with debug symbols:
-g++ -g -O0 -fsanitize=address -o prog main.cpp
-
-# 2. Run — AddressSanitizer prints exactly where the bug is:
-./prog
-# ERROR: AddressSanitizer: heap-use-after-free on address 0x602000000050
-# READ of size 4 at 0x602000000050 thread T0
-#     #0 0x4012ab in main /home/user/prog.cpp:15
-```
-
-AddressSanitizer is almost always the fastest way to find memory bugs. Enable it by default in your debug builds.
 
 ---
 
-*End of Modern C++ for Python Programmers.*
+## Quick Diagnostic Decision Tree
+
+```
+Program crashes:
+  Segfault (SIGSEGV):
+    Run with AddressSanitizer -> tells you exactly which line and why
+    Common causes: null/dangling pointer, buffer overflow, stack overflow
+  Abort (SIGABRT):
+    Usually: assert failed, or bad_alloc, or terminate from uncaught exception
+    Run with -fsanitize=address to catch heap corruption before the abort
+
+Wrong output (no crash):
+  Is it a numeric bug?  Check for overflow (-fsanitize=undefined), truncation
+  Is it a logic bug?    Use debugger, add logging, write a unit test
+  Is it a race condition? Run with ThreadSanitizer (-fsanitize=thread)
+
+Program hangs:
+  Deadlock: Ctrl+C, then run under a deadlock detector
+    Linux: gdb, then 'info threads' and 'thread apply all bt'
+  Infinite loop: gdb, Ctrl+C to interrupt, 'backtrace'
+  Waiting on I/O: strace to see which syscall it is blocking on
+
+Compilation error:
+  Read the FIRST error only -- later errors are often cascading effects
+  Template errors: find the innermost 'note: in instantiation of...' line
+  Linker errors: 'undefined reference' usually means:
+    - missing source file in build
+    - missing extern "C"
+    - missing library flag (-l...)
+```
 
 ---
+
+*The book is complete. You have traveled from the very first C++ compilation to systems programming, graphics, and game development. The concepts build on each other: memory ownership enables performance, performance enables real-time graphics, and real-time graphics enables games. The tools in these appendices -- compiler flags, sanitizers, and the debugger -- are how you close the loop between writing code and understanding what it actually does.*
+
+*The best next step is to build something. Pick a project that excites you -- a game, a networking tool, a renderer, a data structure library -- and start. Every concept in this book will become concrete the first time you debug it at 2am.*
