@@ -1,11 +1,9 @@
-# Modern C++ for Python Programmers
-## From Absolute Beginner to Systems, Graphics, and Game Development
 
 **Target Standard:** C++23 | **Prerequisites:** Comfortable Python, zero C++ assumed
 
 ---
 
-## How to Use This Book
+# How to Use This Book
 
 Each chapter teaches one concept from scratch. Every concept is first shown in Python (which you know), then explained in C++, then built up with multiple examples, memory diagrams where helpful, common mistakes, and exercises with answers.
 
@@ -104,6 +102,7 @@ Work through Part I completely before moving on. The foundations -- types, memor
 ---
 
 <a name="ch1"></a>
+
 # Chapter 1: The Compilation Model and Your First Program
 
 ## What Does "Running a Program" Actually Mean?
@@ -653,6 +652,7 @@ In your own words: what is the difference between compiling with `-O0` and `-O2`
 ---
 
 <a name="ch2"></a>
+
 # Chapter 2: Variables, Types, and the Static Type System
 
 ## What IS a Variable?
@@ -1293,6 +1293,7 @@ What is the maximum value of `uint32_t`? Show the calculation. Do the same for `
 ---
 
 <a name="ch3"></a>
+
 # Chapter 3: Operators and Expressions
 
 ## Arithmetic Operators
@@ -1740,6 +1741,7 @@ bool are_equal(double a, double b) {
 ---
 
 <a name="ch4"></a>
+
 # Chapter 4: Control Flow: Branching and Loops
 
 ## `if` / `else if` / `else`
@@ -2317,6 +2319,7 @@ int main() {
 ---
 
 <a name="ch5"></a>
+
 # Chapter 5: Functions, Overloading, and Declarations vs Definitions
 
 ## What Happens When You Call a Function
@@ -2884,6 +2887,7 @@ The next six chapters cover the concepts that have no real equivalent in Python.
 ---
 
 <a name="ch6"></a>
+
 # Chapter 6: References -- Aliases for Variables
 
 ## The Problem References Solve
@@ -3190,6 +3194,7 @@ int main() {
 ---
 
 <a name="ch7"></a>
+
 # Chapter 7: Pointers and Memory Addresses
 
 ## The Address of a Variable
@@ -3511,6 +3516,7 @@ double* const q = &a;   // const pointer to double
 ---
 
 <a name="ch8"></a>
+
 # Chapter 8: The Stack and the Heap
 
 ## Two Regions of Memory
@@ -3824,6 +3830,7 @@ arr = nullptr;
 ---
 
 <a name="ch9"></a>
+
 # Chapter 9: `const` Correctness
 
 ## Why `const` Matters
@@ -4048,6 +4055,7 @@ constexpr double WATER_BOILING_F = celsius_to_fahrenheit(100.0);   // 212.0
 ---
 
 <a name="ch10"></a>
+
 # Chapter 10: Arrays, `std::vector`, and `std::string`
 
 ## C-Style Arrays (Understand, then Avoid)
@@ -4447,6 +4455,7 @@ Output:
 ---
 
 <a name="ch11"></a>
+
 # Chapter 11: Scope, Lifetime, and Organizing Code into Files
 
 ## Scope
@@ -4892,6 +4901,7 @@ The central pattern is RAII. Everything in this part flows from it.
 ---
 
 <a name="ch12"></a>
+
 # Chapter 12: RAII -- The Core Idea That Replaces Garbage Collection
 
 ## The Problem: Resources Need Cleanup
@@ -5196,6 +5206,7 @@ public:
 ---
 
 <a name="ch13"></a>
+
 # Chapter 13: Dynamic Allocation: `new`, `delete`, and Why You Avoid Them
 
 ## `new` and `delete` Revisited
@@ -5378,6 +5389,7 @@ delete &x;       // (c)
 ---
 
 <a name="ch14"></a>
+
 # Chapter 14: Smart Pointers: `unique_ptr`, `shared_ptr`, `weak_ptr`
 
 ## The Core Idea
@@ -5723,6 +5735,7 @@ d. A function that needs to read-only access an object whose lifetime is certain
 ---
 
 <a name="ch15"></a>
+
 # Chapter 15: Move Semantics, lvalues, and rvalues
 
 ## The Performance Problem With Copies
@@ -5998,6 +6011,7 @@ add_move(std::move(word));        // word is now empty
 ---
 
 <a name="ch16"></a>
+
 # Chapter 16: The Rule of 0, 3, and 5
 
 ## The Problem: Special Member Functions
@@ -6301,6 +6315,7 @@ C++ OOP looks similar to Python OOP on the surface -- both have classes, inherit
 ---
 
 <a name="ch17"></a>
+
 # Chapter 17: Classes, Objects, and Encapsulation
 
 ## Python Classes vs C++ Classes
@@ -6629,6 +6644,7 @@ public:
 ---
 
 <a name="ch18"></a>
+
 # Chapter 18: Constructors, Destructors, and Initialization
 
 ## The Member Initializer List
@@ -6892,6 +6908,7 @@ public:
 ---
 
 <a name="ch19"></a>
+
 # Chapter 19: Inheritance and Composition
 
 ## Two Kinds of Reuse
@@ -7135,6 +7152,7 @@ public:
 ---
 
 <a name="ch20"></a>
+
 # Chapter 20: Virtual Functions and Polymorphism
 
 ## The Problem Without Virtual
@@ -7440,6 +7458,7 @@ for (const auto& animal : zoo) {
 ---
 
 <a name="ch21"></a>
+
 # Chapter 21: Abstract Classes and Interfaces
 
 ## Pure Virtual Functions
@@ -7681,6 +7700,7 @@ do_work(nl);   // prints nothing (testing/silent mode)
 ---
 
 <a name="ch22"></a>
+
 # Chapter 22: Operator Overloading
 
 ## What Operator Overloading Is
@@ -7949,6 +7969,7 @@ Python uses duck typing: if an object has the right methods, any algorithm works
 ---
 
 <a name="ch23"></a>
+
 # Chapter 23: Function and Class Templates
 
 ## The Problem Without Templates
@@ -8274,6 +8295,7 @@ std::cout << p.first() << " " << p.second() << "\n";  // 42 hello
 ---
 
 <a name="ch24"></a>
+
 # Chapter 24: Template Specialization and Variadic Templates
 
 ## Template Specialization
@@ -8561,6 +8583,7 @@ vmin(3.14, 2.71, 1.41); // 1.41
 ---
 
 <a name="ch25"></a>
+
 # Chapter 25: Concepts (C++20) -- Compile-Time Duck Typing
 
 ## The Problem With Unconstrained Templates
@@ -8835,6 +8858,7 @@ sum(std::vector<double>{1.1, 2.2, 3.3});  // 6.6
 ---
 
 <a name="ch26"></a>
+
 # Chapter 26: An Introduction to Template Metaprogramming
 
 ## What Is Template Metaprogramming?
@@ -9140,6 +9164,7 @@ The C++ Standard Library is not a collection of helper functions bolted on after
 ---
 
 <a name="ch27"></a>
+
 # Chapter 27: Containers: `vector`, `map`, `set`, `array`, and Friends
 
 ## The Container Taxonomy
@@ -9485,6 +9510,7 @@ std::vector<int> unique(s.begin(), s.end()); // back to vector: {1,2,3,4,5}
 ---
 
 <a name="ch28"></a>
+
 # Chapter 28: Iterators
 
 ## What Is an Iterator?
@@ -9703,6 +9729,7 @@ int c = std::count(v.begin(), v.end(), 3);  // 3
 ---
 
 <a name="ch29"></a>
+
 # Chapter 29: Algorithms: `sort`, `find`, `transform`, and the Rest
 
 ## Why Algorithms
@@ -9928,6 +9955,7 @@ std::cout << "Total after discount: " << total << "\n";  // 76.95
 ---
 
 <a name="ch30"></a>
+
 # Chapter 30: Lambdas and Function Objects
 
 ## What Is a Lambda?
@@ -10165,6 +10193,7 @@ c();  // 7
 ---
 
 <a name="ch31"></a>
+
 # Chapter 31: Ranges and Views (C++20)
 
 ## The Problem With Iterator Pairs
@@ -10333,6 +10362,7 @@ for (int n : result) std::cout << n << " ";
 ---
 
 <a name="ch32"></a>
+
 # Chapter 32: Utility Types: `optional`, `variant`, `any`, `tuple`
 
 ## `std::optional<T>` -- A Value That May Not Exist
@@ -10637,6 +10667,7 @@ This part covers language features added after C++03. These are not optional ext
 ---
 
 <a name="ch33"></a>
+
 # Chapter 33: `auto`, Type Deduction, and Structured Bindings
 
 ## Type Deduction: The Full Picture
@@ -10869,6 +10900,7 @@ for (const auto& [num, name] : months) {
 ---
 
 <a name="ch34"></a>
+
 # Chapter 34: `constexpr` and Compile-Time Computation
 
 ## Beyond Simple Constants
@@ -11083,6 +11115,7 @@ sum_array(std::array{1.0,2.5,0.5});  // 4.0
 ---
 
 <a name="ch35"></a>
+
 # Chapter 35: `std::format` and Modern String Handling
 
 ## The String Formatting History in C++
@@ -11307,6 +11340,7 @@ std::cout << hex_part << " | " << ascii_part << "\n";
 ---
 
 <a name="ch36"></a>
+
 # Chapter 36: Coroutines and Generators
 
 ## What Is a Coroutine?
@@ -11528,6 +11562,7 @@ for (long long n : powers_of(3) | std::views::take(5)) {
 ---
 
 <a name="ch37"></a>
+
 # Chapter 37: Modules (C++20)
 
 ## The Problem With Headers
@@ -11712,6 +11747,7 @@ The central insight: **modern CPUs are not limited by computation speed -- they 
 ---
 
 <a name="ch38"></a>
+
 # Chapter 38: Value vs Reference Semantics
 
 ## The Two Semantic Models
@@ -11960,6 +11996,7 @@ int count_vowels(std::string_view text) {
 ---
 
 <a name="ch39"></a>
+
 # Chapter 39: How Memory Layout Affects Speed
 
 ## The CPU and the Memory Hierarchy
@@ -12255,6 +12292,7 @@ void update_positions(Particles& p, float dt) {
 ---
 
 <a name="ch40"></a>
+
 # Chapter 40: Data-Oriented Design
 
 ## What Is Data-Oriented Design?
@@ -12523,6 +12561,7 @@ Fix: `std::vector<int> numbers(1'000'000); std::iota(numbers.begin(), numbers.en
 ---
 
 <a name="ch41"></a>
+
 # Chapter 41: Profiling and Flamegraphs
 
 ## Measure First, Optimize Second
@@ -12825,6 +12864,7 @@ This part builds the mental model carefully -- from how threads work at the hard
 ---
 
 <a name="ch42"></a>
+
 # Chapter 42: Threads and `std::jthread`
 
 ## What Is a Thread?
@@ -13085,6 +13125,7 @@ for (int i = 0; i < n; ++i) {
 ---
 
 <a name="ch43"></a>
+
 # Chapter 43: Mutexes, Locks, and Race Conditions
 
 ## What Is a Race Condition?
@@ -13425,6 +13466,7 @@ public:
 ---
 
 <a name="ch44"></a>
+
 # Chapter 44: Atomics and the C++ Memory Model
 
 ## When Mutexes Are Too Heavy
@@ -13694,6 +13736,7 @@ for (int i = 0; i < 4; ++i) threads.emplace_back(worker, i);
 ---
 
 <a name="ch45"></a>
+
 # Chapter 45: Async, Futures, and Tasks
 
 ## The Problem With Raw Threads for Result Delivery
@@ -13979,6 +14022,7 @@ Graphics programming sits at the intersection of math, hardware, and real-time s
 ---
 
 <a name="ch46"></a>
+
 # Chapter 46: Math for Graphics -- Vectors, Matrices, and Quaternions
 
 ## Why Math Matters
@@ -14282,6 +14326,7 @@ float angle_between(Vec3 a, Vec3 b) {
 ---
 
 <a name="ch47"></a>
+
 # Chapter 47: How the GPU Works
 
 ## CPU vs GPU: Two Different Machines
@@ -14459,6 +14504,7 @@ d) Assembling three vertex outputs into a triangle
 ---
 
 <a name="ch48"></a>
+
 # Chapter 48: OpenGL Fundamentals
 
 ## What Is OpenGL?
@@ -14717,6 +14763,7 @@ glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 ---
 
 <a name="ch49"></a>
+
 # Chapter 49: Vulkan -- Explicit GPU Control
 
 ## Why Vulkan Exists
@@ -14905,6 +14952,7 @@ Why do production Vulkan engines use 2 or 3 "frames in flight" rather than 1? Wh
 ---
 
 <a name="ch50"></a>
+
 # Chapter 50: Game Loop, ECS, and Engine Design
 
 ## The Game Loop
@@ -15204,6 +15252,7 @@ Systems programming is writing code that talks directly to the operating system,
 ---
 
 <a name="ch51"></a>
+
 # Chapter 51: The Machine -- Registers, Memory, and Syscalls
 
 ## The Execution Model: What the CPU Actually Does
@@ -15467,6 +15516,7 @@ int main(int argc, char* argv[]) {
 ---
 
 <a name="ch52"></a>
+
 # Chapter 52: Working With OS and Linux APIs
 
 ## POSIX: The Portable Interface
@@ -15697,6 +15747,7 @@ waitpid(pid, nullptr, 0);
 ---
 
 <a name="ch53"></a>
+
 # Chapter 53: Networking From the Ground Up
 
 ## The Network Stack
@@ -15922,6 +15973,7 @@ close(client_fd);
 ---
 
 <a name="ch54"></a>
+
 # Chapter 54: Where C++ Meets C, eBPF, and Go
 
 ## Calling C From C++
@@ -16219,6 +16271,7 @@ inspect(std::numeric_limits<float>::infinity()); // sign=0 exp=128(=255-127) man
 ---
 
 <a name="appendix-a"></a>
+
 # Appendix A: Setting Up Your Toolchain
 
 ## Linux (Ubuntu/Debian)
@@ -16405,6 +16458,7 @@ Open the folder containing `CMakeLists.txt`. CLion detects it automatically and 
 ---
 
 <a name="appendix-b"></a>
+
 # Appendix B: Compiler Flags Reference
 
 ## GCC / Clang Flags
@@ -16543,6 +16597,7 @@ g++ -std=c++20 -O2 -march=x86-64 -Wall -Wextra -Wpedantic -Werror \
 ---
 
 <a name="appendix-c"></a>
+
 # Appendix C: Python to C++ Cheat Sheet
 
 ## Types
@@ -16845,6 +16900,7 @@ cppcoro::generator<int> gen() {
 ---
 
 <a name="appendix-d"></a>
+
 # Appendix D: Common Mistakes and Debugging Guide
 
 ## The Thirty Most Common C++ Bugs

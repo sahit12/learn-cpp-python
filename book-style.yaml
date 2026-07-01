@@ -14,12 +14,14 @@ titlepage-rule-height: 6
 monofont: "DejaVu Sans Mono"
 fontsize: 10pt
 
+top-level-division: chapter
+
 geometry: "top=30mm, bottom=30mm, left=28mm, right=28mm"
 book: true
 toc: true
 toc-depth: 2
 toc-own-page: true
-numbersections: true
+numbersections: false
 
 listings: true
 listings-no-page-break: true
